@@ -21,8 +21,7 @@ The Common Messaging Service (CMSG) is used to electronically notify a user abou
 
 [Try out the capabilities](https://console.pathfinder.gov.bc.ca:8443/console/project/z208i4-tools/overview) - Coming Soon
 
-Learn how to build your own application that connects to CMSG-Messaging-API  
-[Developer Guide](https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md)
+Use this [Developer Guide](https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md) to learn how to build your own application that connects to CMSG-Messaging-API. 
 
 ## Additional Resources
 
