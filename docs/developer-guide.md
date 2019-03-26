@@ -35,7 +35,7 @@ The OAuth2 scopes available for cmsg-api are:
 > Package Name: ca.bc.gov.nrs.cmsg.api.rest.client.v1.impl  
 
 ```
-private void sendEmail( String subject, String message, List\<String\>
+private void sendEmail( String subject, String message, List<String>
 recipients )
     {
         EmailMessageResource emailMessage = **new** EmailMessageResource();
@@ -45,22 +45,17 @@ recipients )
         emailMessage.setSubject(subject);
         emailMessage.setMediaType("text/plain");
         emailMessage.setMessage(message);
-        logger.debug("Send e-mail from "
-\+ emailMessage.getSender() + " to " + emailMessage.getRecipients()
-           + "\\nsubject " + emailMessage.getSubject() + "\\nmessage " +
-emailMessage.getMessage());
+        logger.debug("Send e-mail from "+ emailMessage.getSender() + " to " + emailMessage.getRecipients() + "\\nsubject " + emailMessage.getSubject() + "\\nmessage " + emailMessage.getMessage());
 
 // Read file contents and add to Attachment 
-        List\<ca.bc.gov.nrs.cmsg.model.v1.Attachment\> attachments = **new**
-ArrayList\<\>();
+        List<ca.bc.gov.nrs.cmsg.model.v1.Attachment> attachments = new ArrayList<>();
         String fileName = "validPdfFile.pdf";
         java.nio.file.Path filePath = java.nio.file.Paths.get(fileName);
-        **byte**[] buffer = java.nio.file.Files.readAllBytes(filePath);
-        ca.bc.gov.nrs.cmsg.model.v1.Attachment attachment = **new**
-Attachment();
+        byte[] buffer = java.nio.file.Files.readAllBytes(filePath);
+        ca.bc.gov.nrs.cmsg.model.v1.Attachment attachment = new Attachment();
 
 // Convert file contents to a Base64 encodeded string
-        String base64EncodedContent = **new** String(
+        String base64EncodedContent = new String(
                 org.apache.commons.codec.binary.Base64.encodeBase64(buffer));
         attachment.setContent(base64EncodedContent);
         attachment.setName(fileName);
@@ -69,16 +64,13 @@ Attachment();
 
 // adding attachment to emailMessage
         emailMessage.setAttachments(attachments);
-         **try** {
+         try {
             messagingService.sendMessage(emailMessage);
-        } **catch** (MessagingServiceException e) {
-            **throw new** ServiceException("Common Messaging API threw an
-exception: " + e.getMessage(), e);
-        } **catch** (ca.bc.gov.nrs.cmsg.api.rest.client.v1.ValidationException
-e) {
-            **throw new** BadRequestException(
-                    "Common Messaging API threw a validation exception while
-sending an email: " + e.getMessage(), e);
+        } catch (MessagingServiceException e) {
+            throw new ServiceException("Common Messaging API threw an exception: " + e.getMessage(), e);
+        } catch (ca.bc.gov.nrs.cmsg.api.rest.client.v1.ValidationException e) {
+            throw new BadRequestException(
+                    "Common Messaging API threw a validation exception while sending an email: " + e.getMessage(), e);
         }
     }
 ```  
