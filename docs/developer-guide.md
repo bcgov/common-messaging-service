@@ -35,8 +35,7 @@ The OAuth2 scopes available for cmsg-api are:
 > Package Name: ca.bc.gov.nrs.cmsg.api.rest.client.v1.impl  
 
 ```
-private void sendEmail( String subject, String message, List<String>
-recipients )
+private void sendEmail( String subject, String message, List<String> recipients )
     {
         EmailMessageResource emailMessage = **new** EmailMessageResource();
         String sender = DEFAULT_SENDER;
