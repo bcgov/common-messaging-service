@@ -37,7 +37,7 @@ The OAuth2 scopes available for cmsg-api are:
 ```
 private void sendEmail( String subject, String message, List<String> recipients )
     {
-        EmailMessageResource emailMessage = **new** EmailMessageResource();
+        EmailMessageResource emailMessage = new EmailMessageResource();
         String sender = DEFAULT_SENDER;
         emailMessage.setSender(sender);
         emailMessage.getRecipients().addAll(recipients);
