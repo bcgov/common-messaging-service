@@ -1,5 +1,5 @@
 ---
-title: Common Messaging Service
+title: Messaging Service Showcase
 description: Send email or sms, track delivery status, automated retry
 ---  
 
