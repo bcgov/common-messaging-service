@@ -1,4 +1,7 @@
-# CMSG Developer’s Guide
+---
+title: Messaging Service Developer Guide
+description: Capabilities, OAuth Security, API Endpoints, Example Code
+---  
 
 The Common Messaging service is an API for sending messages to a specified users via SMTP and SMS. The Common Messaging service (CMSG) can be accessed programmatically via the CMSG-MESSAGING-API. A description of the API can be found in [NRM API Store](https://apistore.nrs.gov.bc.ca/store/apis/info?name=cmsg-messaging-api&version=v1&provider=admin).  
 
