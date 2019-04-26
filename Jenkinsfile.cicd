@@ -128,7 +128,7 @@ pipeline {
               }
 
               echo "Tagging Image ${REPO_NAME}-frontend:${JOB_NAME}..."
-              openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-frontend:${JOB_NAME}", "nr-get-token-frontend:${JOB_NAME}")
+              openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-frontend:${JOB_NAME}", "${REPO_NAME}-frontend:${JOB_NAME}")
 
               echo "Processing DeploymentConfig ${REPO_NAME}-frontend..."
               def dcFrontend = openshift.process('-f',
