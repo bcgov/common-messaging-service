@@ -1,6 +1,6 @@
 {
-  "name": "cmsg-sample-showcase",
-  "version": "1.0.0",
+  "name": "nr-messaging-service-showcase",
+  "version": "0.1.0",
   "description": "",
   "main": "index.html",
   "scripts": {
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/loneil/cmsg-sample-showcase.git"
+    "url": "git+https://github.com/bcgov/nr-messaging-service-showcase.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/loneil/cmsg-sample-showcase/issues"
+    "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
   },
-  "homepage": "https://github.com/loneil/cmsg-sample-showcase#readme",
+  "homepage": "https://github.com/bcgov/nr-messaging-service-showcase#readme",
   "dependencies": {
     "http-server": "^0.11.1"
   }
