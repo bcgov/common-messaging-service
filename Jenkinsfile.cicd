@@ -5,7 +5,7 @@ import bcgov.GitHubHelper
 // Pipeline Variables
 // ------------------
 // Enable pipeline verbose debug output
-def DEBUG_OUTPUT = false
+def DEBUG_OUTPUT = true
 
 // --------------------
 // Declarative Pipeline
