@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>Sample Messaging Showcase App</title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="py-5 text-center">
+            <img class="d-block mx-auto" src="logo.png" alt="BC Gov" height="100px">
+            <h2>Sample Messaging Service Showcase App</h2>
+            <p class="lead">This is a simple sample of an Email-sending showcase app. It requires a Service Client that
+                has previously been created in the environment with appropriate CMSG scopes.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 order-md-1">
+                <h4 class="mb-3">Service Client</h4>
+                <form id="emailForm" class="needs-validation" novalidate="">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="scName">Name</label>
+                            <input type="text" readonly class="form-control" id="scName" placeholder=""
+                                value="MSSC_SERVICE" required="">
+                            <div class="invalid-feedback">
+                                Valid name is required.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="scPassword">Password</label>
+                            <input type="password" class="form-control" id="scPassword" placeholder="" value=""
+                                required="">
+                            <div class="invalid-feedback">
+                                Valid password is required.
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="mb-4">
+
+                    <h4 class="mb-3">Email</h4>
+
+                    <div class="mb-3">
+                        <label for="sender">Sender</label>
+                        <input type="text" class="form-control" id="sender" value="NR.CommonServiceShowcase@gov.bc.ca"
+                            required="">
+                        <div class="invalid-feedback">
+                            Email sender is required.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="recipients">Recipients</label>
+                        <input type="text" class="form-control" id="recipients"
+                            placeholder="you@example.com (separate multiple by comma)" required="">
+                        <div class="invalid-feedback">
+                            One or more email recipients required.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subject">Subject</label>
+                        <input type="text" class="form-control" id="subject" required="">
+                        <div class="invalid-feedback">
+                            Subject is required.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="body">Body</label>
+                        <textarea id="body" class="form-control" cols="30" rows="7" required=""></textarea>
+                        <div class="invalid-feedback">
+                            Email body is required.
+                        </div>
+                    </div>
+
+                    <hr class="mb-4">
+                    <button class="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div id="errorModal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">ERROR</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>An error occurred</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Ok</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="successModal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-success">Success</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Email sent</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="doneButton" type="button" class="btn btn-success">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="my-5 pt-5 text-muted text-center text-small">
+            <p class="mb-1">Common Services Showcase Team</p>
+            <ul class="list-inline">
+                <li class="list-inline-item"><a id='footer-home' href="https://www.gov.bc.ca/">Home</a></li>
+                <li class="list-inline-item"><a id="footer-about"
+                        href="https://www2.gov.bc.ca/gov/content/about-gov-bc-ca">About gov.bc.ca</a></li>
+                <li class="list-inline-item"><a id="footer-disclaimer" href="http://gov.bc.ca/disclaimer">Disclaimer</a>
+                </li>
+                <li class="list-inline-item"><a id="footer-privacy" href="http://gov.bc.ca/privacy">Privacy</a></li>
+                <li class="list-inline-item"><a id="footer-accessibility"
+                        href="http://gov.bc.ca/webaccessibility">Accessibility</a></li>
+                <li class="list-inline-item"><a id="footer-copyright" href="http://gov.bc.ca/copyright">Copyright</a>
+                </li>
+                <li class="list-inline-item"><a href="https://www2.gov.bc.ca/gov/content/home/contact-us">Contact Us</a>
+                </li>
+            </ul>
+        </footer>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+    <script src="bootstrapFormValidation.js"></script>
+    <script src="sendEmail.js"></script>
+</body>
+
+</html>
