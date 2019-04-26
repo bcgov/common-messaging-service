@@ -94,6 +94,7 @@ pipeline {
           echo 'Frontend build failed'
           notifyStageStatus('Frontend', 'FAILURE')
         }
+/*
         cleanup {
           echo 'Cleanup Frontend BuildConfigs...'
           script {
@@ -113,6 +114,7 @@ pipeline {
             }
           }
         }
+*/
       }
     }
 
