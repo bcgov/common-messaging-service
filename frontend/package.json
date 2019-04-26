@@ -1,0 +1,24 @@
+{
+  "name": "cmsg-sample-showcase",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo \"No build required - static assets\"",
+    "start": "node_modules/.bin/http-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loneil/cmsg-sample-showcase.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/loneil/cmsg-sample-showcase/issues"
+  },
+  "homepage": "https://github.com/loneil/cmsg-sample-showcase#readme",
+  "dependencies": {
+    "http-server": "^0.11.1"
+  }
+}
