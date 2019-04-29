@@ -14,12 +14,18 @@ var oauth = {
         event.preventDefault();
         event.stopPropagation();
 
+        qS('#emailForm').style.display = 'none';
         qS('#emailForm button[type="submit"]').disabled = true;
 
         oauth.authenticated = false;
         oauth.token = '';
         oauth.hasTopLevel = false;
         oauth.hasCreateMessage = false;
+
+        qS('#credentialsInd').classList = "icon unknown";
+        qS('#apiAccessInd').classList = "icon unknown";
+        qS('#createMsgInd').classList = "icon unknown";
+        qS('#healthCheckInd').classList = "icon unknown";
 
         const sc = qS("#scName").value;
         const pw = qS("#scPassword").value;
@@ -36,21 +42,49 @@ var oauth = {
         })
         .then(resp => resp.json())
         .then(function (data) {
-            if (data.error) {
-                showError(`An error occured while fetching a token. Error: ${data.error} - ${data.error_description}`);
-                throw new Error(data.error);
-            }
-            oauth.authenticated = data.access_token && data.access_token.length >= 16;
-            if (!oauth.authenticated) {
-                showError("An error occured while fetching a token. See console for more details.");
-                throw new Error();
-            }
-            oauth.token = data.access_token;
-            console.log(`token: ${oauth.token}`)
-            oauth.hasTopLevel = data.scope.split(" ").indexOf("CMSG.GETTOPLEVEL") >= 0;
-            oauth.hasCreateMessage = data.scope.split(" ").indexOf("CMSG.CREATEMESSAGE") >= 0;
+            var credentialsClass = "bad";
 
-            healthCheck(oauth.token);
+            if (data.error) {
+                if ("unauthorized" === data.error && "Bad credentials" === data.error_description) {
+                    credentialsClass = "bad";
+                } else {
+                    showError(`An error occured while fetching a token. Error: ${data.error} - ${data.error_description}`);
+                    throw new Error(data.error);
+                }
+            } else {
+                credentialsClass = "good";
+            }
+
+            // show the health check indicators section
+            qS('#healthCheck').style.display = 'block';
+
+            qS('#credentialsInd').classList = "icon " + credentialsClass;
+
+            if (credentialsClass === "good") {
+                // parse out the token...
+                oauth.authenticated = data.access_token && data.access_token.length >= 16;
+                if (!oauth.authenticated) {
+                    showError("An error occured while fetching a token. See console for more details.");
+                    throw new Error();
+                }
+                oauth.token = data.access_token;
+                console.log(`token: ${oauth.token}`)
+
+                // do we actually have access we need to hit api? to send a message?
+                oauth.hasTopLevel = (data.scope.split(" ").indexOf("CMSG.GETTOPLEVEL") >= 0);
+                oauth.hasCreateMessage = (data.scope.split(" ").indexOf("CMSG.CREATEMESSAGE") >= 0);
+
+                var apiAccessClass = oauth.hasTopLevel ? "good" : "bad";
+                var createMsgClass = oauth.hasCreateMessage ? "good" : "bad";
+                qS('#apiAccessInd').classList = "icon " + apiAccessClass;
+                qS('#createMsgInd').classList = "icon " + createMsgClass;
+
+                // check if api is up
+                if (oauth.hasTopLevel) {
+                    healthCheck(oauth.token);
+                }
+
+            }
         })
         .catch(function (error) {
             console.log(`ERROR, caught error fetching token from ${OAUTH_URL}`);
@@ -67,15 +101,22 @@ function healthCheck(token) {
     headers.set("Authorization", `Bearer ${token}`);
     headers.set("Content-Type", "application/json");
 
+    var healthCheckClass = "bad";
+
     fetch(CMSG_ROOT_URL, {
         method: "GET",
         headers: headers
     }).then(function(response) {
         if (response.status == 200) {
             //healthy...
-            // how to show...
+            healthCheckClass = "good";
+            // open up the send email part of the form...
+            qS('#emailForm').style.display = 'block';
             qS('#emailForm button[type="submit"]').disabled = false;
         }
+
+        // set the class indicators...
+        qS('#healthCheckInd').classList = "icon " + healthCheckClass;
     })
         .catch(function (error) {
             console.error("Error pinging cmsg:", error);
@@ -155,7 +196,9 @@ function showError(text) {
     $('#errorModal .modal-body p').text(text);
 }
 
+qS('#emailForm').style.display = 'none';
 qS('#emailForm button[type="submit"]').disabled = true;
-qS("#scPassword").addEventListener("blur", oauth.fetch);
+
+qS("#scForm").addEventListener("submit", oauth.fetch);
 qS("#emailForm").addEventListener("submit", sendEmail);
 qS("#doneButton").addEventListener("click", function () { window.scrollTo(0, 0); location.reload(true); });
