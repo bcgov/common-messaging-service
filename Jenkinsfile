@@ -101,13 +101,13 @@ pipeline {
               openshift.withProject(TOOLS_PROJECT) {
                 if(DEBUG_OUTPUT) {
                   echo "DEBUG - Using project: ${openshift.project()}"
-                }
+                } else {
+                  def bcFrontend = openshift.selector('bc', "${REPO_NAME}-frontend-${JOB_NAME}")
 
-                def bcFrontend = openshift.selector('bc', "${REPO_NAME}-frontend-${JOB_NAME}")
-
-                if(bcFrontend.exists()) {
-                  echo "Removing BuildConfig ${REPO_NAME}-frontend-${JOB_NAME}..."
-                  bcFrontend.delete()
+                  if(bcFrontend.exists()) {
+                    echo "Removing BuildConfig ${REPO_NAME}-frontend-${JOB_NAME}..."
+                    bcFrontend.delete()
+                  }
                 }
               }
             }
