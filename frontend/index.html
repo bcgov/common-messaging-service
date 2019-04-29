@@ -28,7 +28,7 @@
                 <h4 class="mb-3">Service Client</h4>
                 <form id="scForm" class="needs-validation" novalidate="">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-5 mb-3">
                             <label for="scName">Name</label>
                             <input type="text" readonly class="form-control" id="scName" placeholder=""
                                 value="MSSC_SERVICE" required="">
@@ -36,7 +36,7 @@
                                 Valid name is required.
                             </div>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-5 mb-3">
                             <label for="scPassword">Password</label>
                             <input type="password" class="form-control" id="scPassword" placeholder="" value=""
                                 required="">
@@ -44,9 +44,14 @@
                                 Valid password is required.
                             </div>
                         </div>
+                        <div class="col-md-2 mb-3" style="margin-top: 2em">
+                            <button class="btn btn-primary btn-block" type="submit">Login</button>
+                        </div>
                     </div>
 
                     <div id="healthCheck" style="display:none">
+                        <hr class="mb-4">
+
                         <div class="row">
                             <span class="col-md-6 hc-text">Service Client credentials</span><span class="col-md-6 hc-ind"><span id="credentialsInd" class="icon unknown"></span></span>
                         </div>

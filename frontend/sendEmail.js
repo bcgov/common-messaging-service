@@ -199,6 +199,6 @@ function showError(text) {
 qS('#emailForm').style.display = 'none';
 qS('#emailForm button[type="submit"]').disabled = true;
 
-qS("#scPassword").addEventListener("blur", oauth.fetch);
+qS("#scForm").addEventListener("submit", oauth.fetch);
 qS("#emailForm").addEventListener("submit", sendEmail);
 qS("#doneButton").addEventListener("click", function () { window.scrollTo(0, 0); location.reload(true); });
