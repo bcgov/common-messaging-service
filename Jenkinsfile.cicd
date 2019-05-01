@@ -24,7 +24,7 @@ pipeline {
     APP_DOMAIN = new File('/var/run/configs/jobs/app.domain').getText('UTF-8').trim()
 
     // JOB_NAME should be the pull request/branch identifier (i.e. 'pr-5')
-    JOB_NAME = "${JOB_BASE_NAME}".toLowerCase()
+    JOB_NAME = JOB_BASE_NAME.toLowerCase()
 
     // SOURCE_REPO_* references git repository resources
     SOURCE_REPO_RAW = "https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/master"
@@ -41,7 +41,7 @@ pipeline {
         notifyStageStatus('Frontend', 'PENDING')
 
         // Cancel any running builds in progress
-        timeout(10) {
+        timeout(5) {
           echo "Cancelling previous ${APP_NAME}-${JOB_NAME} builds in progress..."
           abortAllPreviousBuildInProgress(currentBuild)
         }
@@ -172,7 +172,7 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
         'openshift/frontend.dc.yaml',
         "REPO_NAME=${REPO_NAME}",
         "JOB_NAME=${JOB_NAME}",
-        "NAMESPACE=${DEV_PROJECT}",
+        "NAMESPACE=${projectEnv}",
         "APP_NAME=${APP_NAME}",
         "HOST_ROUTE=${hostRouteEnv}"
       )
@@ -182,13 +182,11 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
       openshift.apply(dcFrontend)
 
       // Wait for all pods to be ready
-      def newVersion = openshift.selector('dc', "${APP_NAME}-frontend-${JOB_NAME}").object().status.latestVersion
-      def pods = openshift.selector('pod', [deployment: "${APP_NAME}-frontend-${JOB_NAME}-${newVersion}"])
-      timeout(10) {
-        pods.untilEach(2) {
-          return it.object().status.containerStatuses.every {
-            it.ready
-          }
+      def latestVersion = openshift.selector('dc', "${APP_NAME}-frontend-${JOB_NAME}").object().status.latestVersion
+      def rc = openshift.selector('rc', "${APP_NAME}-frontend-${JOB_NAME}-${latestVersion}")
+      timeout(5) {
+        rc.watch {
+          return (it.object().status.readyReplicas == it.object().status.replicas)
         }
       }
     }
