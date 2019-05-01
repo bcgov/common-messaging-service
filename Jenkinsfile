@@ -243,7 +243,7 @@ def createDeploymentStatus (String environment, String status, String hostUrl) {
     SOURCE_REPO_REF,
     [
       'environment': environment,
-      'task': "deploy:pull:${CHANGE_ID}"
+      'task': "deploy:master"
     ]
   )
 
