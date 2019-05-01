@@ -96,7 +96,7 @@ pipeline {
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
-                if(DEBUG_OUTPUT != 0) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
                   def bcFrontend = openshift.selector('bc', "${REPO_NAME}-frontend-${JOB_NAME}")
