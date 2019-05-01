@@ -141,20 +141,30 @@ pipeline {
               )
 
               echo "Applying Deployment ${REPO_NAME}-frontend..."
-              createDeploymentStatus('Dev', 'PENDING', HOST_ROUTE)
+              createDeploymentStatus("${JOB_NAME}-${DEV_PROJECT}", 'PENDING', HOST_ROUTE)
               openshift.apply(dcFrontend)
-              // TODO - Add pod waiting
+
+              // Wait for all pods to be ready
+              def newVersion = openshift.selector('dc', "${APP_NAME}-frontend-${JOB_NAME}").object().status.latestVersion
+              def pods = openshift.selector('pod', [deployment: "${APP_NAME}-frontend-${JOB_NAME}-${newVersion}"])
+              timeout(10) {
+                pods.untilEach(2) {
+                  return it.object().status.containerStatuses.every {
+                    it.ready
+                  }
+                }
+              }
             }
           }
         }
       }
       post {
         success {
-          createDeploymentStatus('Dev', 'SUCCESS', HOST_ROUTE)
+          createDeploymentStatus("${JOB_NAME}-${DEV_PROJECT}", 'SUCCESS', HOST_ROUTE)
           notifyStageStatus('Deploy', 'SUCCESS')
         }
         unsuccessful {
-          echo 'Deploy failed'
+          createDeploymentStatus("${JOB_NAME}-${DEV_PROJECT}", 'FAILURE', HOST_ROUTE)
           notifyStageStatus('Deploy', 'FAILURE')
         }
       }
@@ -198,8 +208,10 @@ def createDeploymentStatus (String environment, String status, String hostUrl) {
 
   if (status.equalsIgnoreCase('SUCCESS')) {
     echo "${environment} deployment successful at https://${hostUrl}"
-  } else if (status.equalsIgnoreCase('PENDING')){
+  } else if (status.equalsIgnoreCase('PENDING')) {
     echo "${environment} deployment pending..."
+  } else if (status.equalsIgnoreCase('FAILURE')) {
+    echo "${environment} deployment failed"
   }
 }
 
