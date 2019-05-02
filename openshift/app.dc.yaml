@@ -4,7 +4,7 @@ kind: Template
 labels:
   template: "${REPO_NAME}-template"
 metadata:
-  name: "${REPO_NAME}-frontend-dc"
+  name: "${REPO_NAME}-app-dc"
   creationTimestamp:
 objects:
 - apiVersion: v1
@@ -15,12 +15,12 @@ objects:
     creationTimestamp:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-frontend-${JOB_NAME}"
+    name: "${APP_NAME}-app-${JOB_NAME}"
   spec:
     replicas: 2
     selector:
       app: "${APP_NAME}-${JOB_NAME}"
-      deploymentconfig: "${APP_NAME}-frontend-${JOB_NAME}"
+      deploymentconfig: "${APP_NAME}-app-${JOB_NAME}"
     strategy:
       resources: {}
       type: Rolling
@@ -31,10 +31,10 @@ objects:
         creationTimestamp:
         labels:
           app: "${APP_NAME}-${JOB_NAME}"
-          deploymentconfig: "${APP_NAME}-frontend-${JOB_NAME}"
+          deploymentconfig: "${APP_NAME}-app-${JOB_NAME}"
       spec:
         containers:
-        - image: docker-registry.default.svc:5000/${NAMESPACE}/${REPO_NAME}-frontend:${JOB_NAME}
+        - image: docker-registry.default.svc:5000/${NAMESPACE}/${REPO_NAME}-app:${JOB_NAME}
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -45,7 +45,7 @@ objects:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 1
-          name: "${APP_NAME}-frontend-${JOB_NAME}"
+          name: "${APP_NAME}-app-${JOB_NAME}"
           ports:
           - containerPort: 8080
             protocol: TCP
@@ -65,10 +65,10 @@ objects:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - "${APP_NAME}-frontend-${JOB_NAME}"
+        - "${APP_NAME}-app-${JOB_NAME}"
         from:
           kind: ImageStreamTag
-          name: "${REPO_NAME}-frontend:${JOB_NAME}"
+          name: "${REPO_NAME}-app:${JOB_NAME}"
           namespace: "${NAMESPACE}"
       type: ImageChange
 - apiVersion: v1
@@ -79,7 +79,7 @@ objects:
     creationTimestamp:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-frontend-${JOB_NAME}"
+    name: "${APP_NAME}-app-${JOB_NAME}"
   spec:
     ports:
     - name: 8080-tcp
@@ -88,7 +88,7 @@ objects:
       targetPort: 8080
     selector:
       app: "${APP_NAME}-${JOB_NAME}"
-      deploymentconfig: "${APP_NAME}-frontend-${JOB_NAME}"
+      deploymentconfig: "${APP_NAME}-app-${JOB_NAME}"
 - apiVersion: v1
   kind: Route
   metadata:
@@ -96,7 +96,7 @@ objects:
       openshift.io/host.generated: 'true'
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-frontend-${JOB_NAME}"
+    name: "${APP_NAME}-app-${JOB_NAME}"
   spec:
     host: "${HOST_ROUTE}"
     port:
@@ -106,7 +106,7 @@ objects:
       termination: edge
     to:
       kind: Service
-      name: "${APP_NAME}-frontend-${JOB_NAME}"
+      name: "${APP_NAME}-app-${JOB_NAME}"
       weight: 100
     wildcardPolicy: None
 parameters:

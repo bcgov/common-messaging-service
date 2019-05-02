@@ -4,7 +4,7 @@ kind: Template
 labels:
   template: "${REPO_NAME}-template"
 metadata:
-  name: "${REPO_NAME}-frontend-bc"
+  name: "${REPO_NAME}-app-bc"
   creationTimestamp:
 objects:
 - apiVersion: v1
@@ -14,17 +14,17 @@ objects:
       openshift.io/generated-by: OpenShiftNewBuild
     creationTimestamp:
     labels:
-      build: "${REPO_NAME}-frontend"
-    name: nodejs-8-rhel7
+      build: "${REPO_NAME}-app"
+    name: nodejs-10
   spec:
     lookupPolicy:
       local: false
     tags:
     - annotations:
-        openshift.io/imported-from: registry.access.redhat.com/rhscl/nodejs-8-rhel7:latest
+        openshift.io/imported-from: registry.access.redhat.com/rhoar-nodejs/nodejs-10:latest
       from:
         kind: DockerImage
-        name: registry.access.redhat.com/rhscl/nodejs-8-rhel7:latest
+        name: registry.access.redhat.com/rhoar-nodejs/nodejs-10:latest
       generation:
       importPolicy: {}
       name: latest
@@ -37,8 +37,8 @@ objects:
       openshift.io/generated-by: OpenShiftNewBuild
     creationTimestamp:
     labels:
-      build: "${REPO_NAME}-frontend"
-    name: "${REPO_NAME}-frontend"
+      build: "${REPO_NAME}-app"
+    name: "${REPO_NAME}-app"
   spec:
     lookupPolicy:
       local: false
@@ -49,15 +49,15 @@ objects:
       openshift.io/generated-by: OpenShiftNewBuild
     creationTimestamp:
     labels:
-      build: "${REPO_NAME}-frontend"
-    name: "${REPO_NAME}-frontend-${JOB_NAME}"
+      build: "${REPO_NAME}-app"
+    name: "${REPO_NAME}-app-${JOB_NAME}"
   spec:
     completionDeadlineSeconds: 600
     nodeSelector:
     output:
       to:
         kind: ImageStreamTag
-        name: "${REPO_NAME}-frontend:latest"
+        name: "${REPO_NAME}-app:latest"
     postCommit: {}
     resources:
       requests:
@@ -68,7 +68,7 @@ objects:
         memory: 2Gi
     runPolicy: SerialLatestOnly
     source:
-      contextDir: frontend
+      contextDir: app
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
@@ -80,7 +80,7 @@ objects:
           value: '2'
         from:
           kind: ImageStreamTag
-          name: nodejs-8-rhel7:latest
+          name: nodejs-10:latest
       type: Source
 parameters:
 - name: REPO_NAME

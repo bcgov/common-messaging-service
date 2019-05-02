@@ -1,12 +1,6 @@
 #!groovy
 import bcgov.GitHubHelper
 
-// ------------------
-// Pipeline Variables
-// ------------------
-// Enable pipeline verbose debug output
-def DEBUG_OUTPUT = false
-
 // --------------------
 // Declarative Pipeline
 // --------------------
@@ -14,6 +8,9 @@ pipeline {
   agent any
 
   environment {
+    // Enable pipeline verbose debug output if greater than 0
+    DEBUG_OUTPUT = 'false'
+
     // Get projects/namespaces from config maps
     DEV_PROJECT = new File('/var/run/configs/ns/project.dev').getText('UTF-8').trim()
     TEST_PROJECT = new File('/var/run/configs/ns/project.test').getText('UTF-8').trim()
@@ -27,30 +24,30 @@ pipeline {
     APP_DOMAIN = new File('/var/run/configs/jobs/app.domain').getText('UTF-8').trim()
 
     // JOB_NAME should be the pull request/branch identifier (i.e. 'pr-5')
-    JOB_NAME = "${JOB_BASE_NAME}".toLowerCase()
+    JOB_NAME = JOB_BASE_NAME.toLowerCase()
 
     // SOURCE_REPO_* references git repository resources
     SOURCE_REPO_RAW = "https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/master"
-    SOURCE_REPO_REF="pull/${CHANGE_ID}/head"
-    SOURCE_REPO_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
+    SOURCE_REPO_REF = "pull/${CHANGE_ID}/head"
+    SOURCE_REPO_URL = "https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
 
     // HOST_ROUTE is the full domain route endpoint (ie. 'appname-pr-5-k8vopl-dev.pathfinder.gov.bc.ca')
-    HOST_ROUTE = "${APP_NAME}-${JOB_NAME}-${DEV_PROJECT}.${APP_DOMAIN}"
+    DEV_HOST_ROUTE = "${APP_NAME}-${JOB_NAME}-${DEV_PROJECT}.${APP_DOMAIN}"
   }
 
   stages {
-    stage('Frontend') {
+    stage('App') {
       steps {
-        notifyStageStatus('Frontend', 'PENDING')
+        notifyStageStatus('App', 'PENDING')
 
         // Cancel any running builds in progress
-        timeout(10) {
+        timeout(5) {
           echo "Cancelling previous ${APP_NAME}-${JOB_NAME} builds in progress..."
           abortAllPreviousBuildInProgress(currentBuild)
         }
 
         script {
-          if(DEBUG_OUTPUT) {
+          if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
             // Force OpenShift Plugin directives to be verbose
             openshift.logLevel(1)
 
@@ -61,25 +58,25 @@ pipeline {
 
           openshift.withCluster() {
             openshift.withProject(TOOLS_PROJECT) {
-              if(DEBUG_OUTPUT) {
+              if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                 echo "DEBUG - Using project: ${openshift.project()}"
               }
 
-              echo "Processing BuildConfig ${REPO_NAME}-frontend..."
-              def bcFrontend = openshift.process('-f',
-                'openshift/frontend.bc.yaml',
+              echo "Processing BuildConfig ${REPO_NAME}-app..."
+              def bcApp = openshift.process('-f',
+                'openshift/app.bc.yaml',
                 "REPO_NAME=${REPO_NAME}",
                 "JOB_NAME=${JOB_NAME}",
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}"
               )
 
-              echo "Building ImageStream ${REPO_NAME}-frontend..."
-              openshift.apply(bcFrontend).narrow('bc').startBuild('-w').logs('-f')
+              echo "Building ImageStream ${REPO_NAME}-app..."
+              openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
 
-              echo "Tagging Image ${REPO_NAME}-frontend:${JOB_NAME}..."
-              openshift.tag("${REPO_NAME}-frontend:latest",
-                "${REPO_NAME}-frontend:${JOB_NAME}"
+              echo "Tagging Image ${REPO_NAME}-app:${JOB_NAME}..."
+              openshift.tag("${REPO_NAME}-app:latest",
+                "${REPO_NAME}-app:${JOB_NAME}"
               )
             }
           }
@@ -87,26 +84,26 @@ pipeline {
       }
       post {
         success {
-          echo 'Frontend build successful'
-          notifyStageStatus('Frontend', 'SUCCESS')
+          echo 'App build successful'
+          notifyStageStatus('App', 'SUCCESS')
         }
         unsuccessful {
-          echo 'Frontend build failed'
-          notifyStageStatus('Frontend', 'FAILURE')
+          echo 'App build failed'
+          notifyStageStatus('App', 'FAILURE')
         }
         cleanup {
-          echo 'Cleanup Frontend BuildConfigs...'
+          echo 'Cleanup App BuildConfigs...'
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
-                if(DEBUG_OUTPUT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
-                  def bcFrontend = openshift.selector('bc', "${REPO_NAME}-frontend-${JOB_NAME}")
+                  def bcApp = openshift.selector('bc', "${REPO_NAME}-app-${JOB_NAME}")
 
-                  if(bcFrontend.exists()) {
-                    echo "Removing BuildConfig ${REPO_NAME}-frontend-${JOB_NAME}..."
-                    bcFrontend.delete()
+                  if(bcApp.exists()) {
+                    echo "Removing BuildConfig ${REPO_NAME}-app-${JOB_NAME}..."
+                    bcApp.delete()
                   }
                 }
               }
@@ -116,48 +113,25 @@ pipeline {
       }
     }
 
-    stage('Deploy') {
+    stage('Deploy - Dev') {
       steps {
-        notifyStageStatus('Deploy', 'PENDING')
-
         script {
-          openshift.withCluster() {
-            openshift.withProject(DEV_PROJECT) {
-              if(DEBUG_OUTPUT) {
-                echo "DEBUG - Using project: ${openshift.project()}"
-              }
-
-              echo "Tagging Image ${REPO_NAME}-frontend:${JOB_NAME}..."
-              openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-frontend:${JOB_NAME}", "${REPO_NAME}-frontend:${JOB_NAME}")
-
-              echo "Processing DeploymentConfig ${REPO_NAME}-frontend..."
-              def dcFrontend = openshift.process('-f',
-                'openshift/frontend.dc.yaml',
-                "REPO_NAME=${REPO_NAME}",
-                "JOB_NAME=${JOB_NAME}",
-                "NAMESPACE=${DEV_PROJECT}",
-                "APP_NAME=${APP_NAME}",
-                "HOST_ROUTE=${HOST_ROUTE}"
-              )
-
-              echo "Applying Deployment ${REPO_NAME}-frontend..."
-              openshift.apply(dcFrontend)
-            }
-          }
+          deployStage('Dev', DEV_PROJECT, DEV_HOST_ROUTE)
         }
       }
       post {
         success {
-          echo "Successfully deployed to https://${HOST_ROUTE}"
-          notifyStageStatus('Deploy', 'SUCCESS')
+          createDeploymentStatus(DEV_PROJECT, 'SUCCESS', DEV_HOST_ROUTE)
+          notifyStageStatus('Deploy - Dev', 'SUCCESS')
         }
         unsuccessful {
-          echo 'Deploy failed'
-          notifyStageStatus('Deploy', 'FAILURE')
+          createDeploymentStatus(DEV_PROJECT, 'FAILURE', DEV_HOST_ROUTE)
+          notifyStageStatus('Deploy - Dev', 'FAILURE')
         }
       }
     }
   }
+/*
   post {
     changed {
       script {
@@ -165,6 +139,54 @@ pipeline {
         if(currentBuild.currentResult.equalsIgnoreCase('SUCCESS')) {
           echo "Posting comment 'Deployed to https://${HOST_ROUTE}' to Pull Request..."
           commentOnPR("Deployed to https://${HOST_ROUTE}")
+        }
+      }
+    }
+  }
+*/
+}
+
+// ------------------
+// Pipeline Functions
+// ------------------
+
+// Parameterized deploy stage
+def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
+  if (!stageEnv.equalsIgnoreCase('Dev')) {
+    input("Deploy to ${projectEnv}?")
+  }
+
+  notifyStageStatus("Deploy - ${stageEnv}", 'PENDING')
+
+  openshift.withCluster() {
+    openshift.withProject(projectEnv) {
+      if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+        echo "DEBUG - Using project: ${openshift.project()}"
+      }
+
+      echo "Tagging Image ${REPO_NAME}-app:${JOB_NAME}..."
+      openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-app:${JOB_NAME}", "${REPO_NAME}-app:${JOB_NAME}")
+
+      echo "Processing DeploymentConfig ${REPO_NAME}-app..."
+      def dcApp = openshift.process('-f',
+        'openshift/app.dc.yaml',
+        "REPO_NAME=${REPO_NAME}",
+        "JOB_NAME=${JOB_NAME}",
+        "NAMESPACE=${projectEnv}",
+        "APP_NAME=${APP_NAME}",
+        "HOST_ROUTE=${hostRouteEnv}"
+      )
+
+      echo "Applying Deployment ${REPO_NAME}-app..."
+      createDeploymentStatus(projectEnv, 'PENDING', hostRouteEnv)
+      openshift.apply(dcApp)
+
+      // Wait for all pods to be ready
+      def latestVersion = openshift.selector('dc', "${APP_NAME}-app-${JOB_NAME}").object().status.latestVersion
+      def rc = openshift.selector('rc', "${APP_NAME}-app-${JOB_NAME}-${latestVersion}")
+      timeout(5) {
+        rc.watch {
+          return (it.object().status.readyReplicas == it.object().status.replicas)
         }
       }
     }
@@ -185,6 +207,33 @@ def notifyStageStatus(String name, String status) {
   GitHubHelper.createCommitStatus(
     this, sha1, status, BUILD_URL, '', "Stage: ${name}"
   )
+}
+
+// Create deployment status and pass to Jenkins-GitHub library
+def createDeploymentStatus (String environment, String status, String hostUrl) {
+  def ghDeploymentId = new GitHubHelper().createDeployment(
+    this,
+    SOURCE_REPO_REF,
+    [
+      'environment': environment,
+      'task': "deploy:pull:${CHANGE_ID}"
+    ]
+  )
+
+  new GitHubHelper().createDeploymentStatus(
+    this,
+    ghDeploymentId,
+    status,
+    ['targetUrl': "https://${hostUrl}"]
+  )
+
+  if (status.equalsIgnoreCase('SUCCESS')) {
+    echo "${environment} deployment successful at https://${hostUrl}"
+  } else if (status.equalsIgnoreCase('PENDING')) {
+    echo "${environment} deployment pending..."
+  } else if (status.equalsIgnoreCase('FAILURE')) {
+    echo "${environment} deployment failed"
+  }
 }
 
 // Creates a comment and pass to Jenkins-GitHub library

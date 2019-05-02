@@ -1,6 +1,6 @@
 # Natural Resources Messaging Service Showcase
 
-TBD
+This tool showcases a simple Email-sending application implementation. It requires a valid Service Client which has the appropriate CMSG scopes.
 
 ## Project Status
 
@@ -9,9 +9,8 @@ TBD - This will have build status and badges
 ## Directory Structure
 
     .github/                   - PR and Issue templates
-    backend/                   - Backend codebase
+    app/                       - Application codebase
     docs/                      - Documentation
-    frontend/                  - Frontend codebase
     openshift/                 - OpenShift-deployment specific files
     tools/                     - Devops utilities
     └── jenkins                - Jenkins standup
@@ -23,7 +22,7 @@ TBD - This will have build status and badges
 
 ## Documentation
 
-* [Frontend Readme](frontend/README.md)
+* [Frontend Readme](app/README.md)
 * [Openshift Readme](openshift/README.md)
 
 ## Getting Help or Reporting an Issue
