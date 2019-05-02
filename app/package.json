@@ -1,24 +1,25 @@
 {
-  "name": "nr-messaging-service-showcase",
-  "version": "0.1.0",
-  "description": "",
-  "main": "index.html",
+  "name": "mssc",
+  "author": "Jason Sherman <jsherman@parcsystems.ca>",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "private": true,
   "scripts": {
-    "build": "echo \"No build required - static assets\"",
-    "start": "node_modules/.bin/http-server",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./bin/www",
+    "test": "nyc --reporter=lcov mocha --exit --timeout 10000"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bcgov/nr-messaging-service-showcase.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
-  },
-  "homepage": "https://github.com/bcgov/nr-messaging-service-showcase#readme",
   "dependencies": {
-    "http-server": "^0.11.1"
+    "config": "^3.0.1",
+    "express": "^4.16.4",
+    "morgan": "^1.9.1",
+    "npmlog": "^4.1.2",
+    "request": "^2.88.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-http": "^4.2.0",
+    "mocha": "^6.1.4",
+    "nyc": "^14.0.0",
+    "sinon": "^7.3.1"
   }
 }
