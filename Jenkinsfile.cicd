@@ -179,15 +179,11 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
 
       echo "Applying Deployment ${REPO_NAME}-app..."
       createDeploymentStatus(projectEnv, 'PENDING', hostRouteEnv)
-      openshift.apply(dcApp)
+      def dc = openshift.apply(dcApp).narrow('dc')
 
-      // Wait for all pods to be ready
-      def latestVersion = openshift.selector('dc', "${APP_NAME}-app-${JOB_NAME}").object().status.latestVersion
-      def rc = openshift.selector('rc', "${APP_NAME}-app-${JOB_NAME}-${latestVersion}")
+      // Wait for new deployment to roll out
       timeout(5) {
-        rc.watch {
-          return (it.object().status.readyReplicas == it.object().status.replicas)
-        }
+        dc.rollout().status('--watch=true')
       }
     }
   }
