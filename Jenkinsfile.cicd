@@ -36,9 +36,9 @@ pipeline {
   }
 
   stages {
-    stage('Frontend') {
+    stage('App') {
       steps {
-        notifyStageStatus('Frontend', 'PENDING')
+        notifyStageStatus('App', 'PENDING')
 
         // Cancel any running builds in progress
         timeout(5) {
@@ -62,21 +62,21 @@ pipeline {
                 echo "DEBUG - Using project: ${openshift.project()}"
               }
 
-              echo "Processing BuildConfig ${REPO_NAME}-frontend..."
-              def bcFrontend = openshift.process('-f',
-                'openshift/frontend.bc.yaml',
+              echo "Processing BuildConfig ${REPO_NAME}-app..."
+              def bcApp = openshift.process('-f',
+                'openshift/app.bc.yaml',
                 "REPO_NAME=${REPO_NAME}",
                 "JOB_NAME=${JOB_NAME}",
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}"
               )
 
-              echo "Building ImageStream ${REPO_NAME}-frontend..."
-              openshift.apply(bcFrontend).narrow('bc').startBuild('-w').logs('-f')
+              echo "Building ImageStream ${REPO_NAME}-app..."
+              openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
 
-              echo "Tagging Image ${REPO_NAME}-frontend:${JOB_NAME}..."
-              openshift.tag("${REPO_NAME}-frontend:latest",
-                "${REPO_NAME}-frontend:${JOB_NAME}"
+              echo "Tagging Image ${REPO_NAME}-app:${JOB_NAME}..."
+              openshift.tag("${REPO_NAME}-app:latest",
+                "${REPO_NAME}-app:${JOB_NAME}"
               )
             }
           }
@@ -84,26 +84,26 @@ pipeline {
       }
       post {
         success {
-          echo 'Frontend build successful'
-          notifyStageStatus('Frontend', 'SUCCESS')
+          echo 'App build successful'
+          notifyStageStatus('App', 'SUCCESS')
         }
         unsuccessful {
-          echo 'Frontend build failed'
-          notifyStageStatus('Frontend', 'FAILURE')
+          echo 'App build failed'
+          notifyStageStatus('App', 'FAILURE')
         }
         cleanup {
-          echo 'Cleanup Frontend BuildConfigs...'
+          echo 'Cleanup App BuildConfigs...'
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
                 if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
-                  def bcFrontend = openshift.selector('bc', "${REPO_NAME}-frontend-${JOB_NAME}")
+                  def bcApp = openshift.selector('bc', "${REPO_NAME}-app-${JOB_NAME}")
 
-                  if(bcFrontend.exists()) {
-                    echo "Removing BuildConfig ${REPO_NAME}-frontend-${JOB_NAME}..."
-                    bcFrontend.delete()
+                  if(bcApp.exists()) {
+                    echo "Removing BuildConfig ${REPO_NAME}-app-${JOB_NAME}..."
+                    bcApp.delete()
                   }
                 }
               }
@@ -164,12 +164,12 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
         echo "DEBUG - Using project: ${openshift.project()}"
       }
 
-      echo "Tagging Image ${REPO_NAME}-frontend:${JOB_NAME}..."
-      openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-frontend:${JOB_NAME}", "${REPO_NAME}-frontend:${JOB_NAME}")
+      echo "Tagging Image ${REPO_NAME}-app:${JOB_NAME}..."
+      openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-app:${JOB_NAME}", "${REPO_NAME}-app:${JOB_NAME}")
 
-      echo "Processing DeploymentConfig ${REPO_NAME}-frontend..."
-      def dcFrontend = openshift.process('-f',
-        'openshift/frontend.dc.yaml',
+      echo "Processing DeploymentConfig ${REPO_NAME}-app..."
+      def dcApp = openshift.process('-f',
+        'openshift/app.dc.yaml',
         "REPO_NAME=${REPO_NAME}",
         "JOB_NAME=${JOB_NAME}",
         "NAMESPACE=${projectEnv}",
@@ -177,13 +177,13 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
         "HOST_ROUTE=${hostRouteEnv}"
       )
 
-      echo "Applying Deployment ${REPO_NAME}-frontend..."
+      echo "Applying Deployment ${REPO_NAME}-app..."
       createDeploymentStatus(projectEnv, 'PENDING', hostRouteEnv)
-      openshift.apply(dcFrontend)
+      openshift.apply(dcApp)
 
       // Wait for all pods to be ready
-      def latestVersion = openshift.selector('dc', "${APP_NAME}-frontend-${JOB_NAME}").object().status.latestVersion
-      def rc = openshift.selector('rc', "${APP_NAME}-frontend-${JOB_NAME}-${latestVersion}")
+      def latestVersion = openshift.selector('dc', "${APP_NAME}-app-${JOB_NAME}").object().status.latestVersion
+      def rc = openshift.selector('rc', "${APP_NAME}-app-${JOB_NAME}-${latestVersion}")
       timeout(5) {
         rc.watch {
           return (it.object().status.readyReplicas == it.object().status.replicas)
