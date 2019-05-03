@@ -2,7 +2,9 @@
 
 For *every* environment/namespace, you will need to set some configuration values and secrets.  These will be picked up in the deployments as environment variables for the application.
 
-You will need to have your Common Messaging Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).  You will also need the urls for the Common Messaging API - the top level (root or base url) and the create/send message url.
+You will need to have your Common Messaging Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).
+
+You will also need the urls for the Common Messaging API - the top level (root or base url) and the create/send message url.
 
 ```sh
 oc create secret -n <namespace> generic cmsg-client --from-literal=username=<client id> --from-literal=password=<client secret> --type=kubernetes.io/basic-auth
