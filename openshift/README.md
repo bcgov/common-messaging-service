@@ -1,3 +1,15 @@
+# configure each environment
+
+For *every* environment/namespace, you will need to set some configuration values and secrets.  These will be picked up in the deployments as environment variables for the application.
+
+You will need to have your Common Messaging Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).  You will also need the urls for the Common Messaging API - the top level (root or base url) and the create/send message url.
+
+```sh
+oc create secret -n <namespace> generic cmsg-client --from-literal=username=<client id> --from-literal=password=<client secret> --type=kubernetes.io/basic-auth
+
+oc process -n <namespace> -f openshift/app.config.yaml -o yaml -p OAUTH_TOKEN_URL=<oauth token url> -p CMSG_TOP_LEVEL_URL=<common messaging api top level url> -p CMSG_MESSAGES_URL=<common messaging api messages url> | oc create -n <namespace> -f -
+```
+
 # Generating Build Configuration Templates
 
 You will likely not need to run the new template generation sections as that the base templates should already be in git. You should be able to skip those steps.

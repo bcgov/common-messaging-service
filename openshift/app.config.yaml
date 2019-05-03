@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: mssc-config-template
+metadata:
+  name: mssc-config
+  creationTimestamp:
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: mssc-oauth-config
+  data:
+    tokenUrl: ${OAUTH_TOKEN_URL}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: mssc-cmsg-config
+  data:
+    topLevelUrl: ${CMSG_TOP_LEVEL_URL}
+    messagesUrl: ${CMSG_MESSAGES_URL}
+parameters:
+- name: OAUTH_TOKEN_URL
+  description: OAuth Token Url
+  value: "https://i1api.nrs.gov.bc.ca/oauth2/v1/oauth/token?disableDeveloperFilter=true&grant_type=client_credentials&scope=CMSG.*"
+  required: true
+- name: CMSG_TOP_LEVEL_URL
+  description: Common Messaging Api Root/Top Level Url
+  value: "https://i1api.nrs.gov.bc.ca/cmsg-messaging-api/v1/"
+  required: true
+- name: CMSG_MESSAGES_URL
+  description: Common Messaging Api Message Url
+  value: "https://i1api.nrs.gov.bc.ca/cmsg-messaging-api/v1/messages"
+  required: true

@@ -6,10 +6,18 @@ const log = require('npmlog');
 const app = express();
 
 app.use(express.static('static'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-app.get('/', function(req, res) {
-    res.sendFile(__dirname + "/static/index.html");
+app.get('/config', function(_, res) {
+  const cmsg = config.services.cmsg;
+  res.json(cmsg);
+});
+
+app.get('/index.html', function(req, res) {
+  res.sendFile(__dirname + "/static/index.html");
   });
+
 
 // Handle 500
 app.use(function(err, _, res, _) {
