@@ -73,7 +73,7 @@ objects:
           - name: OAUTH_TOKEN_URL
             valueFrom:
               configMapKeyRef:
-                key: oauthTokenUrl
+                key: tokenUrl
                 name: mssc-oauth-config
           - name: CMSG_TOP_LEVEL_URL
             valueFrom:
