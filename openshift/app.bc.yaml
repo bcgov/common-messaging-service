@@ -68,7 +68,6 @@ objects:
         memory: 2Gi
     runPolicy: SerialLatestOnly
     source:
-      contextDir: app
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
