@@ -5,8 +5,8 @@ dist
 coverage
 
 
-backend/static/**
-frontend/build/**
+backend/static
+frontend/build
 
 # local env files
 .env.local
