@@ -37,7 +37,7 @@ objects:
         - command:
           - bash
           - -c
-          - cd $HOME && java -XshowSettings:vm -version && exec java -jar /usr/lib/jenkins/swarm-frontend.jar
+          - cd $HOME && java -XshowSettings:vm -version && exec java -jar /usr/lib/jenkins/swarm-client.jar
             -name "$(cat /etc/hostname)" -deleteExistingClients -fsroot "$JENKINS_HOME/$(cat
             /etc/hostname)" -master http://$JENKINS_MASTER_SERVICE:8080 -disableSslVerification
             -username  "$(cat /var/run/secrets/jenkins-slave-user/username)" -passwordFile
