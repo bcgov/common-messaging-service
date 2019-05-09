@@ -1,0 +1,23 @@
+{
+  "name": "nr-messaging-service-showcase",
+  "version": "0.2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcgov/nr-messaging-service-showcase.git"
+  },
+  "author": "NR Common Service Showcase <NR.CommonServiceShowcase@gov.bc.ca>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
+  },
+  "homepage": "https://github.com/bcgov/nr-messaging-service-showcase#readme",
+  "scripts": {
+    "install": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build && rm -rf ../backend/static && mv build ../backend/static",
+    "start": "cd backend && npm run start",
+    "test": "cd backend && npm run test && cd ../frontend && npm run test",
+    "eslint": "cd backend && npm run eslint && cd ../frontend && npm run eslint",
+    "prebuild": "npm run test",
+    "pretest": "npm run eslint"
+  }
+}
