@@ -4,6 +4,10 @@ dist
 .nyc_output
 coverage
 
+
+backend/static/**
+frontend/build/**
+
 # local env files
 .env.local
 .env.*.local

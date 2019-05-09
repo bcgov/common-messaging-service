@@ -9,8 +9,9 @@ TBD - This will have build status and badges
 ## Directory Structure
 
     .github/                   - PR and Issue templates
-    app/                       - Application codebase
+    backend/                   - Node.js Application Server codebase
     docs/                      - Documentation
+    frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
     tools/                     - Devops utilities
     └── jenkins                - Jenkins standup
@@ -22,7 +23,8 @@ TBD - This will have build status and badges
 
 ## Documentation
 
-* [Frontend Readme](app/README.md)
+* [Backend Readme](backend/README.md)
+* [Front Readme](frontend/README.md)
 * [Openshift Readme](openshift/README.md)
 
 ## Getting Help or Reporting an Issue

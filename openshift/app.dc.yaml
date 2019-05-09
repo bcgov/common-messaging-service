@@ -64,12 +64,12 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: username
-                name: cmsg-client
+                name: cmsg-frontend
           - name: CMSG_CLIENT_SECRET
             valueFrom:
               secretKeyRef:
                 key: password
-                name: cmsg-client
+                name: cmsg-frontend
           - name: OAUTH_TOKEN_URL
             valueFrom:
               configMapKeyRef:

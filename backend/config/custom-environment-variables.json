@@ -1,4 +1,7 @@
 {
+  "server": {
+    "port" : "PORT"
+  },
   "services" : {
     "cmsg": {
       "urls": {

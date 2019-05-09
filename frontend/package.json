@@ -1,0 +1,46 @@
+{
+  "name": "nr-messaging-service-showcase-frontend",
+  "version": "0.2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcgov/nr-messaging-service-showcase.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "eslint": "eslint ."
+  },
+  "dependencies": {
+    "@babel/runtime": "7.4.4",
+    "react": "16.8.6",
+    "react-dom": "16.8.6",
+    "react-scripts": "3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "jest": "24.7.1"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "proxy": "http://localhost:3001/"
+}

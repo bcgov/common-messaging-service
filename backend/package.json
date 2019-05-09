@@ -1,0 +1,54 @@
+{
+  "name": "nr-messaging-service-showcase-backend",
+  "version": "0.2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcgov/nr-messaging-service-showcase.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
+  },
+  "homepage": "https://github.com/bcgov/nr-messaging-service-showcase#readme",
+  "scripts": {
+    "start": "node ./bin/www",
+    "test": "jest",
+    "eslint": "eslint ."
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "config": "^3.0.1",
+    "eslint-plugin-jest": "^22.5.1",
+    "express": "^4.16.4"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-recommended": "^4.0.0",
+    "eslint-plugin-flowtype": "^3.8.1",
+    "jest": "24.7.1"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 2017,
+      "sourceType": "module"
+    },
+    "env": {
+      "browser": true,
+      "node": true,
+      "es6": true,
+      "jest": true
+    },
+    "extends": [
+      "eslint:recommended"
+    ],
+    "rules": {
+      "no-console": "off"
+    }
+  },
+  "jest": {
+    "testMatch": [
+      "**/test/*test.js?(x)"
+    ]
+  }
+}
