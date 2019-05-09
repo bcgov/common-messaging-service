@@ -44,7 +44,7 @@ class EmailForm extends Component {
   async componentDidMount() {
     let configurations = undefined;
     let defaultConfiguration = undefined;
-    let { credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy } = false;
+    let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = false;
     try {
 
       await this.pingMessageService();
@@ -54,9 +54,10 @@ class EmailForm extends Component {
       let data = await this.fetchToken();
       let {token, credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage} = data;
       let cmsgApiHealthy = false;
-      if (hasTopLevel){
+      if (hasTopLevel) {
         let json = await this.healthCheck(token, defaultConfiguration.urls.root);
-        cmsgApiHealthy = json['@type'] === 'http://nrscmsg.nrs.gov.bc.ca/v1/endpoints';;
+        cmsgApiHealthy = json['@type'] === 'http://nrscmsg.nrs.gov.bc.ca/v1/endpoints';
+        ;
       }
 
       this.setState({
@@ -68,7 +69,7 @@ class EmailForm extends Component {
         cmsgApiHealthy: cmsgApiHealthy
       });
 
-    } catch(e) {
+    } catch (e) {
       this.setState({
         config: defaultConfiguration,
         credentialsGood: credentialsGood,
@@ -78,7 +79,7 @@ class EmailForm extends Component {
         cmsgApiHealthy: cmsgApiHealthy,
         error: e.message
       });
-   }
+    }
   };
 
   async pingMessageService() {
@@ -99,7 +100,7 @@ class EmailForm extends Component {
       })
       .catch(error => {
         throw Error(error.message);
-    });
+      });
   }
 
   getDefaultConfiguration(configs) {
@@ -156,7 +157,7 @@ class EmailForm extends Component {
         body: "",
         info: "Message submitted to Common Messaging Service"
       });
-    } catch(e) {
+    } catch (e) {
       this.setState({
         wasValidated: false,
         info: "",

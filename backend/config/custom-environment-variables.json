@@ -1,8 +1,8 @@
 {
   "server": {
-    "port" : "PORT"
+    "port": "PORT"
   },
-  "services" : {
+  "services": {
     "cmsg": {
       "urls": {
         "token": "OAUTH_TOKEN_URL",
