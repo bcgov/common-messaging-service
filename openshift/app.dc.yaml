@@ -61,7 +61,7 @@ objects:
           resources: {}
           env:
           - name: PORT
-            value: 8080
+            value: "8080"
           - name: CMSG_CLIENT_ID
             valueFrom:
               secretKeyRef:
