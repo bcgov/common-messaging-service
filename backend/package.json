@@ -14,7 +14,8 @@
   "scripts": {
     "start": "node ./bin/www",
     "test": "CI=true jest --env=jsdom",
-    "eslint": "eslint ."
+    "eslint": "eslint **.js **/www",
+    "eslint-fix": "eslint **.js **/www --fix"
   },
   "dependencies": {
     "axios": "^0.18.0",
@@ -29,21 +30,41 @@
     "jest": "24.7.1"
   },
   "eslintConfig": {
-    "parserOptions": {
-      "ecmaVersion": 8,
-      "sourceType": "module"
-    },
     "env": {
-      "browser": true,
-      "node": true,
       "es6": true,
+      "node": true,
+      "commonjs": true,
       "jest": true
     },
-    "extends": [
-      "eslint:recommended"
+    "extends": ["eslint:recommended"],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "parserOptions": {
+      "ecmaVersion": 2017,
+      "sourceType": "module"
+    },
+    "plugins": [
+        "react"
     ],
     "rules": {
-      "no-console": "off"
+      "indent": [
+          "error",
+          2
+      ],
+      "linebreak-style": [
+          "error",
+          "unix"
+      ],
+      "quotes": [
+          "error",
+          "single"
+      ],
+      "semi": [
+          "error",
+          "always"
+      ]
     }
   },
   "jest": {

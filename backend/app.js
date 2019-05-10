@@ -8,8 +8,8 @@ app.use(express.urlencoded({extended: false}));
 
 app.use('/mssc/v1', msgService);
 
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static("./static"));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static('./static'));
 }
 
 // Handle 500

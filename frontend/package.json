@@ -15,20 +15,70 @@
     "build": "react-scripts build",
     "test": "CI=true react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "eslint": "eslint ."
+    "eslint": "eslint src/**/*.js src/**/*.jsx",
+    "eslint-fix": "eslint src/**/*.js src/**/*.jsx --fix"
   },
   "dependencies": {
     "@babel/runtime": "7.4.4",
+    "@tinymce/tinymce-react": "^3.0.1",
     "react": "16.8.6",
     "react-dom": "16.8.6",
-    "react-scripts": "3.0.1"
+    "react-scripts": "3.0.1",
+    "tinymce": "^5.0.5"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
+    "eslint-plugin-react": "^7.13.0",
     "jest": "24.7.1"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true,
+      "commonjs": true,
+      "jest": true
+    },
+    "extends": ["eslint:recommended", "plugin:react/recommended"],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
+    "settings": {
+      "react": {
+        "version": "detect"
+      }
+    },
+    "parserOptions": {
+      "ecmaFeatures": {
+          "jsx": true
+      },
+      "ecmaVersion": 2017,
+      "sourceType": "module"
+    },
+    "plugins": [
+        "react"
+    ],
+    "rules": {
+      "indent": [
+          "error",
+          2
+      ],
+      "linebreak-style": [
+          "error",
+          "unix"
+      ],
+      "quotes": [
+          "error",
+          "single"
+      ],
+      "semi": [
+          "error",
+          "always"
+      ],
+      "react/jsx-uses-react": "error",
+      "react/jsx-uses-vars": "error"
+    }
   },
   "browserslist": {
     "production": [
