@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@babel/runtime": "7.4.4",
-    "@tinymce/tinymce-react": "^3.0.1",
+    "@tinymce/tinymce-react": "^3.1.1",
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "react-scripts": "3.0.1",
@@ -39,10 +39,13 @@
       "commonjs": true,
       "jest": true
     },
-    "extends": ["eslint:recommended", "plugin:react/recommended"],
+    "extends": [
+      "eslint:recommended",
+      "plugin:react/recommended"
+    ],
     "globals": {
-        "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
+      "Atomics": "readonly",
+      "SharedArrayBuffer": "readonly"
     },
     "settings": {
       "react": {
@@ -51,30 +54,30 @@
     },
     "parserOptions": {
       "ecmaFeatures": {
-          "jsx": true
+        "jsx": true
       },
       "ecmaVersion": 2017,
       "sourceType": "module"
     },
     "plugins": [
-        "react"
+      "react"
     ],
     "rules": {
       "indent": [
-          "error",
-          2
+        "error",
+        2
       ],
       "linebreak-style": [
-          "error",
-          "unix"
+        "error",
+        "unix"
       ],
       "quotes": [
-          "error",
-          "single"
+        "error",
+        "single"
       ],
       "semi": [
-          "error",
-          "always"
+        "error",
+        "always"
       ],
       "react/jsx-uses-react": "error",
       "react/jsx-uses-vars": "error"
