@@ -5,8 +5,8 @@
     "type": "git",
     "url": "git+https://github.com/bcgov/nr-messaging-service-showcase.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "NR Common Service Showcase <NR.CommonServiceShowcase@gov.bc.ca>",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
   },
