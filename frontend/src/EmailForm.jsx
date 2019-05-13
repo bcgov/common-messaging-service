@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
+import TinyMceEditor from './TinyMceEditor';
 
 const MSG_SERVICE_PATH = '/mssc/v1';
+const MEDIA_TYPES = ['text/plain', 'text/html'];
 
 class EmailForm extends Component {
 
@@ -9,36 +11,76 @@ class EmailForm extends Component {
 
     this.state = {
       config: {},
-      credentialsGood: false,
-      credentialsAuthenticated: false,
-      hasTopLevel: false,
-      hasCreateMessage: false,
-      cmsgApiHealthy: false,
-      wasValidated: false,
-      sender: 'NR.CommonServiceShowcase@gov.bc.ca',
-      recipients: '',
-      subject: '',
-      body: '',
+      healthCheck: {
+        credentialsGood: false,
+        credentialsAuthenticated: false,
+        hasTopLevel: false,
+        hasCreateMessage: false,
+        cmsgApiHealthy: false,
+      },
       info: '',
-      error: ''
+      error: '',
+      form: {
+        wasValidated: false,
+        sender: 'NR.CommonServiceShowcase@gov.bc.ca',
+        recipients: '',
+        subject: '',
+        plainText: '',
+        htmlText: '',
+        reset: false,
+        mediaType: MEDIA_TYPES[0]
+      }
     };
 
     this.formSubmit = this.formSubmit.bind(this);
     this.onChangeSubject = this.onChangeSubject.bind(this);
     this.onChangeRecipients = this.onChangeRecipients.bind(this);
-    this.onChangeBody = this.onChangeBody.bind(this);
+    this.onChangePlainText = this.onChangePlainText.bind(this);
+    this.onChangeMediaType = this.onChangeMediaType.bind(this);
+
+    this.onEditorChange = this.onEditorChange.bind(this);
   }
 
   onChangeSubject(event) {
-    this.setState({subject: event.target.value, info: ''});
+    let form = this.state.form;
+    form.subject = event.target.value;
+    this.setState({form: form, info: ''});
   }
 
   onChangeRecipients(event) {
-    this.setState({recipients: event.target.value, info: ''});
+    let form = this.state.form;
+    form.recipients = event.target.value;
+    this.setState({form: form, info: ''});
   }
 
-  onChangeBody(event) {
-    this.setState({body: event.target.value, info: ''});
+  onChangePlainText(event) {
+    let form = this.state.form;
+    form.plainText = event.target.value;
+    this.setState({form: form, info: ''});
+  }
+
+  onChangeMediaType(event) {
+    let form = this.state.form;
+    form.mediaType = event.target.value;
+    this.setState({form: form, info: ''});
+  }
+
+  onEditorChange(content) {
+    let form = this.state.form;
+    form.htmlText = content;
+    this.setState({form: form, info: ''});
+  }
+
+  getMessageBody() {
+    const form = this.state.form;
+    if (form.mediaType === MEDIA_TYPES[0]) {
+      return form.plainText && form.plainText.trim();
+    }
+    return form.htmlText && form.htmlText.trim();
+  }
+
+  hasMessageBody() {
+    return this.getMessageBody().length > 0;
   }
 
   async componentDidMount() {
@@ -61,21 +103,25 @@ class EmailForm extends Component {
 
       this.setState({
         config: defaultConfiguration,
-        credentialsGood: credentialsGood,
-        credentialsAuthenticated: credentialsAuthenticated,
-        hasTopLevel: hasTopLevel,
-        hasCreateMessage: hasCreateMessage,
-        cmsgApiHealthy: cmsgApiHealthy
+        healthCheck: {
+          credentialsGood: credentialsGood,
+          credentialsAuthenticated: credentialsAuthenticated,
+          hasTopLevel: hasTopLevel,
+          hasCreateMessage: hasCreateMessage,
+          cmsgApiHealthy: cmsgApiHealthy
+        }
       });
 
     } catch (e) {
       this.setState({
         config: defaultConfiguration,
-        credentialsGood: credentialsGood,
-        credentialsAuthenticated: credentialsAuthenticated,
-        hasTopLevel: hasTopLevel,
-        hasCreateMessage: hasCreateMessage,
-        cmsgApiHealthy: cmsgApiHealthy,
+        healthCheck: {
+          credentialsGood: credentialsGood,
+          credentialsAuthenticated: credentialsAuthenticated,
+          hasTopLevel: hasTopLevel,
+          hasCreateMessage: hasCreateMessage,
+          cmsgApiHealthy: cmsgApiHealthy
+        },
         error: e.message
       });
     }
@@ -137,8 +183,10 @@ class EmailForm extends Component {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!event.target.checkValidity()) {
-      this.setState({wasValidated: true, info: ''});
+    if (!(event.target.checkValidity() && this.hasMessageBody())) {
+      let form = this.state.form;
+      form.wasValidated = true;
+      this.setState({form: form, info: ''});
       return;
     }
 
@@ -148,18 +196,33 @@ class EmailForm extends Component {
       if (hasCreateMessage) {
         await this.postEmail(token);
         //await this.checkStatus(token, response);
+
+        // this will reset the form and the tinymce editor...
+        let form = this.state.form;
+        form.wasValidated = false;
+        form.recipients = '';
+        form.subject = '';
+        form.plainText = '';
+        form.htmlText = '';
+        form.mediaType = MEDIA_TYPES[0];
+        form.reset = true;
+        this.setState({
+          form: form
+        });
       }
+      // this will show the info message, and prep the tinymce editor for next submit...
+      // kind of lame, but event triggering and states are a bit out of wack in production (minified mode)
+      let form = this.state.form;
+      form.reset = false;
       this.setState({
-        wasValidated: false,
-        recipients: '',
-        subject: '',
-        body: '',
+        form: form,
         info: 'Message submitted to Common Messaging Service'
       });
     } catch (e) {
+      let form = this.state.form;
+      form.wasValidated = false;
       this.setState({
-        wasValidated: false,
-        info: '',
+        form: form,
         error: e.message
       });
     }
@@ -180,16 +243,16 @@ class EmailForm extends Component {
         ],
         "delay": 0,
         "expiration": 0,
-        "maxResend": 0,
-        "mediaType": "text/plain"
+        "maxResend": 0
     }
     `;
     // Add the user entered fields
     const requestBody = JSON.parse(defaults);
-    requestBody.sender = this.state.sender;
-    requestBody.subject = this.state.subject;
-    requestBody.message = this.state.body;
-    requestBody.recipients = this.state.recipients.replace(/\s/g, '').split(',');
+    requestBody.mediaType = this.state.form.mediaType;
+    requestBody.sender = this.state.form.sender;
+    requestBody.subject = this.state.form.subject;
+    requestBody.message = this.getMessageBody();
+    requestBody.recipients = this.state.form.recipients.replace(/\s/g, '').split(',');
 
     const headers = new Headers();
     headers.set('Authorization', `Bearer ${token}`);
@@ -243,15 +306,19 @@ class EmailForm extends Component {
 
   render() {
     // set styles and classes here...
-    const credentialsIndClass = this.state.credentialsGood ? 'icon good' : 'icon bad';
-    const apiAccessIndClass = this.state.hasTopLevel ? 'icon good' : 'icon bad';
-    const createMsgIndClass = this.state.hasCreateMessage ? 'icon good' : 'icon bad';
-    const healthCheckIndClass = this.state.cmsgApiHealthy ? 'icon good' : 'icon bad';
-    const emailFormDisplay = this.state.hasCreateMessage ? {} : {display: 'none'};
+    const credentialsIndClass = this.state.healthCheck.credentialsGood ? 'icon good' : 'icon bad';
+    const apiAccessIndClass = this.state.healthCheck.hasTopLevel ? 'icon good' : 'icon bad';
+    const createMsgIndClass = this.state.healthCheck.hasCreateMessage ? 'icon good' : 'icon bad';
+    const healthCheckIndClass = this.state.healthCheck.cmsgApiHealthy ? 'icon good' : 'icon bad';
+    const emailFormDisplay = this.state.healthCheck.hasCreateMessage ? {} : {display: 'none'};
     const successDisplay = (this.state.info && this.state.info.length > 0) ? {} : {display: 'none'};
     const errorDisplay = (this.state.error && this.state.error.length > 0) ? {} : {display: 'none'};
-    const {wasValidated} = this.state;
-
+    const plainTextDisplay = this.state.form.mediaType === MEDIA_TYPES[0] ? {} : {display: 'none'};
+    const plainTextButton = this.state.form.mediaType === MEDIA_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const htmlTextDisplay = this.state.form.mediaType === MEDIA_TYPES[1] ? {} : {display: 'none'};
+    const htmlTextButton = this.state.form.mediaType === MEDIA_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const {wasValidated} = this.state.form;
+    const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
 
     return (
       <div className="col-md-8 order-md-1">
@@ -292,7 +359,7 @@ class EmailForm extends Component {
           <div className="mb-3">
             <label htmlFor="sender">Sender</label>
             <input type="text" className="form-control" name="sender"
-              readOnly required value={this.state.sender}/>
+              readOnly required value={this.state.form.sender}/>
             <div className="invalid-feedback">
               Email sender is required.
             </div>
@@ -302,7 +369,7 @@ class EmailForm extends Component {
             <label htmlFor="recipients">Recipients</label>
             <input type="text" className="form-control" name="recipients"
               placeholder="you@example.com (separate multiple by comma)" required
-              value={this.state.recipients} onChange={this.onChangeRecipients}/>
+              value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
             <div className="invalid-feedback">
               One or more email recipients required.
             </div>
@@ -310,19 +377,41 @@ class EmailForm extends Component {
 
           <div className="mb-3">
             <label htmlFor="subject">Subject</label>
-            <input type="text" className="form-control" name="subject" required value={this.state.subject}
+            <input type="text" className="form-control" name="subject" required value={this.state.form.subject}
               onChange={this.onChangeSubject}/>
             <div className="invalid-feedback">
               Subject is required.
             </div>
           </div>
 
-          <div className="mb-3">
-            <label htmlFor="body">Body</label>
-            <textarea name="body" className="form-control" cols="30" rows="7" required
-              value={this.state.body} onChange={this.onChangeBody}></textarea>
-            <div className="invalid-feedback">
-              Email body is required.
+          <div className="mb-3 row">
+            <div className="col-sm-4">
+              <label className="mt-1">Body</label>
+            </div>
+            <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
+              <label className={plainTextButton}>
+                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]} value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType} /> Plain Text
+              </label>
+              <label className={htmlTextButton}>
+                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]} value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType} /> HTML
+              </label>
+            </div>
+          </div>
+          <div style={plainTextDisplay} >
+            <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.mediaType === MEDIA_TYPES[0]}
+              value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+            <div className="invalid-feedback" style={bodyErrorDisplay}>
+              Body is required.
+            </div>
+          </div>
+          <div style={htmlTextDisplay} >
+            <TinyMceEditor
+              id="htmlText"
+              reset={this.state.form.reset}
+              onEditorChange={this.onEditorChange}
+            />
+            <div className="invalid-tinymce" style={bodyErrorDisplay}>
+              Body is required.
             </div>
           </div>
 

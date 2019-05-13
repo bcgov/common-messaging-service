@@ -34,3 +34,14 @@
 .hc-ind {
   text-align: center;
 }
+
+#messageText {
+  height: 480px;
+}
+
+.invalid-tinymce {
+  width: 100%;
+  margin-top: .25rem;
+  font-size: 80%;
+  color: #dc3545;
+}
