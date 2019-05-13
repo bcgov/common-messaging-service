@@ -14,15 +14,16 @@
   "scripts": {
     "start": "node ./bin/www",
     "test": "CI=true jest --env=jsdom",
-    "eslint": "eslint **.js **/www",
-    "eslint-fix": "eslint **.js **/www --fix"
+    "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules' **.js **/www",
+    "lint:fix": "node_modules/.bin/eslint . --fix --ignore-pattern 'node_modules' **.js **/www"
   },
   "dependencies": {
     "axios": "^0.18.0",
     "config": "^3.0.1",
     "eslint-plugin-jest": "^22.5.1",
     "express": "^4.16.4",
-    "tinymce": "5.0.5"
+    "morgan": "^1.9.1",
+    "npmlog": "^4.1.2"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
@@ -31,27 +32,29 @@
     "jest": "24.7.1"
   },
   "eslintConfig": {
+    "root": true,
     "env": {
-      "es6": true,
-      "node": true,
       "commonjs": true,
-      "jest": true
+      "es6": true,
+      "jest": true,
+      "node": true
     },
     "extends": [
       "eslint:recommended"
     ],
     "globals": {
       "Atomics": "readonly",
-      "SharedArrayBuffer": "readonly"
+      "SharedArrayBuffer": "readonly",
+      "_": false
     },
     "parserOptions": {
-      "ecmaVersion": 2017,
-      "sourceType": "module"
+      "ecmaVersion": 8
     },
-    "plugins": [
-      "react"
-    ],
     "rules": {
+      "eol-last": [
+        "error",
+        "always"
+      ],
       "indent": [
         "error",
         2

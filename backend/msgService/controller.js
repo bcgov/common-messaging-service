@@ -46,7 +46,7 @@ const parseToken = (data) => {
   let credentialsGood = !data.error;
 
   if (data.error) {
-    if ("unauthorized" !== data.error || "Bad credentials" !== data.error_description) {
+    if ('unauthorized' !== data.error || 'Bad credentials' !== data.error_description) {
       // unknown error, pass it along
       throw Error('Could not determine OAuth credentials: ' + data.error);
     }
@@ -55,12 +55,11 @@ const parseToken = (data) => {
   if (credentialsGood) {
     credentialsAuthenticated = (data.access_token && data.access_token.length >= 16);
     if (!credentialsAuthenticated) {
-      throw Error("Credentials are not authenticated.  Access token is invalid.");
+      throw Error('Credentials are not authenticated.  Access token is invalid.');
     }
     token = data.access_token;
-    console.log(`token: ${token}`)
-    hasTopLevel = (data.scope.split(" ").indexOf("CMSG.GETTOPLEVEL") >= 0);
-    hasCreateMessage = (data.scope.split(" ").indexOf("CMSG.CREATEMESSAGE") >= 0);
+    hasTopLevel = (data.scope.split(' ').indexOf('CMSG.GETTOPLEVEL') >= 0);
+    hasCreateMessage = (data.scope.split(' ').indexOf('CMSG.CREATEMESSAGE') >= 0);
   }
 
   return {token, credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage};
