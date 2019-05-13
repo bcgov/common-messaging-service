@@ -182,7 +182,7 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
       def dc = openshift.apply(dcApp).narrow('dc')
 
       // Wait for new deployment to roll out
-      timeout(5) {
+      timeout(10) {
         dc.rollout().status('--watch=true')
       }
     }
