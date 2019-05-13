@@ -313,7 +313,7 @@ class EmailForm extends Component {
     const emailFormDisplay = this.state.healthCheck.hasCreateMessage ? {} : {display: 'none'};
     const successDisplay = (this.state.info && this.state.info.length > 0) ? {} : {display: 'none'};
     const errorDisplay = (this.state.error && this.state.error.length > 0) ? {} : {display: 'none'};
-    const plainTextDisplay = this.state.form.mediaType === MEDIA_TYPES[0] ? { height: '200px'} : {display: 'none'};
+    const plainTextDisplay = this.state.form.mediaType === MEDIA_TYPES[0] ? {} : {display: 'none'};
     const plainTextButton = this.state.form.mediaType === MEDIA_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const htmlTextDisplay = this.state.form.mediaType === MEDIA_TYPES[1] ? {} : {display: 'none'};
     const htmlTextButton = this.state.form.mediaType === MEDIA_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
@@ -398,7 +398,7 @@ class EmailForm extends Component {
             </div>
           </div>
           <div style={plainTextDisplay} >
-            <textarea id="messageText" name="plainText" className="form-control" cols="30" rows="8" required={this.state.form.mediaType === MEDIA_TYPES[0]}
+            <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.mediaType === MEDIA_TYPES[0]}
               value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
             <div className="invalid-feedback" style={bodyErrorDisplay}>
               Body is required.

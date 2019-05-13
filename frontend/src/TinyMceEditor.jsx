@@ -20,6 +20,7 @@ class TinyMceEditor extends Component {
       skin: false,
       content_css: false,
       plugins: 'wordcount table',
+      height : '480px',
       setup: editor => {
         this.setState({ editor });
         editor.on('keyup change', () => {
