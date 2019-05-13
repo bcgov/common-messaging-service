@@ -21,7 +21,8 @@
     "axios": "^0.18.0",
     "config": "^3.0.1",
     "eslint-plugin-jest": "^22.5.1",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "tinymce": "5.0.5"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
@@ -36,34 +37,36 @@
       "commonjs": true,
       "jest": true
     },
-    "extends": ["eslint:recommended"],
+    "extends": [
+      "eslint:recommended"
+    ],
     "globals": {
-        "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
+      "Atomics": "readonly",
+      "SharedArrayBuffer": "readonly"
     },
     "parserOptions": {
       "ecmaVersion": 2017,
       "sourceType": "module"
     },
     "plugins": [
-        "react"
+      "react"
     ],
     "rules": {
       "indent": [
-          "error",
-          2
+        "error",
+        2
       ],
       "linebreak-style": [
-          "error",
-          "unix"
+        "error",
+        "unix"
       ],
       "quotes": [
-          "error",
-          "single"
+        "error",
+        "single"
       ],
       "semi": [
-          "error",
-          "always"
+        "error",
+        "always"
       ]
     }
   },

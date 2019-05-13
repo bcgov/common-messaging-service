@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { Editor } from '@tinymce/tinymce-react';
+import TinyMceEditor from './TinyMceEditor';
 
 const MSG_SERVICE_PATH = '/mssc/v1';
 const MEDIA_TYPES = ['text/plain', 'text/html'];
@@ -27,6 +27,7 @@ class EmailForm extends Component {
         subject: '',
         plainText: '',
         htmlText: '',
+        reset: false,
         mediaType: MEDIA_TYPES[0]
       }
     };
@@ -35,8 +36,9 @@ class EmailForm extends Component {
     this.onChangeSubject = this.onChangeSubject.bind(this);
     this.onChangeRecipients = this.onChangeRecipients.bind(this);
     this.onChangePlainText = this.onChangePlainText.bind(this);
-    this.onChangeHtmlText = this.onChangeHtmlText.bind(this);
     this.onChangeMediaType = this.onChangeMediaType.bind(this);
+
+    this.onEditorChange = this.onEditorChange.bind(this);
   }
 
   onChangeSubject(event) {
@@ -57,15 +59,15 @@ class EmailForm extends Component {
     this.setState({form: form, info: ''});
   }
 
-  onChangeHtmlText(event) {
-    let form = this.state.form;
-    form.htmlText = event.target.getContent();
-    this.setState({form: form, info: ''});
-  }
-
   onChangeMediaType(event) {
     let form = this.state.form;
     form.mediaType = event.target.value;
+    this.setState({form: form, info: ''});
+  }
+
+  onEditorChange(content) {
+    let form = this.state.form;
+    form.htmlText = content;
     this.setState({form: form, info: ''});
   }
 
@@ -194,14 +196,24 @@ class EmailForm extends Component {
       if (hasCreateMessage) {
         await this.postEmail(token);
         //await this.checkStatus(token, response);
+
+        // this will reset the form and the tinymce editor...
+        let form = this.state.form;
+        form.wasValidated = false;
+        form.recipients = '';
+        form.subject = '';
+        form.plainText = '';
+        form.htmlText = '';
+        form.mediaType = MEDIA_TYPES[0];
+        form.reset = true;
+        this.setState({
+          form: form
+        });
       }
+      // this will show the info message, and prep the tinymce editor for next submit...
+      // kind of lame, but event triggering and states are a bit out of wack in production (minified mode)
       let form = this.state.form;
-      form.wasValidated = false;
-      form.recipients = '';
-      form.subject = '';
-      form.plainText = '';
-      form.htmlText = '';
-      form.mediaType= MEDIA_TYPES[0];
+      form.reset = false;
       this.setState({
         form: form,
         info: 'Message submitted to Common Messaging Service'
@@ -376,31 +388,27 @@ class EmailForm extends Component {
             <div className="col-sm-4">
               <label className="mt-1">Body</label>
             </div>
-            <div className="col-sm-4  offset-sm-4 btn-group btn-group-toggle">
+            <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
               <label className={plainTextButton}>
-                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]} value={MEDIA_TYPES[0]} name="mediaType" onChange={this.onChangeMediaType} /> Plain Text
+                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]} value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType} /> Plain Text
               </label>
               <label className={htmlTextButton}>
-                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]} value={MEDIA_TYPES[1]} name="mediaType" onChange={this.onChangeMediaType} /> HTML
+                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]} value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType} /> HTML
               </label>
             </div>
           </div>
           <div style={plainTextDisplay} >
-            <textarea name="plainText" className="form-control" cols="30" rows="8" required={this.state.form.mediaType === MEDIA_TYPES[0]}
+            <textarea id="messageText" name="plainText" className="form-control" cols="30" rows="8" required={this.state.form.mediaType === MEDIA_TYPES[0]}
               value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
             <div className="invalid-feedback" style={bodyErrorDisplay}>
               Body is required.
             </div>
           </div>
           <div style={htmlTextDisplay} >
-            <Editor
-              value={this.state.form.htmlText}
-              init={{
-                plugins: 'link image code',
-                toolbar: 'undo redo | bold italic | alignleft aligncenter alignright | code',
-                height : '120'
-              }}
-              onChange={this.onChangeHtmlText}
+            <TinyMceEditor
+              id="htmlText"
+              reset={this.state.form.reset}
+              onEditorChange={this.onEditorChange}
             />
             <div className="invalid-tinymce" style={bodyErrorDisplay}>
               Body is required.
