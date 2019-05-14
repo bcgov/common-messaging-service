@@ -8,7 +8,7 @@ const clientSecret = config.get('services.cmsg.client.secret');
 const { webadeSvc } = require('../oauthService/webadeSvc');
 const { cmsgSvc } = require('../msgService/cmsgSvc');
 
-const getStatus = async (req, res) => {
+const getHealth = async (req, res) => {
   // need oauth token for our service client for the Common Messaging Service
   // need to check the credentials (valid/good, authenticated in env)
   // need to check the expected scopes (top level, create/send message)
@@ -32,8 +32,9 @@ const sendEmail = async (req, res) => {
   try {
     let {token, status} = await login();
     if (status.hasCreateMessage) {
-      let {messageId, href} = await cmsgSvc.sendEmail(token, req.body);
-      res.status(200).json({messageId: messageId, statusHref: href});
+      let {messageId} = await cmsgSvc.sendEmail(token, req.body);
+      let response = await cmsgSvc.getEmailStatus(token, messageId);
+      res.status(200).json(response);
     } else {
       res.status(401).json({error: {code: 401, message: 'Service is not authorized to send emails via Common Messaging Service'}});
     }
@@ -56,18 +57,6 @@ const getEmailStatus = async (req, res) => {
   }
 };
 
-const getConfig = async (req, res) => {
-  let result = {
-    configs: [{
-      urls: config.get('services.cmsg.urls'),
-      clientId: clientId,
-      default: true,
-      name: 'Integration'
-    }]
-  };
-  res.status(200).json(result);
-};
-
 const login = async () => {
   let oauthData = await webadeSvc.getToken(clientId, clientSecret, clientScopes);
   let oauthResult = webadeSvc.parseToken(oauthData);
@@ -77,4 +66,4 @@ const login = async () => {
   return {token, status};
 };
 
-module.exports = {getStatus, getConfig, sendEmail, getEmailStatus};
+module.exports = {getHealth, sendEmail, getEmailStatus};

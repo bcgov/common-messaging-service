@@ -4,14 +4,12 @@ const log = require('npmlog');
 
 const utils = require('../components/utils');
 
-const urls = {
-  root: config.get('services.cmsg.urls.root'),
-  messages: config.get('services.cmsg.urls.messages')
-};
+const ROOT_URL = config.get('services.cmsg.urls.root');
+const MESSAGES_URL = `${ROOT_URL}messages`;
 
 const cmsgSvc = {
   healthCheck: async (token) => {
-    const response = await axios.get(urls.root, {
+    const response = await axios.get(ROOT_URL, {
       headers: {
         'Authorization':`Bearer ${token}`,
         'Content-Type':'application/json'
@@ -22,8 +20,8 @@ const cmsgSvc = {
     log.verbose(utils.prettyStringify(response.data));
 
     if (response.status !== 200) {
-      log.error('', 'Error verifying Common Messaging Service alive at %s: %d - %s', urls.root, response.status, response.statusText);
-      throw Error('Could not connect Common Messaging Service: ' + response.statusText);
+      log.error('', 'Error verifying Common Messaging API alive at %s: %d - %s', ROOT_URL, response.status, response.statusText);
+      throw Error('Could not connect Common Messaging API: ' + response.statusText);
     }
 
     return response.data['@type'] === 'http://nrscmsg.nrs.gov.bc.ca/v1/endpoints';
@@ -43,7 +41,7 @@ const cmsgSvc = {
     requestBody.recipients = email.recipients.replace(/\s/g, '').split(',');
 
     const response = await axios.post(
-      urls.messages,
+      MESSAGES_URL,
       JSON.stringify(requestBody),
       {
         headers: {
@@ -56,20 +54,20 @@ const cmsgSvc = {
     log.verbose(utils.prettyStringify(response.data));
 
     if (response.status !== 202) {
-      log.error('', 'Error sending email to Common Messaging Service at %s: %d - %s', urls.root, response.status, response.statusText);
-      throw Error('Could not send email through Common Messaging Service: ' + response.statusText);
+      log.error('', 'Error sending email to Common Messaging API at %s: %d - %s', MESSAGES_URL, response.status, response.statusText);
+      throw Error('Could not send email through Common Messaging API: ' + response.statusText);
     }
 
     // we also expect the response to be of a certain type...  let's verify that.
     if (response.data['@type'] !== 'http://nrscmsg.nrs.gov.bc.ca/v1/accepted') {
-      throw Error('Unexpected return from Common Messaging Service: type returned = ' + response.data['@type']);
+      throw Error('Unexpected return from Common Messaging API: type returned = ' + response.data['@type']);
     }
 
     return cmsgSvc.parseMessageId(response.data);
   },
 
   getEmailStatus: async (token, messageId) => {
-    const statusUrl = `${urls.messages}/${messageId}/statuses`;
+    const statusUrl = `${MESSAGES_URL}/${messageId}/statuses`;
     const response = await axios.get(statusUrl, {
       headers: {
         'Authorization':`Bearer ${token}`,
@@ -81,8 +79,8 @@ const cmsgSvc = {
     log.verbose(utils.prettyStringify(response.data));
 
     if (response.status !== 200) {
-      log.error('', 'Error verifying Common Messaging Service alive at %s: %d - %s', urls.root, response.status, response.statusText);
-      throw Error('Could not connect Common Messaging Service: ' + response.statusText);
+      log.error('', 'Error retreiving status from Common Messaging API at %s: %d - %s', statusUrl, response.status, response.statusText);
+      throw Error('Could not retrieve email status from Common Messaging API: ' + response.statusText);
     }
 
     return response.data;

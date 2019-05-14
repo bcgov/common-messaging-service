@@ -22,7 +22,7 @@ const webadeSvc = {
 
     log.verbose(utils.prettyStringify(response.data));
 
-    if (response.status !== 200) {
+    if (!utils.responseOk(response.status)) {
       log.error('', 'Error getting OAuth token from %s: %d - %s', tokenUrl, response.status, response.statusText);
       throw Error('Could not connect OAuth server to authenticate Service: ' + response.statusText);
     }

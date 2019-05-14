@@ -2,14 +2,10 @@ const wrap = require('../middleware/wrap');
 const routes = require('express').Router();
 
 const path = require('path');
-const {getStatus, getConfig, sendEmail, getEmailStatus} = require(path.resolve(__dirname, 'controller'));
+const {getHealth, sendEmail, getEmailStatus} = require(path.resolve(__dirname, 'controller'));
 
-routes.get('/status', wrap(async function (req, res) {
-  await getStatus(req, res);
-}));
-
-routes.get('/config', wrap(async function (req, res) {
-  await getConfig(req, res);
+routes.get('/health', wrap(async function (req, res) {
+  await getHealth(req, res);
 }));
 
 routes.post('/email', wrap(async function (req, res) {
