@@ -1,82 +1,69 @@
 const config = require('config');
-const axios = require('axios');
+const log = require('npmlog');
 
-const tokenUrl = config.services.cmsg.urls.token;
-const clientId = config.services.cmsg.client.id;
-const clientSecret = config.services.cmsg.client.secret;
+const clientScopes = config.get('services.cmsg.scopes.all');
+const clientId = config.get('services.cmsg.client.id');
+const clientSecret = config.get('services.cmsg.client.secret');
 
+const { webadeSvc } = require('../oauthService/webadeSvc');
+const { cmsgSvc } = require('../msgService/cmsgSvc');
 
-const getToken = async (req, res) => {
+const getHealth = async (req, res) => {
+  // need oauth token for our service client for the Common Messaging Service
+  // need to check the credentials (valid/good, authenticated in env)
+  // need to check the expected scopes (top level, create/send message)
+  // finally need to ping the Common Messaging Service to see if it is up.
+
   try {
-    let data = await fetchToken();
-    let {token, credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage} = parseToken(data);
-    res.status(200).json({
-      token: token,
-      credentialsGood: credentialsGood,
-      credentialsAuthenticated: credentialsAuthenticated,
-      hasTopLevel: hasTopLevel,
-      hasCreateMessage: hasCreateMessage
-    });
-  } catch (e) {
-    res.status(500).json({error: {code: e.code, message: e.message}});
-  }
-
-};
-
-const fetchToken = async () => {
-  const response = await axios.request({
-    method: 'get',
-    url: tokenUrl,
-    auth: {
-      username: clientId,
-      password: clientSecret
+    let {token, status} = await login();
+    status.cmsgApiHealthy = false;
+    if (status.hasTopLevel) {
+      status.cmsgApiHealthy = await cmsgSvc.healthCheck(token);
     }
-  });
-  if (response.status !== 200) {
-    throw Error('Could not fetch OAuth token: ' + response.statusText);
+
+    res.status(200).json(status);
+  } catch (error) {
+    log.error('msgServer.getStatus', error.message);
+    res.status(500).json({error: {code: error.code, message: error.message}});
   }
-  return response.data;
 };
 
-const parseToken = (data) => {
-  let token = undefined;
-  let credentialsAuthenticated = false;
-  let hasTopLevel = false;
-  let hasCreateMessage = false;
-  let credentialsGood = !data.error;
-
-  if (data.error) {
-    if ("unauthorized" !== data.error || "Bad credentials" !== data.error_description) {
-      // unknown error, pass it along
-      throw Error('Could not determine OAuth credentials: ' + data.error);
+const sendEmail = async (req, res) => {
+  try {
+    let {token, status} = await login();
+    if (status.hasCreateMessage) {
+      let {messageId} = await cmsgSvc.sendEmail(token, req.body);
+      let response = await cmsgSvc.getEmailStatus(token, messageId);
+      res.status(200).json(response);
+    } else {
+      res.status(401).json({error: {code: 401, message: 'Service is not authorized to send emails via Common Messaging Service'}});
     }
-  }
 
-  if (credentialsGood) {
-    credentialsAuthenticated = (data.access_token && data.access_token.length >= 16);
-    if (!credentialsAuthenticated) {
-      throw Error("Credentials are not authenticated.  Access token is invalid.");
-    }
-    token = data.access_token;
-    console.log(`token: ${token}`)
-    hasTopLevel = (data.scope.split(" ").indexOf("CMSG.GETTOPLEVEL") >= 0);
-    hasCreateMessage = (data.scope.split(" ").indexOf("CMSG.CREATEMESSAGE") >= 0);
+  } catch (error) {
+    log.error('msgServer.getStatus', error.message);
+    res.status(500).json({error: {code: error.code, message: error.message}});
   }
-
-  return {token, credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage};
 };
 
+const getEmailStatus = async (req, res) => {
+  try {
+    let {token} = await login();
+    let result = await cmsgSvc.getEmailStatus(token, req.params.messageId);
+    res.status(200).json(result);
 
-const getConfig = async (req, res) => {
-  let result = {
-    configs: [{
-      urls: config.services.cmsg.urls,
-      clientId: clientId,
-      default: true,
-      name: 'Integration'
-    }]
-  };
-  res.status(200).json(result);
+  } catch (error) {
+    log.error('msgServer.getStatus', error.message);
+    res.status(500).json({error: {code: error.code, message: error.message}});
+  }
 };
 
-module.exports = {getToken, getConfig};
+const login = async () => {
+  let oauthData = await webadeSvc.getToken(clientId, clientSecret, clientScopes);
+  let oauthResult = webadeSvc.parseToken(oauthData);
+  let cmsgResult = cmsgSvc.parseScopes(oauthData);
+  let status = {...oauthResult.status, ...cmsgResult.status};
+  let token = oauthResult.token;
+  return {token, status};
+};
+
+module.exports = {getHealth, sendEmail, getEmailStatus};

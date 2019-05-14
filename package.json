@@ -16,8 +16,8 @@
     "build": "cd frontend && npm run build && rm -rf ../backend/static && mv build ../backend/static",
     "start": "cd backend && npm run start",
     "test": "cd backend && npm run test && cd ../frontend && npm run test",
-    "eslint": "cd backend && npm run eslint && cd ../frontend && npm run eslint",
+    "lint": "cd backend && npm run lint && cd ../frontend && npm run lint",
     "prebuild": "npm run test",
-    "pretest": "npm run eslint"
+    "pretest": "npm run lint"
   }
 }

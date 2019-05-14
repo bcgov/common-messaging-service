@@ -10,7 +10,6 @@ class EmailForm extends Component {
     super(props);
 
     this.state = {
-      config: {},
       healthCheck: {
         credentialsGood: false,
         credentialsAuthenticated: false,
@@ -84,25 +83,13 @@ class EmailForm extends Component {
   }
 
   async componentDidMount() {
-    let configurations = undefined;
-    let defaultConfiguration = undefined;
     let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = false;
     try {
 
-      await this.pingMessageService();
-
-      configurations = await this.fetchConfigurations();
-      defaultConfiguration = this.getDefaultConfiguration(configurations);
-      let data = await this.fetchToken();
-      let {token, credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage} = data;
-      let cmsgApiHealthy = false;
-      if (hasTopLevel) {
-        let json = await this.healthCheck(token, defaultConfiguration.urls.root);
-        cmsgApiHealthy = json['@type'] === 'http://nrscmsg.nrs.gov.bc.ca/v1/endpoints';
-      }
+      let data = await this.healthCheck();
+      let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = data;
 
       this.setState({
-        config: defaultConfiguration,
         healthCheck: {
           credentialsGood: credentialsGood,
           credentialsAuthenticated: credentialsAuthenticated,
@@ -114,7 +101,6 @@ class EmailForm extends Component {
 
     } catch (e) {
       this.setState({
-        config: defaultConfiguration,
         healthCheck: {
           credentialsGood: credentialsGood,
           credentialsAuthenticated: credentialsAuthenticated,
@@ -127,52 +113,10 @@ class EmailForm extends Component {
     }
   }
 
-  async pingMessageService() {
-    const response = await fetch(`${MSG_SERVICE_PATH}/config`);
+  async healthCheck() {
+    const response = await fetch(`${MSG_SERVICE_PATH}/health`);
     if (!response.ok) {
-      throw Error(`Could not reach Showcase Messaging Service, please ensure that it is running at ${process.env.PUBLIC_URL}${MSG_SERVICE_PATH}`);
-    }
-  }
-
-  async fetchConfigurations() {
-    const response = await fetch(`${MSG_SERVICE_PATH}/config`);
-    if (!response.ok) {
-      throw Error('Could not fetch configuration from Showcase Messaging Service: ' + response.statusText);
-    }
-    return await response.json()
-      .then(json => {
-        return json.configs;
-      })
-      .catch(error => {
-        throw Error(error.message);
-      });
-  }
-
-  getDefaultConfiguration(configs) {
-    const result = configs.filter(c => c.default);
-    return result[0];
-  }
-
-  async fetchToken() {
-    const response = await fetch(`${MSG_SERVICE_PATH}/token`);
-    if (!response.ok) {
-      throw Error('Could not fetch Authentication token from Showcase Messaging Service: ' + response.statusText);
-    }
-    return await response.json().catch(error => {
-      throw Error(error.message);
-    });
-  }
-
-  async healthCheck(token, url) {
-    if (!url) {
-      url = this.state.config.urls.root;
-    }
-    let headers = new Headers();
-    headers.set('Authorization', `Bearer ${token}`);
-    headers.set('Content-Type', 'application/json');
-    const response = await fetch(url, {method: 'get', headers: headers});
-    if (!response.ok) {
-      throw Error('Could not connect to Common Messaging Service: ' + response.statusText);
+      throw Error('Could not connect to Showcase Messaging API: ' + response.statusText);
     }
     return await response.json().catch(error => {
       throw Error(error.message);
@@ -191,11 +135,8 @@ class EmailForm extends Component {
     }
 
     try {
-      let data = await this.fetchToken();
-      let {token, hasCreateMessage} = data;
-      if (hasCreateMessage) {
-        await this.postEmail(token);
-        //await this.checkStatus(token, response);
+      if (this.state.healthCheck.hasCreateMessage) {
+        await this.postEmail();
 
         // this will reset the form and the tinymce editor...
         let form = this.state.form;
@@ -216,7 +157,7 @@ class EmailForm extends Component {
       form.reset = false;
       this.setState({
         form: form,
-        info: 'Message submitted to Common Messaging Service'
+        info: 'Message submitted to Showcase Messaging API'
       });
     } catch (e) {
       let form = this.state.form;
@@ -231,77 +172,29 @@ class EmailForm extends Component {
 
   }
 
-  async postEmail(token, url) {
-    if (!url) {
-      url = this.state.config.urls.messages;
-    }
-    // Things that aren't in the UI to enter
-    const defaults = `
-    {
-        "@type" : "http://nrscmsg.nrs.gov.bc.ca/v1/emailMessage",
-        "links": [
-        ],
-        "delay": 0,
-        "expiration": 0,
-        "maxResend": 0
-    }
-    `;
-    // Add the user entered fields
-    const requestBody = JSON.parse(defaults);
-    requestBody.mediaType = this.state.form.mediaType;
-    requestBody.sender = this.state.form.sender;
-    requestBody.subject = this.state.form.subject;
-    requestBody.message = this.getMessageBody();
-    requestBody.recipients = this.state.form.recipients.replace(/\s/g, '').split(',');
-
+  async postEmail() {
     const headers = new Headers();
-    headers.set('Authorization', `Bearer ${token}`);
     headers.set('Content-Type', 'application/json');
 
-    let response = await fetch(url, {
+    const email  = {
+      mediaType: this.state.form.mediaType,
+      sender: this.state.form.sender,
+      subject: this.state.form.subject,
+      message: this.getMessageBody(),
+      recipients: this.state.form.recipients
+    };
+
+    let response = await fetch(`${MSG_SERVICE_PATH}/email`, {
       method: 'POST',
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(email),
       headers: headers
     });
     if (!response.ok) {
-      throw Error('Could not connect to Common Messaging Service: ' + response.statusText);
+      throw Error('Could not deliver email to Showcase Messaging API: ' + response.statusText);
     }
     return await response.json().catch(error => {
       throw Error(error.message);
     });
-  }
-
-  async checkStatus(token, msg) {
-    let done = false;
-    let result = undefined;
-    do {
-      let status = await this.fetchStatus(token, msg.links[0]['href']);
-      done = status.elements && status.elements.length === 1;
-      if (done) {
-        result = status.elements[0]['content'];
-      }
-    } while (!done);
-
-    return result;
-
-  }
-
-  sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  async fetchStatus(token, statusHref) {
-    const headers = new Headers();
-    headers.set('Authorization', `Bearer ${token}`);
-    headers.set('Content-Type', 'application/json');
-
-    await this.sleep(100);
-    let result = await fetch(statusHref, {
-      method: 'GET',
-      headers: headers
-    }).then(res => res.json());
-    return result;
-
   }
 
   render() {

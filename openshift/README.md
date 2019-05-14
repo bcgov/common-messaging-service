@@ -9,7 +9,7 @@ You will also need the urls for the Common Messaging API - the top level (root o
 ```sh
 oc create secret -n <namespace> generic cmsg-client --from-literal=username=<client id> --from-literal=password=<client secret> --type=kubernetes.io/basic-auth
 
-oc process -n <namespace> -f openshift/app.config.yaml -o yaml -p OAUTH_TOKEN_URL=<oauth token url> -p CMSG_TOP_LEVEL_URL=<common messaging api top level url> -p CMSG_MESSAGES_URL=<common messaging api messages url> | oc create -n <namespace> -f -
+oc create configmap -n <namespace> cmsg-config --from-literal=OAUTH_TOKEN_URL=<oauth token url> --from-literal=CMSG_TOP_LEVEL_URL=<common messaging api top level url>
 ```
 
 # Generating Build Configuration Templates
