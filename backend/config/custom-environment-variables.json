@@ -1,5 +1,7 @@
 {
   "server": {
+    "logLevel": "SERVER_LOGLEVEL",
+    "morganFormat": "SERVER_MORGANFORMAT",
     "port": "PORT"
   },
   "services": {
