@@ -1,5 +1,3 @@
-
-
 const utils = {
   // Returns a pretty JSON representation of an object
   prettyStringify: obj => JSON.stringify(obj, null, 2),
