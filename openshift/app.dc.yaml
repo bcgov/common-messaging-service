@@ -72,21 +72,9 @@ objects:
               secretKeyRef:
                 key: password
                 name: cmsg-client
-          - name: OAUTH_TOKEN_URL
-            valueFrom:
-              configMapKeyRef:
-                key: tokenUrl
-                name: mssc-oauth-config
-          - name: CMSG_TOP_LEVEL_URL
-            valueFrom:
-              configMapKeyRef:
-                key: topLevelUrl
-                name: mssc-cmsg-config
-          - name: CMSG_MESSAGES_URL
-            valueFrom:
-              configMapKeyRef:
-                key: messagesUrl
-                name: mssc-cmsg-config
+          envFrom:
+          - configMapRef:
+              name: cmsg-config
     test: false
     triggers:
     - type: ConfigChange

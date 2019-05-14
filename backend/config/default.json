@@ -8,8 +8,7 @@
     "cmsg": {
       "urls": {
         "token": "set in custom environment variables...",
-        "root": "set in custom environment variables...",
-        "messages": "set in custom environment variables..."
+        "root": "set in custom environment variables..."
       },
       "client": {
         "id": "set in custom environment variables...",
