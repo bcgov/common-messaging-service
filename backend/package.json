@@ -15,7 +15,8 @@
     "start": "node ./bin/www",
     "test": "CI=true jest --env=jsdom",
     "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules' **.js **/www",
-    "lint:fix": "node_modules/.bin/eslint . --fix --ignore-pattern 'node_modules' **.js **/www"
+    "lint:fix": "node_modules/.bin/eslint . --fix --ignore-pattern 'node_modules' **.js **/www",
+    "clean": "rm -rf node_modules && rm -rf static"
   },
   "dependencies": {
     "axios": "^0.18.0",
