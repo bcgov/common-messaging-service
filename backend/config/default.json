@@ -2,7 +2,13 @@
   "server": {
     "logLevel": "debug",
     "morganFormat": "dev",
-    "port": "3001"
+    "port": "3001",
+    "uploads" : {
+      "path": "./uploads",
+      "fieldName": "files",
+      "fileSize": 1048576,
+      "fileCount": 3
+    }
   },
   "services": {
     "cmsg": {

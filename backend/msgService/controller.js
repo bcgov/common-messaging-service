@@ -66,4 +66,17 @@ const login = async () => {
   return {token, status};
 };
 
-module.exports = {getHealth, sendEmail, getEmailStatus};
+const handleFile = async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    res.status(400).json({error: {message: 'File expected, please upload a file.'}});
+  } else {
+    res.send(file);
+  }
+};
+
+const handleFiles = async (req, res) => {
+  res.status(200).json(req.files);
+};
+
+module.exports = {getHealth, sendEmail, getEmailStatus, handleFile, handleFiles};

@@ -6,6 +6,7 @@ coverage
 
 
 backend/static
+backend/uploads
 frontend/build
 
 # local env files

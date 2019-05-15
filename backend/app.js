@@ -31,7 +31,7 @@ app.use(function (err, req, res, next) {
   res.status(500);
   res.json({
     status: 500,
-    message: 'Internal Server Error: ' + err.stack.split('\n', 1)[0]
+    message: err.stack.split('\n', 1)[0]
   });
 });
 
