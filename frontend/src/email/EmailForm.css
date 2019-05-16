@@ -1,0 +1,47 @@
+.icon::before {
+  display: inline-block;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+.unknown::before {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 400;
+  content: "\f059";
+  color: darkorange;
+}
+
+.good::before {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 400;
+  content: "\f164";
+  color: darkgreen;
+}
+
+.bad::before {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 400;
+  content: "\f165";
+  color: darkred;
+}
+
+.hc-text {
+  font-size: smaller;
+}
+
+.hc-ind {
+  text-align: center;
+}
+
+#messageText {
+  height: 480px;
+}
+
+.invalid-tinymce {
+  width: 100%;
+  margin-top: .25rem;
+  font-size: 80%;
+  color: #dc3545;
+}

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import './TinyMceEditor.css';
 
 import tinymce from 'tinymce';
 import 'tinymce/themes/silver';
@@ -35,7 +36,7 @@ class TinyMceEditor extends Component {
     tinymce.remove(this.state.editor);
   }
 
-  componentWillReceiveProps(props) {
+  UNSAFE_componentWillReceiveProps(props) {
     if (props.reset) {
       // ok, we want to reset the content of this tinymce editor
       // new document will start us fresh...

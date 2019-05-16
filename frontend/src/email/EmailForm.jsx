@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
-import TinyMceEditor from './TinyMceEditor';
+import './EmailForm.css';
+import TinyMceEditor from '../htmlText/TinyMceEditor';
 
 const MSG_SERVICE_PATH = '/mssc/v1';
 const MEDIA_TYPES = ['text/plain', 'text/html'];
