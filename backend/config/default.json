@@ -6,7 +6,7 @@
     "uploads" : {
       "path": "./uploads",
       "fieldName": "files",
-      "fileSize": 1048576,
+      "fileSize": 5242880,
       "fileCount": 3
     }
   },

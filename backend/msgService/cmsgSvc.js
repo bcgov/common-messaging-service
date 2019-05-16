@@ -2,6 +2,7 @@ const axios = require('axios');
 const config = require('config');
 const log = require('npmlog');
 
+const fileUtils = require('../components/fileUtils');
 const utils = require('../components/utils');
 
 const ROOT_URL = config.get('services.cmsg.urls.root');
@@ -37,8 +38,18 @@ const cmsgSvc = {
       'maxResend': 0
     };
 
+    let attachments = [];
+    // save the incoming file names (if any)
+    if (email.filenames) {
+      attachments = await fileUtils.convertFiles(email.filenames);
+      delete email.filenames;
+    }
+
     const requestBody = { ...defaults, ...email };
     requestBody.recipients = email.recipients.replace(/\s/g, '').split(',');
+    if (attachments && attachments.length > 0) {
+      requestBody.attachments = attachments;
+    }
 
     const response = await axios.post(
       MESSAGES_URL,

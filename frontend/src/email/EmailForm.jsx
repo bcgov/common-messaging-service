@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import './EmailForm.css';
 import TinyMceEditor from '../htmlText/TinyMceEditor';
+import Dropzone from 'react-dropzone';
 
 const MSG_SERVICE_PATH = '/mssc/v1';
 const MEDIA_TYPES = ['text/plain', 'text/html'];
@@ -27,6 +28,7 @@ class EmailForm extends Component {
         subject: '',
         plainText: '',
         htmlText: '',
+        files: [],
         reset: false,
         mediaType: MEDIA_TYPES[0]
       }
@@ -39,6 +41,7 @@ class EmailForm extends Component {
     this.onChangeMediaType = this.onChangeMediaType.bind(this);
 
     this.onEditorChange = this.onEditorChange.bind(this);
+    this.onFileDrop = this.onFileDrop.bind(this);
   }
 
   onChangeSubject(event) {
@@ -137,7 +140,8 @@ class EmailForm extends Component {
 
     try {
       if (this.state.healthCheck.hasCreateMessage) {
-        await this.postEmail();
+        let filenames = await this.uploadFiles();
+        await this.postEmail(filenames);
 
         // this will reset the form and the tinymce editor...
         let form = this.state.form;
@@ -146,6 +150,7 @@ class EmailForm extends Component {
         form.subject = '';
         form.plainText = '';
         form.htmlText = '';
+        form.files = [];
         form.mediaType = MEDIA_TYPES[0];
         form.reset = true;
         this.setState({
@@ -173,7 +178,26 @@ class EmailForm extends Component {
 
   }
 
-  async postEmail() {
+  async uploadFiles() {
+    const data = new FormData();
+    for (const file of this.state.form.files) {
+      data.append('files', file, file.name);
+    }
+
+    let response = await fetch(`${MSG_SERVICE_PATH}/uploads`, {
+      method: 'POST',
+      body: data
+    });
+    if (!response.ok) {
+      throw Error('Could not upload attachments to Showcase Messaging API: ' + response.statusText);
+    }
+
+    return await response.json().catch(error => {
+      throw Error(error.message);
+    });
+  }
+
+  async postEmail(filenames) {
     const headers = new Headers();
     headers.set('Content-Type', 'application/json');
 
@@ -182,7 +206,8 @@ class EmailForm extends Component {
       sender: this.state.form.sender,
       subject: this.state.form.subject,
       message: this.getMessageBody(),
-      recipients: this.state.form.recipients
+      recipients: this.state.form.recipients,
+      filenames: filenames
     };
 
     let response = await fetch(`${MSG_SERVICE_PATH}/email`, {
@@ -196,6 +221,12 @@ class EmailForm extends Component {
     return await response.json().catch(error => {
       throw Error(error.message);
     });
+  }
+
+  onFileDrop(acceptedFiles) {
+    let form = this.state.form;
+    form.files = acceptedFiles;
+    this.setState({form: form});
   }
 
   render() {
@@ -306,6 +337,32 @@ class EmailForm extends Component {
             />
             <div className="invalid-tinymce" style={bodyErrorDisplay}>
               Body is required.
+            </div>
+          </div>
+
+          <div className="mt-3 mb-3">
+            <label htmlFor="attachments">Attachments</label>
+          </div>
+          <div className="row">
+            <div className="col-sm-4">
+              <Dropzone onDrop={this.onFileDrop}>
+                {({getRootProps}) => (
+                  <div {...getRootProps({className: 'dropzone', multiple: true})}>
+                    <i className="m-sm-auto fas fa-2x fa-file-import upload-icon" alt="upload"></i>
+                  </div>
+                )}
+              </Dropzone>
+            </div>
+            <div className="col-sm-8">
+              <div className="dropzone-files">
+                {this.state.form.files.map(file => {
+                  return (
+                    <div key={file.name} className="row">
+                      <span className="dropzone-file">{file.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
