@@ -7,7 +7,8 @@
       "path": "./uploads",
       "fieldName": "files",
       "fileSize": 5242880,
-      "fileCount": 3
+      "fileCount": 3,
+      "fileType": "pdf"
     }
   },
   "services": {

@@ -1,4 +1,5 @@
 const { Buffer } = require('buffer');
+const config = require('config');
 var fs = require('fs');
 
 const fileUtils = {
@@ -22,7 +23,7 @@ const fileUtils = {
         fileUtils.encode_base64(file.path).then(encoded => {
           resolve({
             name: file.originalname,
-            fileType: 'pdf',
+            fileType: config.get('server.uploads.fileType'),
             content: encoded
           });
         });

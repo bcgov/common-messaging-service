@@ -4,7 +4,15 @@ import TinyMceEditor from '../htmlText/TinyMceEditor';
 import Dropzone from 'react-dropzone';
 
 const MSG_SERVICE_PATH = '/mssc/v1';
+// email message media types: we are allowed to send the body of the email as html or plain text
 const MEDIA_TYPES = ['text/plain', 'text/html'];
+
+// attachments limiting.
+// let's limit the file size and file count(match what our server will accept - arbitrary)
+// and we should limit the file type because the Common Messaging API currently only accepts pdf.
+const ATTACHMENTS_ACCEPTED_TYPE = '.pdf';
+const ATTACHMENTS_MAX_SIZE = 5242880;
+const ATTACHMENTS_MAX_FILES = 3;
 
 class EmailForm extends Component {
 
@@ -21,6 +29,7 @@ class EmailForm extends Component {
       },
       info: '',
       error: '',
+      dropWarning: '',
       form: {
         wasValidated: false,
         sender: 'NR.CommonServiceShowcase@gov.bc.ca',
@@ -224,9 +233,15 @@ class EmailForm extends Component {
   }
 
   onFileDrop(acceptedFiles) {
-    let form = this.state.form;
-    form.files = acceptedFiles;
-    this.setState({form: form});
+    if (acceptedFiles.length === 0) {
+      this.setState({
+        dropWarning: `Attachments are limited to ${ATTACHMENTS_MAX_FILES} total files of type ${ATTACHMENTS_ACCEPTED_TYPE} and under ${ATTACHMENTS_MAX_SIZE} bytes in size.`,
+      });
+    } else {
+      let form = this.state.form;
+      form.files = acceptedFiles;
+      this.setState({form: form, dropWarning: ''});
+    }
   }
 
   render() {
@@ -244,6 +259,7 @@ class EmailForm extends Component {
     const htmlTextButton = this.state.form.mediaType === MEDIA_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const {wasValidated} = this.state.form;
     const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
+    const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
 
     return (
       <div className="col-md-8 order-md-1">
@@ -345,10 +361,14 @@ class EmailForm extends Component {
           </div>
           <div className="row">
             <div className="col-sm-4">
-              <Dropzone onDrop={this.onFileDrop}>
+              <Dropzone
+                onDrop={this.onFileDrop}
+                accept={ATTACHMENTS_ACCEPTED_TYPE}
+                maxSize={ATTACHMENTS_MAX_SIZE}
+                noClick='true' >
                 {({getRootProps}) => (
-                  <div {...getRootProps({className: 'dropzone', multiple: true})}>
-                    <i className="m-sm-auto fas fa-2x fa-file-import upload-icon" alt="upload"></i>
+                  <div {...getRootProps({className: 'dropzone'})}>
+                    <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload pdf"></i>
                   </div>
                 )}
               </Dropzone>
@@ -365,7 +385,9 @@ class EmailForm extends Component {
               </div>
             </div>
           </div>
-
+          <div className="alert alert-warning mt-2" style={dropWarningDisplay}>
+            {this.state.dropWarning}
+          </div>
           <hr className="mb-4"/>
           <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
         </form>
