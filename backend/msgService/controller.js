@@ -1,4 +1,5 @@
 const config = require('config');
+const fileUtils = require('../components/fileUtils');
 const log = require('npmlog');
 
 const clientScopes = config.get('services.cmsg.scopes.all');
@@ -29,10 +30,25 @@ const getHealth = async (req, res) => {
 };
 
 const sendEmail = async (req, res) => {
+  let email = {};
+  let filenames = [];
+  let attachments = [];
   try {
     let {token, status} = await login();
     if (status.hasCreateMessage) {
-      let {messageId} = await cmsgSvc.sendEmail(token, req.body);
+
+      // extract what we need from the request
+      email = req.body;
+      filenames = email.filenames;
+      // remove filenames field from email, we don't want to send this to the cmsg service.
+      delete email.filenames;
+      // convert our filenames to acceptable attachment model.
+      if (filenames && filenames.length > 0) {
+        attachments = await fileUtils.convertFiles(filenames);
+      }
+      // send the email and attachements
+      let {messageId} = await cmsgSvc.sendEmail(token, email, attachments);
+      // return the status from cmsg
       let response = await cmsgSvc.getEmailStatus(token, messageId);
       res.status(200).json(response);
     } else {
@@ -42,6 +58,11 @@ const sendEmail = async (req, res) => {
   } catch (error) {
     log.error('msgServer.getStatus', error.message);
     res.status(500).json({error: {code: error.code, message: error.message}});
+  } finally {
+    // check for presence of uploaded files, delete them if they exist....
+    if (filenames && filenames.length >0) {
+      await fileUtils.deleteFiles(filenames);
+    }
   }
 };
 
@@ -66,17 +87,8 @@ const login = async () => {
   return {token, status};
 };
 
-const handleFile = async (req, res) => {
-  const file = req.file;
-  if (!file) {
-    res.status(400).json({error: {message: 'File expected, please upload a file.'}});
-  } else {
-    res.send(file);
-  }
-};
-
 const handleFiles = async (req, res) => {
   res.status(200).json(req.files);
 };
 
-module.exports = {getHealth, sendEmail, getEmailStatus, handleFile, handleFiles};
+module.exports = {getHealth, sendEmail, getEmailStatus, handleFiles};

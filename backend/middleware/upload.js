@@ -32,6 +32,19 @@ const upload = (req, res, next) => {
       case 'LIMIT_UNEXPECTED_FILE':
         next(new Error('Upload encountered an unexpected file'));
         break;
+      // we don't expect that we will encounter these in our api/app, but here for completeness
+      case 'LIMIT_PART_COUNT':
+        next(new Error('Upload rejected: upload form has too many parts'));
+        break;
+      case 'LIMIT_FIELD_KEY':
+        next(new Error('Upload rejected: upload field name for the files is too long'));
+        break;
+      case 'LIMIT_FIELD_VALUE':
+        next(new Error('Upload rejected: upload field is too long'));
+        break;
+      case 'LIMIT_FIELD_COUNT':
+        next(new Error('Upload rejected: too many fields'));
+        break;
       default:
         next(new Error(`Upload failed with the following error: ${err.message}`));
       }

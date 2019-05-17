@@ -364,10 +364,10 @@ class EmailForm extends Component {
               <Dropzone
                 onDrop={this.onFileDrop}
                 accept={ATTACHMENTS_ACCEPTED_TYPE}
-                maxSize={ATTACHMENTS_MAX_SIZE}
-                noClick='true' >
-                {({getRootProps}) => (
+                maxSize={ATTACHMENTS_MAX_SIZE}>
+                {({getRootProps, getInputProps}) => (
                   <div {...getRootProps({className: 'dropzone'})}>
+                    <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
                     <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload pdf"></i>
                   </div>
                 )}

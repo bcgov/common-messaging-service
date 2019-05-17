@@ -1,6 +1,9 @@
 const { Buffer } = require('buffer');
 const config = require('config');
 var fs = require('fs');
+const log = require('npmlog');
+const util = require('util');
+const unlink = util.promisify(fs.unlink);
 
 const fileUtils = {
   encode_base64: (filename) => {
@@ -35,6 +38,15 @@ const fileUtils = {
 
   convertFiles: (files) => {
     return Promise.all(files.map(file => fileUtils.convertFile(file)));
+  },
+
+  deleteFiles: async (files) => {
+    try {
+      const unlinkPromises = files.map(file => unlink(file.path));
+      return Promise.all(unlinkPromises);
+    } catch(err) {
+      log.error(err);
+    }
   }
 
 };

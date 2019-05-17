@@ -68,6 +68,10 @@
   text-align:left;
 }
 
+.dropzone-fileinput {
+  display: none;
+}
+
 .dropzone-file {
   font-size: smaller;
 }
