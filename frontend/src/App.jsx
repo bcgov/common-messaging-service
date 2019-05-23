@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from './Header';
 import Footer from './Footer';
-import EmailForm from './EmailForm';
+import EmailForm from './email/EmailForm';
 
 const App = () => (
   <div className="container">

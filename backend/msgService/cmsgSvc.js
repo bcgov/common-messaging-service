@@ -27,7 +27,7 @@ const cmsgSvc = {
     return response.data['@type'] === 'http://nrscmsg.nrs.gov.bc.ca/v1/endpoints';
   },
 
-  sendEmail: async (token, email) => {
+  sendEmail: async (token, email, attachments) => {
     const defaults = {
       '@type' : 'http://nrscmsg.nrs.gov.bc.ca/v1/emailMessage',
       'links': [
@@ -37,8 +37,13 @@ const cmsgSvc = {
       'maxResend': 0
     };
 
+
     const requestBody = { ...defaults, ...email };
     requestBody.recipients = email.recipients.replace(/\s/g, '').split(',');
+    if (attachments && attachments.length > 0) {
+      // add the attachements to the outgoing request.
+      requestBody.attachments = attachments;
+    }
 
     const response = await axios.post(
       MESSAGES_URL,
@@ -49,7 +54,12 @@ const cmsgSvc = {
           'Content-Type':'application/json'
         }
       }
-    );
+    ).catch(function (error) {
+      // we could be getting specific errors back from cmsg.
+      log.error(`Error from Common Messaging: status = ${error.response.status}, msg = ${error.response.statusText}`);
+      error.response.data.errors.map(e => log.error(`.. ${e.message}`));
+      throw Error('Could not send email through Common Messaging API: ' + error.response.data.errors[0].message);
+    });
 
     log.verbose(utils.prettyStringify(response.data));
 

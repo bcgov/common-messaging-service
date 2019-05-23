@@ -1,8 +1,18 @@
 import React, {Component} from 'react';
-import TinyMceEditor from './TinyMceEditor';
+import './EmailForm.css';
+import TinyMceEditor from '../htmlText/TinyMceEditor';
+import Dropzone from 'react-dropzone';
 
 const MSG_SERVICE_PATH = '/mssc/v1';
+// email message media types: we are allowed to send the body of the email as html or plain text
 const MEDIA_TYPES = ['text/plain', 'text/html'];
+
+// attachments limiting.
+// let's limit the file size and file count(match what our server will accept - arbitrary)
+// and we should limit the file type because the Common Messaging API currently only accepts pdf.
+const ATTACHMENTS_ACCEPTED_TYPE = '.pdf';
+const ATTACHMENTS_MAX_SIZE = 5242880;
+const ATTACHMENTS_MAX_FILES = 3;
 
 class EmailForm extends Component {
 
@@ -19,6 +29,7 @@ class EmailForm extends Component {
       },
       info: '',
       error: '',
+      dropWarning: '',
       form: {
         wasValidated: false,
         sender: 'NR.CommonServiceShowcase@gov.bc.ca',
@@ -26,6 +37,7 @@ class EmailForm extends Component {
         subject: '',
         plainText: '',
         htmlText: '',
+        files: [],
         reset: false,
         mediaType: MEDIA_TYPES[0]
       }
@@ -38,6 +50,7 @@ class EmailForm extends Component {
     this.onChangeMediaType = this.onChangeMediaType.bind(this);
 
     this.onEditorChange = this.onEditorChange.bind(this);
+    this.onFileDrop = this.onFileDrop.bind(this);
   }
 
   onChangeSubject(event) {
@@ -136,7 +149,8 @@ class EmailForm extends Component {
 
     try {
       if (this.state.healthCheck.hasCreateMessage) {
-        await this.postEmail();
+        let filenames = await this.uploadFiles();
+        await this.postEmail(filenames);
 
         // this will reset the form and the tinymce editor...
         let form = this.state.form;
@@ -145,6 +159,7 @@ class EmailForm extends Component {
         form.subject = '';
         form.plainText = '';
         form.htmlText = '';
+        form.files = [];
         form.mediaType = MEDIA_TYPES[0];
         form.reset = true;
         this.setState({
@@ -172,7 +187,26 @@ class EmailForm extends Component {
 
   }
 
-  async postEmail() {
+  async uploadFiles() {
+    const data = new FormData();
+    for (const file of this.state.form.files) {
+      data.append('files', file, file.name);
+    }
+
+    let response = await fetch(`${MSG_SERVICE_PATH}/uploads`, {
+      method: 'POST',
+      body: data
+    });
+    if (!response.ok) {
+      throw Error('Could not upload attachments to Showcase Messaging API: ' + response.statusText);
+    }
+
+    return await response.json().catch(error => {
+      throw Error(error.message);
+    });
+  }
+
+  async postEmail(filenames) {
     const headers = new Headers();
     headers.set('Content-Type', 'application/json');
 
@@ -181,7 +215,8 @@ class EmailForm extends Component {
       sender: this.state.form.sender,
       subject: this.state.form.subject,
       message: this.getMessageBody(),
-      recipients: this.state.form.recipients
+      recipients: this.state.form.recipients,
+      filenames: filenames
     };
 
     let response = await fetch(`${MSG_SERVICE_PATH}/email`, {
@@ -195,6 +230,18 @@ class EmailForm extends Component {
     return await response.json().catch(error => {
       throw Error(error.message);
     });
+  }
+
+  onFileDrop(acceptedFiles) {
+    if (acceptedFiles.length === 0) {
+      this.setState({
+        dropWarning: `Attachments are limited to ${ATTACHMENTS_MAX_FILES} total files of type ${ATTACHMENTS_ACCEPTED_TYPE} and under ${ATTACHMENTS_MAX_SIZE} bytes in size.`,
+      });
+    } else {
+      let form = this.state.form;
+      form.files = acceptedFiles;
+      this.setState({form: form, dropWarning: ''});
+    }
   }
 
   render() {
@@ -212,6 +259,7 @@ class EmailForm extends Component {
     const htmlTextButton = this.state.form.mediaType === MEDIA_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const {wasValidated} = this.state.form;
     const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
+    const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
 
     return (
       <div className="col-md-8 order-md-1">
@@ -308,6 +356,38 @@ class EmailForm extends Component {
             </div>
           </div>
 
+          <div className="mt-3 mb-3">
+            <label htmlFor="attachments">Attachments</label>
+          </div>
+          <div className="row">
+            <div className="col-sm-4">
+              <Dropzone
+                onDrop={this.onFileDrop}
+                accept={ATTACHMENTS_ACCEPTED_TYPE}
+                maxSize={ATTACHMENTS_MAX_SIZE}>
+                {({getRootProps, getInputProps}) => (
+                  <div {...getRootProps({className: 'dropzone'})}>
+                    <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
+                    <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload pdf"></i>
+                  </div>
+                )}
+              </Dropzone>
+            </div>
+            <div className="col-sm-8">
+              <div className="dropzone-files">
+                {this.state.form.files.map(file => {
+                  return (
+                    <div key={file.name} className="row">
+                      <span className="dropzone-file">{file.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="alert alert-warning mt-2" style={dropWarningDisplay}>
+            {this.state.dropWarning}
+          </div>
           <hr className="mb-4"/>
           <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
         </form>
