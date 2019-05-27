@@ -61,7 +61,7 @@
 }
 
 .dropzone-files {
-  text-align:left;
+  text-align: left;
 }
 
 .dropzone-fileinput {
@@ -69,5 +69,6 @@
 }
 
 .dropzone-file {
+  text-align: left;
   font-size: smaller;
 }
