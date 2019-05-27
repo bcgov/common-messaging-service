@@ -69,5 +69,6 @@
 }
 
 .dropzone-file {
+  text-align:left;
   font-size: smaller;
 }

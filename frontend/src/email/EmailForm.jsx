@@ -52,6 +52,8 @@ class EmailForm extends Component {
 
     this.onEditorChange = this.onEditorChange.bind(this);
     this.onFileDrop = this.onFileDrop.bind(this);
+
+    this.removeFile = this.removeFile.bind(this);
   }
 
   onChangeSubject(event) {
@@ -242,15 +244,28 @@ class EmailForm extends Component {
   }
 
   onFileDrop(acceptedFiles) {
-    if (acceptedFiles.length === 0) {
-      this.setState({
-        dropWarning: `Attachments are limited to ${ATTACHMENTS_MAX_FILES} total files of type ${ATTACHMENTS_ACCEPTED_TYPE} and under ${ATTACHMENTS_MAX_SIZE} bytes in size.`,
-      });
-    } else {
-      let form = this.state.form;
-      form.files = acceptedFiles;
-      this.setState({form: form, dropWarning: ''});
+    let dropWarning = `Attachments are limited to ${ATTACHMENTS_MAX_FILES} total files of type ${ATTACHMENTS_ACCEPTED_TYPE} and under ${ATTACHMENTS_MAX_SIZE} bytes in size.`;
+    let form = this.state.form;
+    let files = form.files;
+    acceptedFiles.forEach((value) => {
+      if (-1 === form.files.findIndex((f) => { return f.name === value.name && f.lastModified === value.lastModified && f.size === value.size; })) {
+        files.push(value);
+      }
+    });
+
+    if (acceptedFiles.length > 0 && files.length <= ATTACHMENTS_MAX_FILES) {
+      // dropped in valid files, and we kept it under the desired number
+      dropWarning = '';
     }
+    form.files = files.slice(0, ATTACHMENTS_MAX_FILES);
+    this.setState({form: form, dropWarning: dropWarning});
+  }
+
+  removeFile(filename) {
+    let form = this.state.form;
+    let files = form.files.filter((f) => { return f.name !== filename; });
+    form.files = files;
+    this.setState({form: form});
   }
 
   render() {
@@ -398,15 +413,14 @@ class EmailForm extends Component {
                 </Dropzone>
               </div>
               <div className="col-sm-8">
-                <div className="dropzone-files">
-                  {this.state.form.files.map(file => {
-                    return (
-                      <div key={file.name} className="row">
-                        <span className="dropzone-file">{file.name}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                {this.state.form.files.map(file => {
+                  return (
+                    <div key={file.name} className="row">
+                      <div className="col-sm-7 dropzone-file m-auto">{file.name}</div>
+                      <div className="col-sm-1 m-auto"><button type="button" className="btn btn-sm" onClick={() => { this.removeFile(file.name); }}><i className="far fa-trash-alt"></i></button></div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             <div className="alert alert-warning mt-2" style={dropWarningDisplay}>
