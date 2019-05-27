@@ -300,23 +300,20 @@ class EmailForm extends Component {
           <div id="healthCheck">
             <hr className="mb-4"/>
             <div className="row">
-              <span className="col-sm-10 hc-text">Service Client credentials</span><span
-                className="col-sm-2"><span id="credentialsInd"
-                  className={credentialsIndClass}></span></span>
+              <div className="col-sm-10 hc-text">Service Client credentials</div>
+              <div className="col-sm-2"><span id="credentialsInd" className={credentialsIndClass}></span></div>
             </div>
             <div className="row">
-              <span
-                className="col-sm-10 hc-text">Service Client has access to Common Messaging API</span><span
-                className="col-sm-2"><span id="apiAccessInd" className={apiAccessIndClass}></span></span>
+              <div className="col-sm-10 hc-text">Service Client has access to Common Messaging API</div>
+              <div className="col-sm-2"><span id="apiAccessInd" className={apiAccessIndClass}></span></div>
             </div>
             <div className="row">
-              <span className="col-sm-10 hc-text">Service Client can send message</span><span
-                className="col-sm-2"><span id="createMsgInd" className={createMsgIndClass}></span></span>
+              <div className="col-sm-10 hc-text">Service Client can send message</div>
+              <div className="col-sm-2"><span id="createMsgInd" className={createMsgIndClass}></span></div>
             </div>
             <div className="row">
-              <span className="col-sm-10 hc-text">Common Messaging API available</span><span
-                className="col-sm-2"><span id="healthCheckInd"
-                  className={healthCheckIndClass}></span></span>
+              <div className="col-sm-10 hc-text">Common Messaging API available</div>
+              <div className="col-sm-2"><span id="healthCheckInd" className={healthCheckIndClass}></span></div>
             </div>
           </div>
 
