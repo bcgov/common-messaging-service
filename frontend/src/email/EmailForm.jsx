@@ -20,6 +20,7 @@ class EmailForm extends Component {
     super(props);
 
     this.state = {
+      busy: false,
       healthCheck: {
         credentialsGood: false,
         credentialsAuthenticated: false,
@@ -98,11 +99,13 @@ class EmailForm extends Component {
   async componentDidMount() {
     let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = false;
     try {
+      this.setState({busy: true});
 
       let data = await this.healthCheck();
       let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = data;
 
       this.setState({
+        busy: false,
         healthCheck: {
           credentialsGood: credentialsGood,
           credentialsAuthenticated: credentialsAuthenticated,
@@ -114,6 +117,7 @@ class EmailForm extends Component {
 
     } catch (e) {
       this.setState({
+        busy: false,
         healthCheck: {
           credentialsGood: credentialsGood,
           credentialsAuthenticated: credentialsAuthenticated,
@@ -127,6 +131,7 @@ class EmailForm extends Component {
   }
 
   async healthCheck() {
+
     const response = await fetch(`${MSG_SERVICE_PATH}/health`);
     if (!response.ok) {
       throw Error('Could not connect to Showcase Messaging API: ' + response.statusText);
@@ -149,6 +154,7 @@ class EmailForm extends Component {
 
     try {
       if (this.state.healthCheck.hasCreateMessage) {
+        this.setState({busy: true});
         let filenames = await this.uploadFiles();
         await this.postEmail(filenames);
 
@@ -163,6 +169,7 @@ class EmailForm extends Component {
         form.mediaType = MEDIA_TYPES[0];
         form.reset = true;
         this.setState({
+          busy:false,
           form: form
         });
       }
@@ -171,6 +178,7 @@ class EmailForm extends Component {
       let form = this.state.form;
       form.reset = false;
       this.setState({
+        busy: false,
         form: form,
         info: 'Message submitted to Showcase Messaging API'
       });
@@ -178,6 +186,7 @@ class EmailForm extends Component {
       let form = this.state.form;
       form.wasValidated = false;
       this.setState({
+        busy: false,
         form: form,
         error: e.message
       });
@@ -245,7 +254,11 @@ class EmailForm extends Component {
   }
 
   render() {
+
     // set styles and classes here...
+    const displayBusy = this.state.busy ? {} : {display: 'none'};
+    const displayNotBusy = this.state.busy ? {display: 'none'} : {};
+
     const credentialsIndClass = this.state.healthCheck.credentialsGood ? 'icon good' : 'icon bad';
     const apiAccessIndClass = this.state.healthCheck.hasTopLevel ? 'icon good' : 'icon bad';
     const createMsgIndClass = this.state.healthCheck.hasCreateMessage ? 'icon good' : 'icon bad';
@@ -262,135 +275,150 @@ class EmailForm extends Component {
     const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
 
     return (
-      <div className="col-md-8 order-md-1">
-        <div className="alert alert-success" style={successDisplay}>
-          {this.state.info}
+      <div className="col-md-8 offset-md-2 order-md-1">
+
+        <div className="text-center" style={displayBusy}>
+          <div className="spinner-grow text-primary" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+          <div className="spinner-grow text-primary" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+          <div className="spinner-grow text-primary" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
         </div>
-        <div className="alert alert-danger" style={errorDisplay}>
-          {this.state.error}
-        </div>
-        <h4 className="mb-3">Service Client</h4>
-        <div id="healthCheck">
+
+        <div style={displayNotBusy}>
+          <div className="alert alert-success" style={successDisplay}>
+            {this.state.info}
+          </div>
+          <div className="alert alert-danger" style={errorDisplay}>
+            {this.state.error}
+          </div>
+          <h4 className="mb-3">Service Client</h4>
+          <div id="healthCheck">
+            <hr className="mb-4"/>
+            <div className="row">
+              <span className="col-sm-10 hc-text">Service Client credentials</span><span
+                className="col-sm-2"><span id="credentialsInd"
+                  className={credentialsIndClass}></span></span>
+            </div>
+            <div className="row">
+              <span
+                className="col-sm-10 hc-text">Service Client has access to Common Messaging API</span><span
+                className="col-sm-2"><span id="apiAccessInd" className={apiAccessIndClass}></span></span>
+            </div>
+            <div className="row">
+              <span className="col-sm-10 hc-text">Service Client can send message</span><span
+                className="col-sm-2"><span id="createMsgInd" className={createMsgIndClass}></span></span>
+            </div>
+            <div className="row">
+              <span className="col-sm-10 hc-text">Common Messaging API available</span><span
+                className="col-sm-2"><span id="healthCheckInd"
+                  className={healthCheckIndClass}></span></span>
+            </div>
+          </div>
+
           <hr className="mb-4"/>
-          <div className="row">
-            <span className="col-md-6 hc-text">Service Client credentials</span><span
-              className="col-md-6 hc-ind"><span id="credentialsInd"
-                className={credentialsIndClass}></span></span>
-          </div>
-          <div className="row">
-            <span
-              className="col-md-6 hc-text">Service Client has access to Common Messaging API</span><span
-              className="col-md-6 hc-ind"><span id="apiAccessInd" className={apiAccessIndClass}></span></span>
-          </div>
-          <div className="row">
-            <span className="col-md-6 hc-text">Service Client can send message</span><span
-              className="col-md-6 hc-ind"><span id="createMsgInd" className={createMsgIndClass}></span></span>
-          </div>
-          <div className="row">
-            <span className="col-md-6 hc-text">Common Messaging API available</span><span
-              className="col-md-6 hc-ind"><span id="healthCheckInd"
-                className={healthCheckIndClass}></span></span>
-          </div>
-        </div>
-
-        <hr className="mb-4"/>
-        <form id="emailForm" noValidate style={emailFormDisplay} onSubmit={this.formSubmit}
-          className={wasValidated ? 'was-validated' : ''}>
-          <h4 className="mb-3">Email</h4>
-          <div className="mb-3">
-            <label htmlFor="sender">Sender</label>
-            <input type="text" className="form-control" name="sender"
-              readOnly required value={this.state.form.sender}/>
-            <div className="invalid-feedback">
-              Email sender is required.
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="recipients">Recipients</label>
-            <input type="text" className="form-control" name="recipients"
-              placeholder="you@example.com (separate multiple by comma)" required
-              value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
-            <div className="invalid-feedback">
-              One or more email recipients required.
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="subject">Subject</label>
-            <input type="text" className="form-control" name="subject" required value={this.state.form.subject}
-              onChange={this.onChangeSubject}/>
-            <div className="invalid-feedback">
-              Subject is required.
-            </div>
-          </div>
-
-          <div className="mb-3 row">
-            <div className="col-sm-4">
-              <label className="mt-1">Body</label>
-            </div>
-            <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
-              <label className={plainTextButton}>
-                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]} value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType} /> Plain Text
-              </label>
-              <label className={htmlTextButton}>
-                <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]} value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType} /> HTML
-              </label>
-            </div>
-          </div>
-          <div style={plainTextDisplay} >
-            <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.mediaType === MEDIA_TYPES[0]}
-              value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
-            <div className="invalid-feedback" style={bodyErrorDisplay}>
-              Body is required.
-            </div>
-          </div>
-          <div style={htmlTextDisplay} >
-            <TinyMceEditor
-              id="htmlText"
-              reset={this.state.form.reset}
-              onEditorChange={this.onEditorChange}
-            />
-            <div className="invalid-tinymce" style={bodyErrorDisplay}>
-              Body is required.
-            </div>
-          </div>
-
-          <div className="mt-3 mb-3">
-            <label htmlFor="attachments">Attachments</label>
-          </div>
-          <div className="row">
-            <div className="col-sm-4">
-              <Dropzone
-                onDrop={this.onFileDrop}
-                accept={ATTACHMENTS_ACCEPTED_TYPE}
-                maxSize={ATTACHMENTS_MAX_SIZE}>
-                {({getRootProps, getInputProps}) => (
-                  <div {...getRootProps({className: 'dropzone'})}>
-                    <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
-                    <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload pdf"></i>
-                  </div>
-                )}
-              </Dropzone>
-            </div>
-            <div className="col-sm-8">
-              <div className="dropzone-files">
-                {this.state.form.files.map(file => {
-                  return (
-                    <div key={file.name} className="row">
-                      <span className="dropzone-file">{file.name}</span>
-                    </div>
-                  );
-                })}
+          <form id="emailForm" noValidate style={emailFormDisplay} onSubmit={this.formSubmit}
+            className={wasValidated ? 'was-validated' : ''}>
+            <h4 className="mb-3">Email</h4>
+            <div className="mb-3">
+              <label htmlFor="sender">Sender</label>
+              <input type="text" className="form-control" name="sender"
+                readOnly required value={this.state.form.sender}/>
+              <div className="invalid-feedback">
+                Email sender is required.
               </div>
             </div>
-          </div>
-          <div className="alert alert-warning mt-2" style={dropWarningDisplay}>
-            {this.state.dropWarning}
-          </div>
-          <hr className="mb-4"/>
-          <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
-        </form>
+
+            <div className="mb-3">
+              <label htmlFor="recipients">Recipients</label>
+              <input type="text" className="form-control" name="recipients"
+                placeholder="you@example.com (separate multiple by comma)" required
+                value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
+              <div className="invalid-feedback">
+                One or more email recipients required.
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="subject">Subject</label>
+              <input type="text" className="form-control" name="subject" required value={this.state.form.subject}
+                onChange={this.onChangeSubject}/>
+              <div className="invalid-feedback">
+                Subject is required.
+              </div>
+            </div>
+
+            <div className="mb-3 row">
+              <div className="col-sm-4">
+                <label className="mt-1">Body</label>
+              </div>
+              <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
+                <label className={plainTextButton}>
+                  <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]} value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType} /> Plain Text
+                </label>
+                <label className={htmlTextButton}>
+                  <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]} value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType} /> HTML
+                </label>
+              </div>
+            </div>
+            <div style={plainTextDisplay} >
+              <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.mediaType === MEDIA_TYPES[0]}
+                value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+              <div className="invalid-feedback" style={bodyErrorDisplay}>
+                Body is required.
+              </div>
+            </div>
+            <div style={htmlTextDisplay} >
+              <TinyMceEditor
+                id="htmlText"
+                reset={this.state.form.reset}
+                onEditorChange={this.onEditorChange}
+              />
+              <div className="invalid-tinymce" style={bodyErrorDisplay}>
+                Body is required.
+              </div>
+            </div>
+
+            <div className="mt-3 mb-3">
+              <label htmlFor="attachments">Attachments</label>
+            </div>
+            <div className="row">
+              <div className="col-sm-4">
+                <Dropzone
+                  onDrop={this.onFileDrop}
+                  accept={ATTACHMENTS_ACCEPTED_TYPE}
+                  maxSize={ATTACHMENTS_MAX_SIZE}>
+                  {({getRootProps, getInputProps}) => (
+                    <div {...getRootProps({className: 'dropzone'})}>
+                      <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
+                      <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload pdf"></i>
+                    </div>
+                  )}
+                </Dropzone>
+              </div>
+              <div className="col-sm-8">
+                <div className="dropzone-files">
+                  {this.state.form.files.map(file => {
+                    return (
+                      <div key={file.name} className="row">
+                        <span className="dropzone-file">{file.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="alert alert-warning mt-2" style={dropWarningDisplay}>
+              {this.state.dropWarning}
+            </div>
+            <hr className="mb-4"/>
+            <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
+          </form>
+        </div>
       </div>
     );
   }
