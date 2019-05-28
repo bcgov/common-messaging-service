@@ -4,8 +4,8 @@ const path = require('path');
 
 const uploadsDir = path.resolve(config.get('server.uploads.path'));
 const formFieldName = config.get('server.uploads.fieldName');
-const maxFileSize = config.get('server.uploads.fileSize');
-const maxFileCount = config.get('server.uploads.fileCount');
+const maxFileSize = parseInt(config.get('server.uploads.fileSize'));
+const maxFileCount = parseInt(config.get('server.uploads.fileCount'));
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
