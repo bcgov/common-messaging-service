@@ -22,6 +22,13 @@ const getHealth = async (req, res) => {
       status.cmsgApiHealthy = await cmsgSvc.healthCheck(token);
     }
 
+    // pass along configuration to the caller...
+    // these could change from deployment to deployment, so allow caller to match up with what we can handle.
+    status.attachmentsMaxSize = parseInt(config.get('server.uploads.fileSize'));
+    status.attachmentsMaxFiles = parseInt(config.get('server.uploads.fileCount'));
+    status.attachmentsAcceptedType = config.get('server.uploads.fileType');
+    status.sender = config.get('services.cmsg.sender');
+
     res.status(200).json(status);
   } catch (error) {
     log.error('msgServer.getStatus', error.message);

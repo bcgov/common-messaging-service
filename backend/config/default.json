@@ -25,7 +25,8 @@
         "all": "CMSG.*",
         "topLevel": "CMSG.GETTOPLEVEL",
         "createMessage": "CMSG.CREATEMESSAGE"
-      }
+      },
+      "sender": "NR.CommonServiceShowcase@gov.bc.ca"
     }
   }
 }

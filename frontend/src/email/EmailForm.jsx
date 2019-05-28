@@ -7,13 +7,6 @@ const MSG_SERVICE_PATH = '/mssc/v1';
 // email message media types: we are allowed to send the body of the email as html or plain text
 const MEDIA_TYPES = ['text/plain', 'text/html'];
 
-// attachments limiting.
-// let's limit the file size and file count(match what our server will accept - arbitrary)
-// and we should limit the file type because the Common Messaging API currently only accepts pdf.
-const ATTACHMENTS_ACCEPTED_TYPE = '.pdf';
-const ATTACHMENTS_MAX_SIZE = 5242880;
-const ATTACHMENTS_MAX_FILES = 3;
-
 class EmailForm extends Component {
 
   constructor(props) {
@@ -33,7 +26,6 @@ class EmailForm extends Component {
       dropWarning: '',
       form: {
         wasValidated: false,
-        sender: 'NR.CommonServiceShowcase@gov.bc.ca',
         recipients: '',
         subject: '',
         plainText: '',
@@ -41,6 +33,12 @@ class EmailForm extends Component {
         files: [],
         reset: false,
         mediaType: MEDIA_TYPES[0]
+      },
+      config: {
+        attachmentsMaxSize: 5242880,
+        attachmentsMaxFiles: 3,
+        attachmentsAcceptedType: '.pdf',
+        sender: 'NR.CommonServiceShowcase@gov.bc.ca'
       }
     };
 
@@ -104,7 +102,7 @@ class EmailForm extends Component {
       this.setState({busy: true});
 
       let data = await this.healthCheck();
-      let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = data;
+      let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy, attachmentsMaxSize, attachmentsMaxFiles, attachmentsAcceptedType, sender} = data;
 
       this.setState({
         busy: false,
@@ -114,6 +112,12 @@ class EmailForm extends Component {
           hasTopLevel: hasTopLevel,
           hasCreateMessage: hasCreateMessage,
           cmsgApiHealthy: cmsgApiHealthy
+        },
+        config: {
+          attachmentsMaxSize: attachmentsMaxSize,
+          attachmentsMaxFiles: attachmentsMaxFiles,
+          attachmentsAcceptedType: attachmentsAcceptedType.startsWith('.') ? attachmentsAcceptedType : '.'.concat(attachmentsAcceptedType),
+          sender: sender
         }
       });
 
@@ -133,10 +137,9 @@ class EmailForm extends Component {
   }
 
   async healthCheck() {
-
     const response = await fetch(`${MSG_SERVICE_PATH}/health`);
     if (!response.ok) {
-      throw Error('Could not connect to Showcase Messaging API: ' + response.statusText);
+      throw Error('Could not connect to Showcase Messaging API for health check: ' + response.statusText);
     }
     return await response.json().catch(error => {
       throw Error(error.message);
@@ -223,7 +226,7 @@ class EmailForm extends Component {
 
     const email  = {
       mediaType: this.state.form.mediaType,
-      sender: this.state.form.sender,
+      sender: this.state.config.sender,
       subject: this.state.form.subject,
       message: this.getMessageBody(),
       recipients: this.state.form.recipients,
@@ -244,7 +247,7 @@ class EmailForm extends Component {
   }
 
   onFileDrop(acceptedFiles) {
-    let dropWarning = `Attachments are limited to ${ATTACHMENTS_MAX_FILES} total files of type ${ATTACHMENTS_ACCEPTED_TYPE} and under ${ATTACHMENTS_MAX_SIZE} bytes in size.`;
+    let dropWarning = `Attachments are limited to ${this.state.config.attachmentsMaxFiles} total files of type ${this.state.config.attachmentsAcceptedType} and under ${this.state.config.attachmentsMaxSize} bytes in size.`;
     let form = this.state.form;
     let files = form.files;
     acceptedFiles.forEach((value) => {
@@ -253,11 +256,11 @@ class EmailForm extends Component {
       }
     });
 
-    if (acceptedFiles.length > 0 && files.length <= ATTACHMENTS_MAX_FILES) {
+    if (acceptedFiles.length > 0 && files.length <= this.state.config.attachmentsMaxFiles) {
       // dropped in valid files, and we kept it under the desired number
       dropWarning = '';
     }
-    form.files = files.slice(0, ATTACHMENTS_MAX_FILES);
+    form.files = files.slice(0, this.state.config.attachmentsMaxFiles);
     this.setState({form: form, dropWarning: dropWarning});
   }
 
@@ -339,7 +342,7 @@ class EmailForm extends Component {
             <div className="mb-3">
               <label htmlFor="sender">Sender</label>
               <input type="text" className="form-control" name="sender"
-                readOnly required value={this.state.form.sender}/>
+                readOnly required value={this.state.config.sender}/>
               <div className="invalid-feedback">
                 Email sender is required.
               </div>
@@ -402,8 +405,8 @@ class EmailForm extends Component {
               <div className="col-sm-4">
                 <Dropzone
                   onDrop={this.onFileDrop}
-                  accept={ATTACHMENTS_ACCEPTED_TYPE}
-                  maxSize={ATTACHMENTS_MAX_SIZE}>
+                  accept={this.state.config.attachmentsAcceptedType}
+                  maxSize={this.state.config.attachmentsMaxSize}>
                   {({getRootProps, getInputProps}) => (
                     <div {...getRootProps({className: 'dropzone'})}>
                       <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
