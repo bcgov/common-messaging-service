@@ -2,7 +2,14 @@
   "server": {
     "logLevel": "SERVER_LOGLEVEL",
     "morganFormat": "SERVER_MORGANFORMAT",
-    "port": "PORT"
+    "port": "PORT",
+    "uploads" : {
+      "path": "UPLOADS_PATH",
+      "fieldName": "UPLOADS_FIELD_NAME",
+      "fileSize": "UPLOADS_FILE_SIZE",
+      "fileCount": "UPLOADS_FILE_COUNT",
+      "fileType": "UPLOADS_FILE_TYPE"
+    }
   },
   "services": {
     "cmsg": {
@@ -13,6 +20,11 @@
       "client": {
         "id": "CMSG_CLIENT_ID",
         "secret": "CMSG_CLIENT_SECRET"
+      },
+      "scopes": {
+        "all": "CMSG_SCOPES_ALL",
+        "topLevel": "CMSG_SCOPES_TOP_LEVEL",
+        "createMessage": "CMSG_SCOPES_CREATE_MESSAGE"
       }
     }
   }
