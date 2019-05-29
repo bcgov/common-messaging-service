@@ -6,8 +6,8 @@
     "uploads" : {
       "path": "./uploads",
       "fieldName": "files",
-      "fileSize": 5242880,
-      "fileCount": 3,
+      "fileSize": "5242880",
+      "fileCount": "3",
       "fileType": "pdf"
     }
   },
@@ -25,7 +25,8 @@
         "all": "CMSG.*",
         "topLevel": "CMSG.GETTOPLEVEL",
         "createMessage": "CMSG.CREATEMESSAGE"
-      }
+      },
+      "sender": "NR.CommonServiceShowcase@gov.bc.ca"
     }
   }
 }
