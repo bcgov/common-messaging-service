@@ -32,7 +32,8 @@
     "eslint": "^5.16.0",
     "eslint-config-recommended": "^4.0.0",
     "eslint-plugin-flowtype": "^3.8.1",
-    "jest": "24.7.1"
+    "jest": "24.7.1",
+    "supertest": "^4.0.2"
   },
   "eslintConfig": {
     "root": true,
@@ -77,8 +78,13 @@
     }
   },
   "jest": {
+    "globalSetup": "./test/globalSetup.js",
+    "globalTeardown": "./test/globalTeardown.js",
+    "setupFiles": [
+      "./test/setup.js"
+    ],
     "testMatch": [
-      "**/test/*test.js?(x)"
+      "**/*test.js?(x)"
     ]
   }
 }
