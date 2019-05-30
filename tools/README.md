@@ -55,7 +55,8 @@ You will need a github account and token (preferrably a team shared account) wit
 
 The following commands setup up Jenkins and uses this repository and specific OpenShift project namespaces.
 
-For the following examples, we will be using environment variable substitutions.  Set your environment variables as necessary.
+### environment variables
+For the following examples, we will be using environment variable substitutions.  Set your environment variables as necessary.  This is not required, but will make using the provided OpenShift commands much easier.  
 
 #### namespaces
 ```sh
@@ -67,8 +68,8 @@ export prod=z208i4-prod
 
 #### github repository and credentials
 ```sh
-export gh_username=bcgov-nr-csst
-export gh_password=<personal access token for above>
+export gh_username=<github account>
+export gh_password=<personal access token, see above>
 export repo_owner=bcgov
 export repo_name=nr-messaging-service-showcase
 export repo_url=https://github.com/bcgov/nr-messaging-service-showcase
