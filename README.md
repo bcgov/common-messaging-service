@@ -1,16 +1,24 @@
 # Natural Resources Messaging Service Showcase
 
-This tool showcases a simple Email-sending application implementation. It requires a valid Service Client which has the appropriate CMSG scopes.
+This repository contains code to showcase the Common Messaging Service (CMSG).  It demonstrates how to authenticate use the CMSG API.  We will also provide a simple UI to integrate the CMSG capabilities into an application. The technologies we use for this example are: [Node.js](https://nodejs.org/) for the backend server (calls to CMSG) and [React.js](https://reactjs.org) for the frontend UI.
 
-## Project Status
+### About Common Messaging Service (CMSG)
 
-TBD - This will have build status and badges
+The Common Messaging Service (CMSG) is used to electronically notify a user about an event. The CMSG service is a REST web service that may be integrated into applications by developers. The Messaging service is not a user accessible service. The CMSG may only be invoked through an application.
+
+#### Additional Resources for CMSG
+
+[Open API definition for the CMSG in the WS02 API Store](https://apistore.nrs.gov.bc.ca/store/apis/info?provider=admin&version=v1&name=cmsg-messaging-api)
+
+[Documentation for the CMSG API on Confluence (Login Required)](https://apps.nrs.gov.bc.ca/int/confluence/display/DO/cmsg-api)
+
+[CMSG source code on Stash (Login Required)](https://apps.nrs.gov.bc.ca/int/stash/projects/cmsg)
+
 
 ## Directory Structure
 
     .github/                   - PR and Issue templates
     backend/                   - Node.js Application Server codebase
-    docs/                      - Documentation
     frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
     tools/                     - Devops utilities
@@ -23,9 +31,11 @@ TBD - This will have build status and badges
 
 ## Documentation
 
+* [Tools Readme](tools/README.md)
 * [Backend Readme](backend/README.md)
 * [Front Readme](frontend/README.md)
 * [Openshift Readme](openshift/README.md)
+
 
 ## Getting Help or Reporting an Issue
 
