@@ -1,16 +1,12 @@
 # Natural Resources Messaging Service Showcase
 
-This tool showcases a simple Email-sending application implementation. It requires a valid Service Client which has the appropriate CMSG scopes.
-
-## Project Status
-
-TBD - This will have build status and badges
+This repository contains code to showcase the Common Messaging Service (CMSG).  It demonstrates how to authenticate use the CMSG API.  We will also provide a simple UI to integrate the CMSG capabilities into an application. The technologies we use for this example are: [Node.js](https://nodejs.org/) for the backend server (calls to CMSG) and [React.js](https://reactjs.org) for the frontend UI.
 
 ## Directory Structure
 
     .github/                   - PR and Issue templates
     backend/                   - Node.js Application Server codebase
-    docs/                      - Documentation
+    docs/                      - Common Messaging Service documentation
     frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
     tools/                     - Devops utilities
@@ -23,9 +19,13 @@ TBD - This will have build status and badges
 
 ## Documentation
 
+* [CMSG Overview](docs/overview.md)
+* [CMSG Developer Guide](docs/developer-guide.md)
+* [Tools Readme](tools/README.md)
 * [Backend Readme](backend/README.md)
 * [Front Readme](frontend/README.md)
 * [Openshift Readme](openshift/README.md)
+
 
 ## Getting Help or Reporting an Issue
 
