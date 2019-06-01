@@ -19,7 +19,7 @@ To configure the application for local development, we have a few options.  Sinc
 
 #### local.json
 
-``` 
+```json 
 {
   "server": {
     "logLevel": "verbose"
