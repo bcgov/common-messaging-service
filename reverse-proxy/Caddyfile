@@ -1,6 +1,4 @@
-*:2015 {
-
-    rewrite / {$PATH_ROOT}/
+*:{$PROXY_SERVICE_PORT} {
 
     proxy {$PATH_ROOT}/api/v1/ {$API_SERVICE_NAME}:{$API_SERVICE_PORT} {
         without {$PATH_ROOT}

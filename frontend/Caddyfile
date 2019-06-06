@@ -1,7 +1,18 @@
 *:{$UI_SERVICE_PORT}{$PATH_ROOT} {
+    # requests without trailing slash don't load our app.
+    redir / {uri}/
+
+    log stdout
+
+    errors stdout
+}
+
+*:{$UI_SERVICE_PORT}{$PATH_ROOT}/ {
+
     root {$STATIC_FILES_PATH}
 
     log stdout
 
     errors stdout
 }
+
