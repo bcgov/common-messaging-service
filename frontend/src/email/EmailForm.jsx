@@ -3,7 +3,7 @@ import './EmailForm.css';
 import TinyMceEditor from '../htmlText/TinyMceEditor';
 import Dropzone from 'react-dropzone';
 
-const MSG_SERVICE_PATH = '/mssc/v1';
+const MSG_SERVICE_PATH = `${process.env.REACT_APP_PATH_ROOT}/api/v1`;
 // email message media types: we are allowed to send the body of the email as html or plain text
 const MEDIA_TYPES = ['text/plain', 'text/html'];
 

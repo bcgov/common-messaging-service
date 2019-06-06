@@ -1,0 +1,7 @@
+*:{$UI_SERVICE_PORT}{$PATH_ROOT} {
+    root {$STATIC_FILES_PATH}
+
+    log stdout
+
+    errors stdout
+}

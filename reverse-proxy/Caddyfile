@@ -1,0 +1,21 @@
+*:2015 {
+
+    rewrite / {$PATH_ROOT}/
+
+    proxy {$PATH_ROOT}/api/v1/ {$API_SERVICE_NAME}:{$API_SERVICE_PORT} {
+        without {$PATH_ROOT}
+        transparent
+        header_upstream X-App-Token {~AppSession}
+        header_downstream X-App-Token {~AppSession}
+    }
+
+    proxy {$PATH_ROOT} {$UI_SERVICE_NAME}:{$UI_SERVICE_PORT} {
+        transparent
+        header_upstream X-App-Token {~AppSession}
+        header_downstream X-App-Token {~AppSession}
+    }
+
+    log stdout
+
+    errors stdout
+}

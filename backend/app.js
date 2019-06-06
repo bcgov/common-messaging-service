@@ -19,11 +19,7 @@ log.addLevel('debug', 1500, { fg: 'green' });
 // Print out configuration settings in verbose startup
 log.verbose(utils.prettyStringify(config));
 
-app.use('/mssc/v1', msgService);
-
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static('./static'));
-}
+app.use('/api/v1', msgService);
 
 // Handle 500
 // eslint-disable-next-line no-unused-vars

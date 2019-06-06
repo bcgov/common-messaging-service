@@ -1,0 +1,124 @@
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: "${REPO_NAME}-${JOB_NAME}-backend-bc-template"
+metadata:
+  name: "${REPO_NAME}-${JOB_NAME}-backend-dc"
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-backend"
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: "${APP_NAME}-${JOB_NAME}"
+      deploymentconfig: "${APP_NAME}-${JOB_NAME}-backend"
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-backend"
+  spec:
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      app: "${APP_NAME}-${JOB_NAME}"
+      deploymentconfig: "${APP_NAME}-${JOB_NAME}-backend"
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: "${APP_NAME}-${JOB_NAME}"
+          deploymentconfig: "${APP_NAME}-${JOB_NAME}-backend"
+      spec:
+        containers:
+        - image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-backend:latest"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: "/"
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: "${APP_NAME}-${JOB_NAME}-backend"
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - "${APP_NAME}-${JOB_NAME}-backend"
+        from:
+          kind: ImageStreamTag
+          name: "${APP_NAME}-${JOB_NAME}-backend:latest"
+      type: ImageChange
+parameters:
+- name: REPO_NAME
+  description: Application repository name
+  required: true
+- name: JOB_NAME
+  description: Job identifier (i.e. 'pr-5' OR 'master')
+  required: true
+- name: NAMESPACE
+  description: Target namespace reference (i.e. 'k8vopl-dev')
+  required: true
+- name: APP_NAME
+  description: Application name
+  required: true
+- name: HOST_ROUTE
+  description: The host the route will use to expose service outside cluster
+  required: true
+- name: PATH_ROOT
+  description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
+  required: true
+  value: "/mssc"
+- name: API_SERVICE_NAME
+  description: name of the api/backend service
+  required: true
+  value: "${APP_NAME}-${JOB_NAME}-backend"
+- name: API_SERVICE_PORT
+  description: port of the api/backend service
+  required: true
+  value: "8080"
+- name: UI_SERVICE_NAME
+  description: name of the ui/frontend service
+  required: true
+  value: "${APP_NAME}-${JOB_NAME}-frontend"
+- name: UI_SERVICE_PORT
+  description: port of the api/frontend service
+  required: true
+  value: "2015"
