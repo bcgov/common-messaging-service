@@ -198,7 +198,7 @@ pipeline {
                     notifyStageStatus('Frontend', 'FAILURE')
                     throw e
                   }
-                }
+                },
 
                 ReverseProxy: {
                   try {
