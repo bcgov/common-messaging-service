@@ -74,35 +74,34 @@ pipeline {
     stage('Builder') {
       steps {
           notifyStageStatus('Builder', 'PENDING')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                }
 
-          openshift.withCluster() {
-            openshift.withProject(TOOLS_PROJECT) {
-              if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
-                echo "DEBUG - Using project: ${openshift.project()}"
+                echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                def bcApp = openshift.process('-f',
+                  'openshift/frontend-builder.bc.yaml',
+                  "REPO_NAME=${REPO_NAME}",
+                  "JOB_NAME=${JOB_NAME}",
+                  "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                  "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                  "APP_NAME=${APP_NAME}",
+                  "PATH_ROOT=${PATH_ROOT}"
+                )
+
+                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
+
+                echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}..."
+                openshift.tag("${APP_NAME}-${JOB_NAME}-frontend-builder:latest",
+                  "${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}"
+                )
               }
-
-              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-              def bcApp = openshift.process('-f',
-                'openshift/frontend-builder.bc.yaml',
-                "REPO_NAME=${REPO_NAME}",
-                "JOB_NAME=${JOB_NAME}",
-                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}",
-                "PATH_ROOT=${PATH_ROOT}"
-              )
-
-              echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-              openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
-
-              echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}..."
-              openshift.tag("${APP_NAME}-${JOB_NAME}-frontend-builder:latest",
-                "${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}"
-              )
             }
           }
-
-
         }
       }
       post {
