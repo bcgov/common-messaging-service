@@ -98,46 +98,46 @@ pipeline {
                 openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
 
                 echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}..."
-                openshift.tag("${APP_NAME}-${JOB_NAME}-frontend-builder:latest",
-                  "${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}"
-                )
+                openshift.tag("${APP_NAME}-${JOB_NAME}-frontend-builder:latest", "${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}")
               }
             }
           }
-        } // end of steps
+        }
+      } // end of steps
 
-        post {
+      post {
 
-          success {
-            echo 'Builder successful'
-            notifyStageStatus('Builder', 'SUCCESS')
-            script {
-              openshift.withCluster() {
-                openshift.withProject(TOOLS_PROJECT) {
-                  if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
-                    echo "DEBUG - Using project: ${openshift.project()}"
-                  } else {
-                    def bc = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-builder")
+        success {
+          echo 'Builder successful'
+          notifyStageStatus('Builder', 'SUCCESS')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                } else {
+                  def bc = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-builder")
 
-                    if(bc.exists()) {
-                      echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                      bc.delete()
-                    }
+                  if(bc.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                    bc.delete()
                   }
                 }
               }
             }
           }
+        }
 
-          unsuccessful {
-            echo 'Builder failed'
-            notifyStageStatus('Builder', 'FAILURE')
-          }
+        unsuccessful {
+          echo 'Builder failed'
+          notifyStageStatus('Builder', 'FAILURE')
+        }
 
-        } // end of post
-      }
+      } // end of post
 
-    } //end of stages
+    } //end of stage
+
+  } //end of stages
 
 } // end of pipeline
 
