@@ -81,7 +81,7 @@ pipeline {
                 }
 
                 echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                def bcApp = openshift.process('-f',
+                def bcFrontendBuilderTemplate = openshift.process('-f',
                   'openshift/frontend-builder.bc.yaml',
                   "REPO_NAME=${REPO_NAME}",
                   "JOB_NAME=${JOB_NAME}",
@@ -92,7 +92,7 @@ pipeline {
                 )
 
                 echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
+                openshift.apply(bcFrontendBuilderTemplate).narrow('bc').startBuild('-w').logs('-f')
               }
             }
           }
@@ -107,9 +107,9 @@ pipeline {
                 if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
-                  def bc = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-builder")
+                  def bcFrontendBuilderConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-builder")
 
-                  if(bc.exists()) {
+                  if(bcFrontendBuilderConfig.exists()) {
                     echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
                     bc.delete()
                   }
@@ -136,7 +136,7 @@ pipeline {
               }
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
-              def bcBackend = openshift.process('-f',
+              def bcBackendTemplate = openshift.process('-f',
                 'openshift/backend.bc.yaml',
                 "REPO_NAME=${REPO_NAME}",
                 "JOB_NAME=${JOB_NAME}",
@@ -146,7 +146,7 @@ pipeline {
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
-              def bcFrontend = openshift.process('-f',
+              def bcFrontendTemplate = openshift.process('-f',
                 'openshift/frontend.bc.yaml',
                 "REPO_NAME=${REPO_NAME}",
                 "JOB_NAME=${JOB_NAME}",
@@ -156,7 +156,7 @@ pipeline {
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-              def bcFrontend = openshift.process('-f',
+              def bcReverseProxyTemplate = openshift.process('-f',
                 'openshift/reverse-proxy.bc.yaml',
                 "REPO_NAME=${REPO_NAME}",
                 "JOB_NAME=${JOB_NAME}",
@@ -166,13 +166,13 @@ pipeline {
               )
 
               echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
-              openshift.apply(bcBackend).narrow('bc').startBuild()
+              openshift.apply(bcBackendTemplate).narrow('bc').startBuild()
 
               echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
-              openshift.apply(bcFrontend).narrow('bc').startBuild()
+              openshift.apply(bcFrontendTemplate).narrow('bc').startBuild()
 
               echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-              openshift.apply(bcFrontend).narrow('bc').startBuild()
+              openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild()
 
               timeout(10) {
                 openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-backend").related('builds').untilEach(1) {
