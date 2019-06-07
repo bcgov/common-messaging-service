@@ -38,7 +38,6 @@ pipeline {
 
   stages {
     stage('Init') {
-
       steps {
         notifyStageStatus('Init', 'PENDING')
 
@@ -59,7 +58,6 @@ pipeline {
           }
         }
       }
-
       post {
         success {
           echo 'Init successful'
@@ -70,7 +68,6 @@ pipeline {
           notifyStageStatus('Init', 'FAILURE')
         }
       }
-
     }
 
     stage('Builder') {
@@ -102,11 +99,8 @@ pipeline {
               }
             }
           }
-        }
-      } // end of steps
-
+      }
       post {
-
         success {
           echo 'Builder successful'
           notifyStageStatus('Builder', 'SUCCESS')
@@ -127,19 +121,14 @@ pipeline {
             }
           }
         }
-
         unsuccessful {
           echo 'Builder failed'
           notifyStageStatus('Builder', 'FAILURE')
         }
-
-      } // end of post
-
-    } //end of stage
-
-  } //end of stages
-
-} // end of pipeline
+      }
+    }
+  }
+}
 
 // ------------------
 // Pipeline Functions
