@@ -1,0 +1,72 @@
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: "${REPO_NAME}-${JOB_NAME}-frontend-bc-template"
+metadata:
+  name: "${REPO_NAME}-${JOB_NAME}-frontend-bc"
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+  spec:
+    lookupPolicy:
+      local: false
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+  spec:
+    failedBuildsHistoryLimit: 5
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      contextDir: /frontend
+      git:
+        ref: "${SOURCE_REPO_REF}"
+        uri: "${SOURCE_REPO_URL}"
+      type: Git
+    strategy:
+      sourceStrategy:
+        env:
+        - name: PATH_ROOT
+          value: "${PATH_ROOT}"
+        - name: REACT_APP_PATH_ROOT
+          value: "${PATH_ROOT}"
+        from:
+          kind: ImageStreamTag
+          name: nodejs:10
+          namespace: openshift
+      type: Source
+    successfulBuildsHistoryLimit: 5
+parameters:
+- name: REPO_NAME
+  description: Application repository name
+  required: true
+- name: JOB_NAME
+  description: Job identifier (i.e. 'pr-5' OR 'master')
+  required: true
+- name: SOURCE_REPO_REF
+  description: Git Pull Request Reference (i.e. 'pull/CHANGE_ID/head')
+  required: true
+- name: SOURCE_REPO_URL
+  description: Git Repository URL
+  required: true
+- name: APP_NAME
+  description: Application name
+  required: true
+- name: PATH_ROOT
+  description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
+  required: true
+  value: "/mssc"
