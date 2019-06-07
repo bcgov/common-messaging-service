@@ -6,48 +6,50 @@ labels:
 metadata:
   name: "${REPO_NAME}-${JOB_NAME}-frontend-bc"
 objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+  spec:
+    lookupPolicy:
+      local: false
 - apiVersion: build.openshift.io/v1
   kind: BuildConfig
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend"
+    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
   spec:
-    completionDeadlineSeconds: 600
-    failedBuildsHistoryLimit: 3
+    failedBuildsHistoryLimit: 5
     nodeSelector: null
     output:
       to:
         kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-frontend:latest"
+        name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
     postCommit: {}
-    resources:
-      limits:
-        cpu: "2"
-        memory: 2Gi
-      requests:
-        cpu: "1"
-        memory: 1Gi
-    runPolicy: SerialLatestOnly
+    resources: {}
+    runPolicy: Serial
     source:
-      dockerfile: |-
-        FROM docker-registry.default.svc:5000/bcgov/s2i-caddy:v1-stable
-        COPY /tmp/src/build /var/www/html
-        COPY /tmp/src/Caddyfile /etc/Caddyfile
-        CMD /tmp/scripts/run
-      images:
-      - as: null
+      contextDir: /frontend
+      git:
+        ref: "${SOURCE_REPO_REF}"
+        uri: "${SOURCE_REPO_URL}"
+      type: Git
+    strategy:
+      sourceStrategy:
+        env:
+        - name: PATH_ROOT
+          value: "${PATH_ROOT}"
+        - name: REACT_APP_PATH_ROOT
+          value: "${PATH_ROOT}"
         from:
           kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
-        paths:
-        - destinationDir: tmp
-          sourcePath: /opt/app-root/src
-      type: Dockerfile
-    strategy:
-      dockerStrategy: {}
-      type: Docker
-    successfulBuildsHistoryLimit: 3
+          name: nodejs:10
+          namespace: openshift
+      type: Source
+    successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
   description: Application repository name
