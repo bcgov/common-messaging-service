@@ -1,15 +1,15 @@
 ---
-title: Messaging Service Showcase
-description: Send email or sms, track delivery status, automated retry
+title: NR Messaging Service Showcase
+description: Send email, track delivery status, automated retry
 ---  
 
 ## Summary
 
-The Common Messaging Service (CMSG) is used to electronically notify a user about an event. The CMSG service is a REST web service that may be integrated into applications by developers. The Messaging service is not a user accessible service. The CMSG may only be invoked through an application.
+The Common Messaging Service (CMSG) is used to email users. The CMSG service is a REST web service that may be integrated into applications by developers. The Messaging service is not a user accessible service. The CMSG may only be invoked through an application.
 
 ### Capabilities
 
-* Send email and sms messages
+* Send email
 * Tracks delivery status information and makes the status information available so that applications can respond to a failed delivery.
 * Automated retry where a message notification has failed.
 
@@ -17,9 +17,9 @@ The Common Messaging Service (CMSG) is used to electronically notify a user abou
 
 [Learn more about the CMSG-Messaging-API](https://www.github.com/bcgov/nr-messaging-service-showcase/readme.md)  
 
-[Check the DevHub for other NRM Common Services](https://developer.gov.bc.ca) - Coming Soon
+[Check the DevHub for other NRM Common Services](https://developer.gov.bc.ca)
 
-[Try out the capabilities](https://console.pathfinder.gov.bc.ca:8443/console/project/z208i4-tools/overview) - Coming Soon
+Request a "MSSC Capabilities Demo": NR.CommonServiceShowcase@gov.bc.ca
 
 Use this [Developer Guide](https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md) to learn how to build your own application that connects to CMSG-Messaging-API. 
 
