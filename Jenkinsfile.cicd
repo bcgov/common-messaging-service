@@ -56,6 +56,21 @@ pipeline {
             echo 'DEBUG - All pipeline environment variables:'
             echo sh(returnStdout: true, script: 'env')
           }
+
+          def backendChanges = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+          def frontendChanges = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+          def reverseProxyChanges = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^reverse\-proxy/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+          def openshift = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+
+          echo backendChanges
+          echo frontendChanges
+          echo reverseProxyChanges
+          echo openshift
+
+          def backendPackageChanges = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+          def frontendPackageChanges = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+          echo backendPackageChanges
+          echo frontendPackageChanges
         }
       }
       post {
@@ -192,7 +207,7 @@ pipeline {
                   },
 
                   ReverseProxy: {
-                    openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('pods').untilEach(1) {
+                    openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('builds').untilEach(1) {
                       return (it.object().status.phase == "Complete")
                     }
                   }
