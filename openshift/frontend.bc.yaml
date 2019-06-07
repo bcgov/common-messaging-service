@@ -6,63 +6,6 @@ labels:
 metadata:
   name: "${REPO_NAME}-${JOB_NAME}-frontend-bc"
 objects:
-- apiVersion: image.openshift.io/v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
-  spec:
-    lookupPolicy:
-      local: false
-- apiVersion: image.openshift.io/v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend"
-  spec:
-    lookupPolicy:
-      local: false
-- apiVersion: build.openshift.io/v1
-  kind: BuildConfig
-  metadata:
-    labels:
-      app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
-  spec:
-    failedBuildsHistoryLimit: 5
-    nodeSelector: null
-    output:
-      to:
-        kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
-    postCommit: {}
-    resources: {}
-    runPolicy: Serial
-    source:
-      contextDir: /frontend
-      git:
-        ref: "${SOURCE_REPO_REF}"
-        uri: "${SOURCE_REPO_URL}"
-      type: Git
-    strategy:
-      sourceStrategy:
-        env:
-        - name: PATH_ROOT
-          value: "${PATH_ROOT}"
-        - name: REACT_APP_PATH_ROOT
-          value: "${PATH_ROOT}"
-        from:
-          kind: ImageStreamTag
-          name: nodejs:10
-          namespace: openshift
-      type: Source
-    successfulBuildsHistoryLimit: 5
-    triggers:
-    - type: ConfigChange
-    - imageChange: {}
-      type: ImageChange
 - apiVersion: build.openshift.io/v1
   kind: BuildConfig
   metadata:
@@ -105,15 +48,6 @@ objects:
       dockerStrategy: {}
       type: Docker
     successfulBuildsHistoryLimit: 3
-    triggers:
-    - type: ConfigChange
-    - imageChange: {}
-      type: ImageChange
-    - type: "imageChange"
-      imageChange:
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
 parameters:
 - name: REPO_NAME
   description: Application repository name

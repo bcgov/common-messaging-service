@@ -37,9 +37,9 @@ pipeline {
   }
 
   stages {
-    stage('App') {
+    stage('Init') {
       steps {
-        notifyStageStatus('App', 'PENDING')
+        notifyStageStatus('Init', 'PENDING')
 
         // Cancel any running builds in progress
         timeout(5) {
@@ -56,170 +56,86 @@ pipeline {
             echo 'DEBUG - All pipeline environment variables:'
             echo sh(returnStdout: true, script: 'env')
           }
+        }
 
-         openshift.withCluster() {
+      }
+      post {
+        success {
+          echo 'Init successful'
+          notifyStageStatus('Init', 'SUCCESS')
+        }
+        unsuccessful {
+          echo 'Init failed'
+          notifyStageStatus('Init', 'FAILURE')
+        }
+      }
+    }
+
+    stage('Builder') {
+      steps {
+          notifyStageStatus('Builder', 'PENDING')
+
+          openshift.withCluster() {
             openshift.withProject(TOOLS_PROJECT) {
               if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                 echo "DEBUG - Using project: ${openshift.project()}"
               }
-              try {
-                notifyStageStatus('Reverseproxy', 'PENDING')
 
-                echo "Processing BuildConfig reverse proxy..."
-                def bcApp = openshift.process('-f',
-                  'openshift/reverse-proxy.bc.yaml',
-                  "REPO_NAME=${REPO_NAME}",
-                  "JOB_NAME=${JOB_NAME}",
-                  "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                  "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                  "APP_NAME=${APP_NAME}"
-                )
+              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+              def bcApp = openshift.process('-f',
+                'openshift/frontend-builder.bc.yaml',
+                "REPO_NAME=${REPO_NAME}",
+                "JOB_NAME=${JOB_NAME}",
+                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                "APP_NAME=${APP_NAME}",
+                "PATH_ROOT=${PATH_ROOT}"
+              )
 
-                echo "Building ImageStreams for reverse proxy..."
-                openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
+              echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+              openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
 
-                echo "Tagging Image ${APP_NAME}-${JOB_NAME}-reverse-proxy:${JOB_NAME}..."
-                openshift.tag("${APP_NAME}-${JOB_NAME}-reverse-proxy:latest", "${APP_NAME}-${JOB_NAME}-reverse-proxy:${JOB_NAME}")
-
-                echo 'Reverseproxy build successful'
-                notifyStageStatus('Reverseproxy', 'SUCCESS')
-              } catch (e) {
-                echo 'Reverseproxy build failed'
-                notifyStageStatus('Reverseproxy', 'FAILURE')
-                throw e
-              }
-
-              parallel(
-               Backend: {
-                  try {
-                    notifyStageStatus('Backend', 'PENDING')
-
-                    echo "Processing BuildConfig backend..."
-                    def bcApp = openshift.process('-f',
-                      'openshift/backend.bc.yaml',
-                      "REPO_NAME=${REPO_NAME}",
-                      "JOB_NAME=${JOB_NAME}",
-                      "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                      "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                      "APP_NAME=${APP_NAME}"
-                    )
-
-                    echo "Building ImageStreams for backend..."
-                    openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
-
-                    echo "Tagging Image ${APP_NAME}-${JOB_NAME}-backend:${JOB_NAME}..."
-                    openshift.tag("${APP_NAME}-${JOB_NAME}-backend:latest", "${APP_NAME}-${JOB_NAME}-backend:${JOB_NAME}")
-
-                    echo 'Backend build successful'
-                    notifyStageStatus('Backend', 'SUCCESS')
-                  } catch (e) {
-                    echo 'Backend build failed'
-                    notifyStageStatus('Backend', 'FAILURE')
-                    throw e
-                  }
-                },
-
-                Frontend: {
-                  try {
-                    notifyStageStatus('Frontend', 'PENDING')
-
-                    echo "Processing BuildConfig frontend..."
-                    def bcApp = openshift.process('-f',
-                      'openshift/frontend.bc.yaml',
-                      "REPO_NAME=${REPO_NAME}",
-                      "JOB_NAME=${JOB_NAME}",
-                      "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                      "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                      "APP_NAME=${APP_NAME}",
-                      "PATH_ROOT=${PATH_ROOT}"
-                    )
-
-                    echo "Building ImageStreams for frontend..."
-                    def b = openshift.selector('bc/${APP_NAME}-${JOB_NAME}-frontend-builder' ).object()
-                    openshift.apply(b).startBuild('-w').logs('-f')
-
-
-                    echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}..."
-                    openshift.tag("${APP_NAME}-${JOB_NAME}-frontend-builder:latest", "${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}")
-
-                    echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend:${JOB_NAME}..."
-                    openshift.tag("${APP_NAME}-${JOB_NAME}-frontend:latest", "${APP_NAME}-${JOB_NAME}-frontend:${JOB_NAME}")
-
-                    echo 'Frontend build successful'
-                    notifyStageStatus('Frontend', 'SUCCESS')
-                  } catch (e) {
-                    echo 'Frontend build failed'
-                    notifyStageStatus('Frontend', 'FAILURE')
-                    throw e
-                  }
-                }
+              echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}..."
+              openshift.tag("${APP_NAME}-${JOB_NAME}-frontend-builder:latest",
+                "${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}"
               )
             }
           }
+
+
         }
       }
       post {
         success {
-          echo 'App build successful'
-          notifyStageStatus('App', 'SUCCESS')
-        }
-        unsuccessful {
-          echo 'App build failed'
-          notifyStageStatus('App', 'FAILURE')
-        }
-        cleanup {
-          echo 'Cleanup App BuildConfigs...'
+          echo 'Builder successful'
+          notifyStageStatus('Builder', 'SUCCESS')
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
                 if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
-                  def bcApp = openshift.selector('bc', [app: "${APP_NAME}-${JOB_NAME}"])
+                  def bc = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-builder")
 
-                  bcApp.withEach {
-                    echo "Removing BuildConfig ${it.name()}..."
-                    it.delete()
+                  if(bc.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                    bc.delete()
                   }
                 }
               }
             }
           }
         }
+        unsuccessful {
+          echo 'Builder failed'
+          notifyStageStatus('Builder', 'FAILURE')
+        }
       }
     }
 
-    stage('Deploy - Dev') {
-      steps {
-        script {
-          deployStage('Dev', DEV_PROJECT, DEV_HOST, PATH_ROOT)
-        }
-      }
-      post {
-        success {
-          createDeploymentStatus(DEV_PROJECT, 'SUCCESS', DEV_HOST, PATH_ROOT)
-          notifyStageStatus('Deploy - Dev', 'SUCCESS')
-        }
-        unsuccessful {
-          createDeploymentStatus(DEV_PROJECT, 'FAILURE', DEV_HOST, PATH_ROOT)
-          notifyStageStatus('Deploy - Dev', 'FAILURE')
-        }
-      }
-    }
+
   }
-/*
-  post {
-    changed {
-      script {
-        // Comment on Pull Request if build changes to successful
-        if(currentBuild.currentResult.equalsIgnoreCase('SUCCESS')) {
-          echo "Posting comment 'Deployed to https://${HOST_ROUTE}' to Pull Request..."
-          commentOnPR("Deployed to https://${HOST_ROUTE}")
-        }
-      }
-    }
-  }
-*/
+
 }
 
 // ------------------
