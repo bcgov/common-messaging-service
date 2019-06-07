@@ -57,13 +57,14 @@ pipeline {
             echo sh(returnStdout: true, script: 'env')
           }
 
-          openshift.withCluster() {
+         openshift.withCluster() {
             openshift.withProject(TOOLS_PROJECT) {
               if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                 echo "DEBUG - Using project: ${openshift.project()}"
               }
 
-                Backend: {
+              parallel(
+               Backend: {
                   try {
                     notifyStageStatus('Backend', 'PENDING')
 
