@@ -6,6 +6,15 @@ labels:
 metadata:
   name: "${REPO_NAME}-${JOB_NAME}-frontend-bc"
 objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend"
+  spec:
+    lookupPolicy:
+      local: false
 - apiVersion: build.openshift.io/v1
   kind: BuildConfig
   metadata:
