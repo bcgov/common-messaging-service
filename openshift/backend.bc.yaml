@@ -22,6 +22,7 @@ objects:
       app: "${APP_NAME}-${JOB_NAME}"
     name: "${APP_NAME}-${JOB_NAME}-backend"
   spec:
+    completionDeadlineSeconds: 600
     failedBuildsHistoryLimit: 5
     nodeSelector: null
     output:
@@ -29,7 +30,13 @@ objects:
         kind: ImageStreamTag
         name: "${APP_NAME}-${JOB_NAME}-backend:latest"
     postCommit: {}
-    resources: {}
+    resources:
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+      limits:
+        cpu: 2000m
+        memory: 2Gi
     runPolicy: Serial
     source:
       contextDir: /backend

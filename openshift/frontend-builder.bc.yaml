@@ -6,29 +6,6 @@ labels:
 metadata:
   name: "${REPO_NAME}-${JOB_NAME}-frontend-bc"
 objects:
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    annotations:
-      openshift.io/generated-by: OpenShiftNewBuild
-    creationTimestamp:
-    labels:
-      app: "${APP_NAME}-${JOB_NAME}"
-    name: mhart-nodejs-10
-  spec:
-    lookupPolicy:
-      local: false
-    tags:
-    - annotations:
-        openshift.io/imported-from: mhart/alpine-node:10
-      from:
-        kind: DockerImage
-        name: mhart/alpine-node:10
-      generation:
-      importPolicy: {}
-      name: latest
-      referencePolicy:
-        type: Local
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
@@ -45,6 +22,7 @@ objects:
       app: "${APP_NAME}-${JOB_NAME}"
     name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
   spec:
+    completionDeadlineSeconds: 600
     failedBuildsHistoryLimit: 5
     nodeSelector: null
     output:
@@ -75,7 +53,8 @@ objects:
           value: "${PATH_ROOT}"
         from:
           kind: ImageStreamTag
-          name: mhart-nodejs-10:latest
+          name: nodejs:10
+          namespace: openshift
       type: Source
     successfulBuildsHistoryLimit: 5
 parameters:
