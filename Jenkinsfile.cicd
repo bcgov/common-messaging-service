@@ -111,7 +111,7 @@ pipeline {
 
                   if(bcFrontendBuilderConfig.exists()) {
                     echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                    bc.delete()
+                    bcFrontendBuilderConfig.delete()
                   }
                 }
               }
