@@ -14,14 +14,12 @@ The Common Messaging Service (CMSG) is used to email users. The CMSG service is 
 * Automated retry where a message notification has failed.
 
 ### Getting Started
-
-[Learn more about the CMSG-Messaging-API](https://www.github.com/bcgov/nr-messaging-service-showcase/readme.md)  
-
-[Check the DevHub for other NRM Common Services](https://developer.gov.bc.ca)
-
-Request a "MSSC Capabilities Demo": NR.CommonServiceShowcase@gov.bc.ca
-
-Use this [Developer Guide](https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md) to learn how to build your own application that connects to CMSG-Messaging-API. 
+- [Getting Started](https://github.com/bcgov/nr-get-token/wiki/Getting-Started)
+- [README](../readme.md)  
+- [Developer Guide](https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md) - to learn how to build your own application that connects to CMSG-Messaging-API. 
+- [DevHub](https://developer.gov.bc.ca)
+- [Request a "MSSC Capabilities Demo"](mailto:NR.CommonServiceShowcase@gov.bc.ca)
+- [nr-showcase repositories](https://github.com/bcgov/?=nr-showcase)  
 
 ## Additional Resources
 
