@@ -75,7 +75,7 @@ objects:
           value: "${PATH_ROOT}"
         from:
           kind: ImageStreamTag
-          name: mhart-nodejs-10
+          name: mhart-nodejs-10:latest
       type: Source
     successfulBuildsHistoryLimit: 5
 parameters:
