@@ -33,7 +33,7 @@ pipeline {
     SOURCE_REPO_URL = "https://github.com/${REPO_OWNER}/${REPO_NAME}.git"
 
     // HOST_ROUTE is the full domain route endpoint (ie. 'appname-k8vopl-dev.pathfinder.gov.bc.ca/pr-5')
-    DEV_HOST_ROUTE = "${APP_NAME}-${DEV_PROJECT}.${APP_DOMAIN}/${PATH_ROOT}"
+    DEV_HOST = "${APP_NAME}-${DEV_PROJECT}.${APP_DOMAIN}"
   }
 
   stages {
@@ -61,6 +61,32 @@ pipeline {
             openshift.withProject(TOOLS_PROJECT) {
               if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                 echo "DEBUG - Using project: ${openshift.project()}"
+              }
+              try {
+                notifyStageStatus('Reverseproxy', 'PENDING')
+
+                echo "Processing BuildConfig reverse proxy..."
+                def bcApp = openshift.process('-f',
+                  'openshift/reverse-proxy.bc.yaml',
+                  "REPO_NAME=${REPO_NAME}",
+                  "JOB_NAME=${JOB_NAME}",
+                  "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                  "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                  "APP_NAME=${APP_NAME}"
+                )
+
+                echo "Building ImageStreams for reverse proxy..."
+                openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
+
+                echo "Tagging Image ${APP_NAME}-${JOB_NAME}-reverse-proxy:${JOB_NAME}..."
+                openshift.tag("${APP_NAME}-${JOB_NAME}-reverse-proxy:latest", "${APP_NAME}-${JOB_NAME}-reverse-proxy:${JOB_NAME}")
+
+                echo 'Reverseproxy build successful'
+                notifyStageStatus('Reverseproxy', 'SUCCESS')
+              } catch (e) {
+                echo 'Reverseproxy build failed'
+                notifyStageStatus('Reverseproxy', 'FAILURE')
+                throw e
               }
 
               parallel(
@@ -124,35 +150,6 @@ pipeline {
                     notifyStageStatus('Frontend', 'FAILURE')
                     throw e
                   }
-                },
-
-                Reverseproxy: {
-                  try {
-                    notifyStageStatus('Reverseproxy', 'PENDING')
-
-                    echo "Processing BuildConfig reverse proxy..."
-                    def bcApp = openshift.process('-f',
-                      'openshift/reverse-proxy.bc.yaml',
-                      "REPO_NAME=${REPO_NAME}",
-                      "JOB_NAME=${JOB_NAME}",
-                      "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                      "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                      "APP_NAME=${APP_NAME}"
-                    )
-
-                    echo "Building ImageStreams for reverse proxy..."
-                    openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
-
-                    echo "Tagging Image ${APP_NAME}-${JOB_NAME}-reverse-proxy:${JOB_NAME}..."
-                    openshift.tag("${APP_NAME}-${JOB_NAME}-reverse-proxy:latest", "${APP_NAME}-${JOB_NAME}-reverse-proxy:${JOB_NAME}")
-
-                    echo 'Reverseproxy build successful'
-                    notifyStageStatus('Reverseproxy', 'SUCCESS')
-                  } catch (e) {
-                    echo 'Reverseproxy build failed'
-                    notifyStageStatus('Reverseproxy', 'FAILURE')
-                    throw e
-                  }
                 }
               )
             }
@@ -193,16 +190,16 @@ pipeline {
     stage('Deploy - Dev') {
       steps {
         script {
-          deployStage('Dev', DEV_PROJECT, DEV_HOST_ROUTE)
+          deployStage('Dev', DEV_PROJECT, DEV_HOST, PATH_ROOT)
         }
       }
       post {
         success {
-          createDeploymentStatus(DEV_PROJECT, 'SUCCESS', DEV_HOST_ROUTE)
+          createDeploymentStatus(DEV_PROJECT, 'SUCCESS', DEV_HOST, PATH_ROOT)
           notifyStageStatus('Deploy - Dev', 'SUCCESS')
         }
         unsuccessful {
-          createDeploymentStatus(DEV_PROJECT, 'FAILURE', DEV_HOST_ROUTE)
+          createDeploymentStatus(DEV_PROJECT, 'FAILURE', DEV_HOST, PATH_ROOT)
           notifyStageStatus('Deploy - Dev', 'FAILURE')
         }
       }
@@ -228,7 +225,7 @@ pipeline {
 // ------------------
 
 // Parameterized deploy stage
-def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
+def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathEnv) {
   if (!stageEnv.equalsIgnoreCase('Dev')) {
     input("Deploy to ${projectEnv}?")
   }
@@ -266,9 +263,7 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
         "REPO_NAME=${REPO_NAME}",
         "JOB_NAME=${JOB_NAME}",
         "NAMESPACE=${projectEnv}",
-        "APP_NAME=${APP_NAME}",
-        "HOST_ROUTE=${hostRouteEnv}",
-        "PATH_ROOT=${PATH_ROOT}"
+        "APP_NAME=${APP_NAME}"
       )
 
       echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -278,8 +273,7 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
         "JOB_NAME=${JOB_NAME}",
         "NAMESPACE=${projectEnv}",
         "APP_NAME=${APP_NAME}",
-        "HOST_ROUTE=${hostRouteEnv}",
-        "PATH_ROOT=${PATH_ROOT}"
+        "PATH_ROOT=${pathEnv}"
       )
 
       echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
@@ -289,19 +283,19 @@ def deployStage(String stageEnv, String projectEnv, String hostRouteEnv) {
         "JOB_NAME=${JOB_NAME}",
         "NAMESPACE=${projectEnv}",
         "APP_NAME=${APP_NAME}",
-        "HOST_ROUTE=${hostRouteEnv}",
-        "PATH_ROOT=${PATH_ROOT}"
+        "HOST_ROUTE=${hostEnv}",
+        "PATH_ROOT=${pathEnv}"
       )
 
       echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
 
-      createDeploymentStatus(projectEnv, 'PENDING', hostRouteEnv)
+      createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
       def dcBackend = openshift.apply(dcBackendTemplate).narrow('dc')
 
-       createDeploymentStatus(projectEnv, 'PENDING', hostRouteEnv)
+       createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
       def dcFrontend = openshift.apply(dcFrontendTemplate).narrow('dc')
 
-      createDeploymentStatus(projectEnv, 'PENDING', hostRouteEnv)
+      createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
       def dcProxy = openshift.apply(dcProxyTemplate).narrow('dc')
 
       // Wait for new deployment to roll out
@@ -343,7 +337,7 @@ def notifyStageStatus(String name, String status) {
 }
 
 // Create deployment status and pass to Jenkins-GitHub library
-def createDeploymentStatus (String environment, String status, String hostUrl) {
+def createDeploymentStatus (String environment, String status, String hostEnv, String pathEnv) {
   def ghDeploymentId = new GitHubHelper().createDeployment(
     this,
     SOURCE_REPO_REF,
@@ -361,7 +355,7 @@ def createDeploymentStatus (String environment, String status, String hostUrl) {
   )
 
   if (status.equalsIgnoreCase('SUCCESS')) {
-    echo "${environment} deployment successful at https://${hostUrl}"
+    echo "${environment} deployment successful at https://${hostEnv}${pathEnv}"
   } else if (status.equalsIgnoreCase('PENDING')) {
     echo "${environment} deployment pending..."
   } else if (status.equalsIgnoreCase('FAILURE')) {
