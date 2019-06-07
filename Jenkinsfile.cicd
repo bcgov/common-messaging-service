@@ -135,13 +135,15 @@ pipeline {
                     )
 
                     echo "Building ImageStreams for frontend..."
-                    openshift.apply(bcApp).narrow('bc').startBuild('-w').logs('-f')
+                    def b = openshift.selector('bc/${APP_NAME}-${JOB_NAME}-frontend-builder' ).object()
+                    openshift.apply(b).startBuild('-w').logs('-f')
 
-                    echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend:${JOB_NAME}..."
-                    openshift.tag("${APP_NAME}-${JOB_NAME}-frontend:latest", "${APP_NAME}-${JOB_NAME}-frontend:${JOB_NAME}")
 
                     echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}..."
                     openshift.tag("${APP_NAME}-${JOB_NAME}-frontend-builder:latest", "${APP_NAME}-${JOB_NAME}-frontend-builder:${JOB_NAME}")
+
+                    echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend:${JOB_NAME}..."
+                    openshift.tag("${APP_NAME}-${JOB_NAME}-frontend:latest", "${APP_NAME}-${JOB_NAME}-frontend:${JOB_NAME}")
 
                     echo 'Frontend build successful'
                     notifyStageStatus('Frontend', 'SUCCESS')
@@ -351,7 +353,7 @@ def createDeploymentStatus (String environment, String status, String hostEnv, S
     this,
     ghDeploymentId,
     status,
-    ['targetUrl': "https://${hostUrl}"]
+    ['targetUrl': "https://${hostEnv}${pathEnv}"]
   )
 
   if (status.equalsIgnoreCase('SUCCESS')) {
