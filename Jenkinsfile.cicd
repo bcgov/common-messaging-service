@@ -343,7 +343,6 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           echo "frontend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
           return (it.object().status.phase == "Running")
         }
-
       }
       timeout(5) {
         echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
@@ -355,6 +354,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           echo "reverse-proxy pod: ${it.name()}, status.phase: ${it.object().status.phase}"
           return (it.object().status.phase == "Running")
         }
+      }
     }
   }
 }
