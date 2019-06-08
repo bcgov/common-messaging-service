@@ -144,22 +144,41 @@ pipeline {
               //  }
               //
               // so build out in parallel with explicit wait
+              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
+              def bcBackendTemplate = openshift.process('-f',
+                'openshift/backend.bc.yaml',
+                "REPO_NAME=${REPO_NAME}",
+                "JOB_NAME=${JOB_NAME}",
+                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                "APP_NAME=${APP_NAME}",
+              )
+
+              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
+              def bcFrontendTemplate = openshift.process('-f',
+                'openshift/frontend.bc.yaml',
+                "REPO_NAME=${REPO_NAME}",
+                "JOB_NAME=${JOB_NAME}",
+                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                "APP_NAME=${APP_NAME}"
+              )
+
+              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+              def bcReverseProxyTemplate = openshift.process('-f',
+                'openshift/reverse-proxy.bc.yaml',
+                "REPO_NAME=${REPO_NAME}",
+                "JOB_NAME=${JOB_NAME}",
+                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                "APP_NAME=${APP_NAME}"
+              )
 
               timeout(10) {
                 parallel(
                   Backend: {
                     try {
                       notifyStageStatus('Backend', 'PENDING')
-
-                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
-                      def bcBackendTemplate = openshift.process('-f',
-                        'openshift/backend.bc.yaml',
-                        "REPO_NAME=${REPO_NAME}",
-                        "JOB_NAME=${JOB_NAME}",
-                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                        "APP_NAME=${APP_NAME}",
-                      )
 
                       echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
                       openshift.apply(bcBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
@@ -176,15 +195,6 @@ pipeline {
                   Frontend: {
                     try {
                       notifyStageStatus('Frontend', 'PENDING')
-                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
-                      def bcFrontendTemplate = openshift.process('-f',
-                        'openshift/frontend.bc.yaml',
-                        "REPO_NAME=${REPO_NAME}",
-                        "JOB_NAME=${JOB_NAME}",
-                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                        "APP_NAME=${APP_NAME}"
-                      )
 
                       echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
                       openshift.apply(bcFrontendTemplate).narrow('bc').startBuild('-w').logs('-f')
@@ -201,16 +211,6 @@ pipeline {
                   ReverseProxy: {
                     try {
                       notifyStageStatus('ReverseProxy', 'PENDING')
-
-                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-                      def bcReverseProxyTemplate = openshift.process('-f',
-                        'openshift/reverse-proxy.bc.yaml',
-                        "REPO_NAME=${REPO_NAME}",
-                        "JOB_NAME=${JOB_NAME}",
-                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                        "APP_NAME=${APP_NAME}"
-                      )
 
                       echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
                       openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild('-w').logs('-f')
@@ -355,39 +355,35 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
         "PATH_ROOT=${pathEnv}"
       )
 
-      // Wait for new deployment to roll out
+      // watching related pods is not reliable, particularly if this not the first deployment.
+      // get "false" positives that the pods we launched are running.
+      //  openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-backend").related('pods').untilEach(1) {
+      //    echo "backend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
+      //    return (it.object().status.phase == "Running")
+      //  }
+      //
+      // so build out in parallel with explicit wait
+
       timeout(10) {
+        parallel(
+          Backend: {
+            echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
+            createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+            openshift.apply(dcBackendTemplate).narrow('dc').rollout().status('--watch=true')
+          },
 
-        echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
-        createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-
-        def dcBackendConfig = openshift.apply(dcBackendTemplate).narrow('dc')
-
-        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-backend").related('pods').untilEach(1) {
-          echo "backend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
-          return (it.object().status.phase == "Running")
-        }
-
-        echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
-        createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-
-        def dcFrontendConfig = openshift.apply(dcFrontendTemplate).narrow('dc')
-
-        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-frontend").related('pods').untilEach(1) {
-          echo "frontend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
-          return (it.object().status.phase == "Running")
-        }
+          Frontend: {
+            echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
+            createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+            openshift.apply(dcFrontendTemplate).narrow('dc').rollout().status('--watch=true')
+          }
+        )
       }
+      // deploy our reverse proxy once the backend and frontend services have deployed
       timeout(5) {
         echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
         createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-
-        def dcProxyConfig = openshift.apply(dcProxyTemplate).narrow('dc')
-
-        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('pods').untilEach(1) {
-          echo "reverse-proxy pod: ${it.name()}, status.phase: ${it.object().status.phase}"
-          return (it.object().status.phase == "Running")
-        }
+        openshift.apply(dcProxyTemplate).narrow('dc').rollout().status('--watch=true')
       }
     }
   }
