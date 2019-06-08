@@ -136,60 +136,94 @@ pipeline {
                 echo "DEBUG - Using project: ${openshift.project()}"
               }
 
-              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
-              def bcBackendTemplate = openshift.process('-f',
-                'openshift/backend.bc.yaml',
-                "REPO_NAME=${REPO_NAME}",
-                "JOB_NAME=${JOB_NAME}",
-                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}",
-              )
-
-              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
-              def bcFrontendTemplate = openshift.process('-f',
-                'openshift/frontend.bc.yaml',
-                "REPO_NAME=${REPO_NAME}",
-                "JOB_NAME=${JOB_NAME}",
-                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}"
-              )
-
-              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-              def bcReverseProxyTemplate = openshift.process('-f',
-                'openshift/reverse-proxy.bc.yaml',
-                "REPO_NAME=${REPO_NAME}",
-                "JOB_NAME=${JOB_NAME}",
-                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}"
-              )
+              // for whatever reason, watching related builds is not reliable.
+              // the watches don't always close even when build is complete.
+              //  openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-backend").related('builds').untilEach(1) {
+              //    echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
+              //    return (it.object().status.phase == "Complete")
+              //  }
+              //
+              // so build out in parallel with explicit wait
 
               timeout(10) {
-                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
-                openshift.apply(bcBackendTemplate).narrow('bc').startBuild()
+                parallel(
+                  Backend: {
+                    try {
+                      notifyStageStatus('Backend', 'PENDING')
 
-                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-backend").related('builds').untilEach(1) {
-                  echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
-                  return (it.object().status.phase == "Complete")
-                }
+                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
+                      def bcBackendTemplate = openshift.process('-f',
+                        'openshift/backend.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}",
+                      )
 
-                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
-                openshift.apply(bcFrontendTemplate).narrow('bc').startBuild()
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
+                      openshift.apply(bcBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
 
-                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-frontend").related('builds').untilEach(1) {
-                  echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
-                  return (it.object().status.phase == "Complete")
-                }
+                      echo 'Backend build successful'
+                      notifyStageStatus('Backend', 'SUCCESS')
+                    } catch (e) {
+                      echo 'Backend build failed'
+                      notifyStageStatus('Backend', 'FAILURE')
+                      throw e
+                    }
+                  },
 
-                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-                openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild()
+                  Frontend: {
+                    try {
+                      notifyStageStatus('Frontend', 'PENDING')
+                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
+                      def bcFrontendTemplate = openshift.process('-f',
+                        'openshift/frontend.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}"
+                      )
 
-                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('builds').untilEach(1) {
-                  echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
-                  return (it.object().status.phase == "Complete")
-                }
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
+                      openshift.apply(bcFrontendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo 'Frontend build successful'
+                      notifyStageStatus('Frontend', 'SUCCESS')
+                    } catch (e) {
+                      echo 'Frontend build failed'
+                      notifyStageStatus('Frontend', 'FAILURE')
+                      throw e
+                    }
+                  },
+
+                  ReverseProxy: {
+                    try {
+                      notifyStageStatus('ReverseProxy', 'PENDING')
+
+                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+                      def bcReverseProxyTemplate = openshift.process('-f',
+                        'openshift/reverse-proxy.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+                      openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo 'ReverseProxy build successful'
+                      notifyStageStatus('ReverseProxy', 'SUCCESS')
+                    } catch (e) {
+                      echo 'ReverseProxy build failed'
+                      notifyStageStatus('ReverseProxy', 'FAILURE')
+                      throw e
+                    }
+                  }
+                )
               }
             }
           }
