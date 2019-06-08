@@ -325,36 +325,6 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       echo "Tagging Image ${APP_NAME}-${JOB_NAME}-reverse-proxy:latest..."
       openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-reverse-proxy:latest", "${APP_NAME}-${JOB_NAME}-reverse-proxy:latest")
 
-      echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
-      def dcBackendTemplate = openshift.process('-f',
-        'openshift/backend.dc.yaml',
-        "REPO_NAME=${REPO_NAME}",
-        "JOB_NAME=${JOB_NAME}",
-        "NAMESPACE=${projectEnv}",
-        "APP_NAME=${APP_NAME}"
-      )
-
-      echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-frontend..."
-      def dcFrontendTemplate = openshift.process('-f',
-        'openshift/frontend.dc.yaml',
-        "REPO_NAME=${REPO_NAME}",
-        "JOB_NAME=${JOB_NAME}",
-        "NAMESPACE=${projectEnv}",
-        "APP_NAME=${APP_NAME}",
-        "PATH_ROOT=${pathEnv}"
-      )
-
-      echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-      def dcProxyTemplate = openshift.process('-f',
-        'openshift/reverse-proxy.dc.yaml',
-        "REPO_NAME=${REPO_NAME}",
-        "JOB_NAME=${JOB_NAME}",
-        "NAMESPACE=${projectEnv}",
-        "APP_NAME=${APP_NAME}",
-        "HOST_ROUTE=${hostEnv}",
-        "PATH_ROOT=${pathEnv}"
-      )
-
       // watching related pods is not reliable, particularly if this not the first deployment.
       // get "false" positives that the pods we launched are running.
       //  openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-backend").related('pods').untilEach(1) {
@@ -367,12 +337,29 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       timeout(10) {
         parallel(
           Backend: {
+            echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
+            def dcBackendTemplate = openshift.process('-f',
+              'openshift/backend.dc.yaml',
+              "REPO_NAME=${REPO_NAME}",
+              "JOB_NAME=${JOB_NAME}",
+              "NAMESPACE=${projectEnv}",
+              "APP_NAME=${APP_NAME}"
+            )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
             openshift.apply(dcBackendTemplate).narrow('dc').rollout().status('--watch=true')
           },
 
           Frontend: {
+            echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-frontend..."
+            def dcFrontendTemplate = openshift.process('-f',
+              'openshift/frontend.dc.yaml',
+              "REPO_NAME=${REPO_NAME}",
+              "JOB_NAME=${JOB_NAME}",
+              "NAMESPACE=${projectEnv}",
+              "APP_NAME=${APP_NAME}",
+              "PATH_ROOT=${pathEnv}"
+            )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
             openshift.apply(dcFrontendTemplate).narrow('dc').rollout().status('--watch=true')
@@ -381,6 +368,16 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       }
       // deploy our reverse proxy once the backend and frontend services have deployed
       timeout(5) {
+        echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+        def dcProxyTemplate = openshift.process('-f',
+          'openshift/reverse-proxy.dc.yaml',
+          "REPO_NAME=${REPO_NAME}",
+          "JOB_NAME=${JOB_NAME}",
+          "NAMESPACE=${projectEnv}",
+          "APP_NAME=${APP_NAME}",
+          "HOST_ROUTE=${hostEnv}",
+          "PATH_ROOT=${pathEnv}"
+        )
         echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
         createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
         openshift.apply(dcProxyTemplate).narrow('dc').rollout().status('--watch=true')

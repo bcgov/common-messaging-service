@@ -58,7 +58,7 @@ objects:
             value: "2015"
           - name: STATIC_FILES_PATH
             value: "${STATIC_FILES_PATH}"
-          image: "docker-registry.default.svc:5000/${NAMEPSACE}/${APP_NAME}-${JOB_NAME}-frontend:latest"
+          image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend:latest"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
