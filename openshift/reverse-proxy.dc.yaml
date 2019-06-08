@@ -105,7 +105,13 @@ objects:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 10
-          resources: {}
+          resources:
+            requests:
+              cpu: "${CPU_REQUEST}"
+              memory: "${MEMORY_REQUEST}"
+            limits:
+              cpu: "${CPU_LIMIT}"
+              memory: "${MEMORY_LIMIT}"
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
         dnsPolicy: ClusterFirst
@@ -127,6 +133,22 @@ parameters:
 - name: APP_NAME
   description: Application name
   required: true
+- name: CPU_REQUEST
+  description: Requested CPU per pod (in millicores ex. 500m)
+  required: true
+  value: 250m
+- name: MEMORY_REQUEST
+  description: Requested Memory per pod (in gigabytes Gi or megabytes Mi ex. 500Mi)
+  required: true
+  value: 500Mi
+- name: CPU_LIMIT
+  description: Limit Peak CPU per pod (in millicores ex. 1000m)
+  required: true
+  value: 500m
+- name: MEMORY_LIMIT
+  description: Limit Peak Memory per pod (in gigabytes Gi or megabytes Mi ex. 2Gi)
+  required: true
+  value: 1Gi
 - name: HOST_ROUTE
   description: The host the route will use to expose service outside cluster
   required: true
