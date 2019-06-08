@@ -91,16 +91,6 @@ objects:
         securityContext: {}
         terminationGracePeriodSeconds: 30
     test: false
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - "${APP_NAME}-${JOB_NAME}-frontend"
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend:latest"
-      type: ImageChange
 parameters:
 - name: REPO_NAME
   description: Application repository name
