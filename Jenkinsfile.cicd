@@ -167,36 +167,29 @@ pipeline {
               )
 
               timeout(10) {
-                parallel(
-                  Backend: {
-                    echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
-                    openshift.apply(bcBackendTemplate).narrow('bc').startBuild()
+                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
+                openshift.apply(bcBackendTemplate).narrow('bc').startBuild()
 
-                    openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-backend").related('builds').untilEach(1) {
-                      echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
-                      return (it.object().status.phase == "Complete")
-                    }
-                  },
-                  Frontend: {
-                    echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
-                    openshift.apply(bcFrontendTemplate).narrow('bc').startBuild()
+                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-backend").related('builds').untilEach(1) {
+                  echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
+                  return (it.object().status.phase == "Complete")
+                }
 
-                    openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-frontend").related('builds').untilEach(1) {
-                      echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
-                      return (it.object().status.phase == "Complete")
-                    }
+                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
+                openshift.apply(bcFrontendTemplate).narrow('bc').startBuild()
 
-                  },
-                  Proxy: {
-                    echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-                    openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild()
+                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-frontend").related('builds').untilEach(1) {
+                  echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
+                  return (it.object().status.phase == "Complete")
+                }
 
-                    openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('builds').untilEach(1) {
-                      echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
-                      return (it.object().status.phase == "Complete")
-                    }
-                  }
-                )
+                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+                openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild()
+
+                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('builds').untilEach(1) {
+                  echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
+                  return (it.object().status.phase == "Complete")
+                }
               }
             }
           }
@@ -330,47 +323,38 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
 
       // Wait for new deployment to roll out
       timeout(10) {
-        sequential(
-          Services: {
-            parallel (
-              Backend: {
-                echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
-                createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
 
-                def dcBackendConfig = openshift.apply(dcBackendTemplate).narrow('dc')
+        echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
+        createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
 
-                openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-backend").related('pods').untilEach(1) {
-                  echo "backend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
-                  return (it.object().status.phase == "Running")
-                }
+        def dcBackendConfig = openshift.apply(dcBackendTemplate).narrow('dc')
 
-              },
-              Frontend: {
-                echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
-                createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-backend").related('pods').untilEach(1) {
+          echo "backend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
+          return (it.object().status.phase == "Running")
+        }
 
-                def dcFrontendConfig = openshift.apply(dcFrontendTemplate).narrow('dc')
+        echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
+        createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
 
-                openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-frontend").related('pods').untilEach(1) {
-                  echo "frontend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
-                  return (it.object().status.phase == "Running")
-                }
-              }
-            )
-          },
-          Proxy: {
-            echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-            createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+        def dcFrontendConfig = openshift.apply(dcFrontendTemplate).narrow('dc')
 
-            def dcProxyConfig = openshift.apply(dcProxyTemplate).narrow('dc')
+        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-frontend").related('pods').untilEach(1) {
+          echo "frontend pod: ${it.name()}, status.phase: ${it.object().status.phase}"
+          return (it.object().status.phase == "Running")
+        }
 
-            openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('pods').untilEach(1) {
-              echo "reverse-proxy pod: ${it.name()}, status.phase: ${it.object().status.phase}"
-              return (it.object().status.phase == "Running")
-            }
-          }
-        )
       }
+      timeout(5) {
+        echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+        createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+
+        def dcProxyConfig = openshift.apply(dcProxyTemplate).narrow('dc')
+
+        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('pods').untilEach(1) {
+          echo "reverse-proxy pod: ${it.name()}, status.phase: ${it.object().status.phase}"
+          return (it.object().status.phase == "Running")
+        }
     }
   }
 }
