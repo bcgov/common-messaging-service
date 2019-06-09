@@ -71,6 +71,73 @@ pipeline {
       }
     }
 
+    stage('Backend Builder') {
+      steps {
+          notifyStageStatus('Backend Builder', 'PENDING')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                }
+
+                def packagesBackendUpdate = backendPackagesUpdated();
+                echo "backend/package.json updated: ${packagesBackendUpdate}"
+                def backendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-builder:latest").exists()
+                echo "backend builder image exists: ${backendBuilderImageExists}"
+
+                if (packagesBackendUpdate || backendBuilderImageExists) {
+                  echo "backend/packages.json updated or ImageStream ${APP_NAME}-${JOB_NAME}-backend-builder not exist, build/update image"
+                  echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-builder..."
+                  def bcBackendBuilderTemplate = openshift.process('-f',
+                    'openshift/backend-builder.bc.yaml',
+                    "REPO_NAME=${REPO_NAME}",
+                    "JOB_NAME=${JOB_NAME}",
+                    "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                    "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                    "APP_NAME=${APP_NAME}",
+                    "PATH_ROOT=${PATH_ROOT}"
+                  )
+
+                  echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-builder..."
+                  openshift.apply(bcBackendBuilderTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                } else {
+                  echo "backend/packages.json and builder image up to date."
+                }
+
+              }
+            }
+          }
+      }
+      post {
+        success {
+          echo 'Backend Builder successful'
+          notifyStageStatus('Backend Builder', 'SUCCESS')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                } else {
+                  def bcBackendBuilderConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-builder")
+
+                  if(bcBackendBuilderConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-builder..."
+                    bcBackendBuilderConfig.delete()
+                  }
+                }
+              }
+            }
+          }
+        }
+        unsuccessful {
+          echo 'Build Prep. failed'
+          notifyStageStatus('Build Prep.', 'FAILURE')
+        }
+      }
+    }
+
     stage('Build Prep.') {
       steps {
           notifyStageStatus('Build Prep.', 'PENDING')
@@ -152,6 +219,7 @@ pipeline {
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
                 "APP_NAME=${APP_NAME}",
+                "NAMESPACE=${TOOLS_PROJECT}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -434,4 +502,14 @@ def commentOnPR(String comment) {
   if(JOB_BASE_NAME.startsWith('PR-')) {
     GitHubHelper.commentOnPullRequest(this, comment)
   }
+}
+
+def backendPackagesUpdated() {
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  return commitFiles.length() === 1
+}
+
+def backendUpdated() {
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  return commitFiles.length() > 0 && !(backendPackagesUpdated && commitFiles.length() === 1)
 }
