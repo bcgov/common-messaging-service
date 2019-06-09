@@ -82,6 +82,8 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
+                def pipelineUpdated = jenkinsFileUpdated()
+
                 def packagesBackendUpdate = backendPackagesUpdated()
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
                 def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
@@ -99,7 +101,7 @@ pipeline {
 
                 parallel(
                   Backend: {
-                    if (packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists) {
+                    if (pipelineUpdated || packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists) {
                       echo "Changes to backend NPM, update and build..."
                       echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
                       def bcBackendNpmTemplate = openshift.process('-f',
@@ -120,7 +122,7 @@ pipeline {
 
                   },
                   Frontend: {
-                    if (packagesFrontendUpdate || frontendNpmTemplateChanged || !frontendNpmImageExists) {
+                    if (pipelineUpdated || packagesFrontendUpdate || frontendNpmTemplateChanged || !frontendNpmImageExists) {
                       echo "Changes to frontend NPM, update and build..."
                       echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
                       def bcFrontendNpmTemplate = openshift.process('-f',
@@ -191,14 +193,12 @@ pipeline {
 
                 def frontendChanged = frontendUpdated();
                 echo "frontend/* updated: ${frontendChanged}"
-
                 def frontendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-builder").exists()
                 echo "frontend builder image exists: ${frontendBuilderImageExists}"
-
                 def frontendBuilderTemplateChanged = frontendBuilderTemplateUpdated()
                 echo "frontend builder template updated: ${frontendBuilderTemplateChanged}"
 
-                if (frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists) {
+                if (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists) {
                   echo "Changes to frontend NPM, update and build..."
                   echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
                   def bcFrontendBuilderTemplate = openshift.process('-f',
@@ -470,7 +470,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcBackendTemplate).narrow('dc').rollout().status('--watch=true')
+            openshift.apply(dcBackendTemplate).narrow('dc').rollout().latest().status('--watch=true')
           },
 
           Frontend: {
@@ -485,7 +485,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcFrontendTemplate).narrow('dc').rollout().status('--watch=true')
+            openshift.apply(dcFrontendTemplate).narrow('dc').rollout().latest().status('--watch=true')
           },
 
           ReverseProxy: {
@@ -501,7 +501,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcProxyTemplate).narrow('dc').rollout().status('--watch=true')
+            openshift.apply(dcProxyTemplate).narrow('dc').rollout().latest().status('--watch=true')
 
           }
 
@@ -561,13 +561,18 @@ def commentOnPR(String comment) {
   }
 }
 
+def jenkinsFileUpdated() {
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^Jenkinsfile.cicd' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  return commitFiles.length() > 0
+}
+
 def backendPackagesUpdated() {
   def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() > 0
 }
 
 def backendNpmTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/backend-npm.bc.yaml.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/backend-npm.bc.yaml' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() > 0
 }
 
@@ -582,12 +587,12 @@ def frontendPackagesUpdated() {
 }
 
 def frontendNpmTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-npm.bc.yaml.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-npm.bc.yaml' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() > 0
 }
 
 def frontendBuilderTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-builder.bc.yaml.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-builder.bc.yaml' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() > 0
 }
 
