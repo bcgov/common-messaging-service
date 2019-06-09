@@ -561,12 +561,12 @@ def commentOnPR(String comment) {
 }
 
 def backendPackagesUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/package.json$' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() == 1
 }
 
 def backendNpmTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/backend-npm.bc.yaml.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/backend-npm.bc.yaml.json$' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() == 1
 }
 
@@ -576,17 +576,17 @@ def backendUpdated() {
 }
 
 def frontendPackagesUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/package.json$' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() == 1
 }
 
 def frontendNpmTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-npm.bc.yaml.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-npm.bc.yaml.json$' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() == 1
 }
 
 def frontendBuilderTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-builder.bc.yaml.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-builder.bc.yaml.json$' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() == 1
 }
 
