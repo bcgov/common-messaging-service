@@ -83,12 +83,12 @@ pipeline {
 
                 def packagesBackendUpdate = backendPackagesUpdated();
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
-                def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm:latest").exists()
+                def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
                 echo "backend builder image exists: ${backendNpmImageExists}"
 
                 def packagesFrontendUpdate = frontendPackagesUpdated();
                 echo "frontend/package.json updated: ${packagesFrontendUpdate}"
-                def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm:latest").exists()
+                def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm").exists()
                 echo "frontend npm image exists: ${frontendNpmImageExists}"
 
 
@@ -187,7 +187,7 @@ pipeline {
                 def frontendUpdated = frontendUpdated();
                 echo "frontend/* updated: ${frontendUpdated}"
 
-                def frontendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-builder:latest").exists()
+                def frontendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-builder").exists()
                 echo "frontend builder image exists: ${frontendBuilderImageExists}"
 
                 if (frontendUpdated || !frontendBuilderImageExists) {
