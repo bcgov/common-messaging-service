@@ -199,7 +199,7 @@ pipeline {
                 echo "frontend builder template updated: ${frontendBuilderTemplateChanged}"
 
                 if (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists) {
-                  echo "Changes to frontend NPM, update and build..."
+                  echo "Changes to frontend builder, update and build..."
                   echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
                   def bcFrontendBuilderTemplate = openshift.process('-f',
                     'openshift/frontend-builder.bc.yaml',
@@ -470,7 +470,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcBackendTemplate).narrow('dc').rollout().latest().status('--watch=true')
+            openshift.apply(dcBackendTemplate).narrow('dc').rollout().latest().status()
           },
 
           Frontend: {
@@ -485,7 +485,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcFrontendTemplate).narrow('dc').rollout().latest().status('--watch=true')
+            openshift.apply(dcFrontendTemplate).narrow('dc').rollout().latest().status()
           },
 
           ReverseProxy: {
@@ -501,7 +501,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             )
             echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
             createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcProxyTemplate).narrow('dc').rollout().latest().status('--watch=true')
+            openshift.apply(dcProxyTemplate).narrow('dc').rollout().latest().status()
 
           }
 
