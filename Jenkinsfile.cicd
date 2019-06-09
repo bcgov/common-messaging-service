@@ -81,19 +81,19 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                def packagesBackendUpdate = backendPackagesUpdated();
+                def packagesBackendUpdate = checkFolderForDiffs('backend/packages.json')
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
                 def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
                 echo "backend builder image exists: ${backendNpmImageExists}"
-                def backendNpmTemplateChanged = backendNpmTemplateUpdated()
-                echo "backend npm template udpated: ${backendNpmTemplateChanged}"
+                def backendNpmTemplateChanged = checkFolderForDiffs('openshift/backend-npm.bc.yaml')
+                echo "backend npm template updated: ${backendNpmTemplateChanged}"
 
                 def packagesFrontendUpdate = frontendPackagesUpdated();
                 echo "frontend/package.json updated: ${packagesFrontendUpdate}"
                 def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm").exists()
                 echo "frontend npm image exists: ${frontendNpmImageExists}"
                 def frontendNpmTemplateChanged = frontendNpmTemplateUpdated()
-                echo "frontend npm template udpated: ${frontendNpmTemplateChanged}"
+                echo "frontend npm template updated: ${frontendNpmTemplateChanged}"
 
 
                 parallel(
@@ -594,3 +594,15 @@ def frontendUpdated() {
   def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
   return commitFiles.length() > 0
 }
+
+def checkFolderForDiffs(path) {
+    try {
+        // git diff will return 1 for changes (failure) which is caught in catch, or
+        // 0 meaning no changes
+        sh "git diff --quiet --exit-code HEAD~1..HEAD ${path}"
+        return false
+    } catch (err) {
+        return true
+    }
+}
+
