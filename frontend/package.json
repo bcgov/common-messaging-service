@@ -19,7 +19,7 @@
     "lint:fix": "node_modules/.bin/eslint . --fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",
     "clean": "rm -rf node_modules",
     "clean:build": "npm run clean && npm install && npm run build",
-    "noop": "echo \"Do nothing...\" && exit 1"
+    "noop": "echo \"allows us to call an npm script that does nothing...\" && exit 1"
   },
   "dependencies": {
     "@babel/runtime": "7.4.4",

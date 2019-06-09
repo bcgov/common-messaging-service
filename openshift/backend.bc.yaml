@@ -47,7 +47,7 @@ objects:
     strategy:
       sourceStrategy:
         env:
-        - name: "NPM_RUN"
+        - name: NPM_RUN
           value: "start"
         from:
           kind: ImageStreamTag
