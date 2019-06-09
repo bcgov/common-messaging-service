@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: "${REPO_NAME}-${JOB_NAME}-backend-bc-template"
+  template: "${APP_NAME}-${JOB_NAME}-backend-bc-template"
 metadata:
-  name: "${REPO_NAME}-${JOB_NAME}-backend-bc"
+  name: "${APP_NAME}-${JOB_NAME}-backend-bc"
 objects:
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
@@ -48,14 +48,14 @@ objects:
       - as: null
         from:
           kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-backend-builder:latest"
+          name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
           namespace: "${NAMESPACE}"
         paths:
         - destinationDir: ./app/node_modules
           sourcePath: /app/node_modules
       type: Dockerfile
       dockerfile: |-
-        FROM docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-backend-builder:latest
+        FROM docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-backend-npm:latest
         WORKDIR /app
         COPY . .
         EXPOSE 8080

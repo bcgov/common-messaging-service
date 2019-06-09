@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: "${REPO_NAME}-${JOB_NAME}-frontend-builder-bc-template"
+  template: "${APP_NAME}-${JOB_NAME}-frontend-builder-bc-template"
 metadata:
-  name: "${REPO_NAME}-${JOB_NAME}-frontend-builder-bc"
+  name: "${APP_NAME}-${JOB_NAME}-frontend-builder-bc"
 objects:
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
