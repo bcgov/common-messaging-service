@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: "${REPO_NAME}-${JOB_NAME}-frontend-builder-bc-template"
+  template: "${REPO_NAME}-${JOB_NAME}-backend-npm-bc-template"
 metadata:
-  name: "${REPO_NAME}-${JOB_NAME}-frontend-builder-bc"
+  name: "${REPO_NAME}-${JOB_NAME}-backend-npm-bc"
 objects:
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+    name: "${APP_NAME}-${JOB_NAME}-backend-npm"
   spec:
     lookupPolicy:
       local: false
@@ -20,7 +20,7 @@ objects:
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+    name: "${APP_NAME}-${JOB_NAME}-backend-npm"
   spec:
     completionDeadlineSeconds: 600
     failedBuildsHistoryLimit: 5
@@ -28,7 +28,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
+        name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
     postCommit: {}
     resources:
       requests:
@@ -36,27 +36,24 @@ objects:
         memory: 1Gi
       limits:
         cpu: 2000m
-        memory: 1Gi
+        memory: 2Gi
     runPolicy: Serial
     source:
-      contextDir: /frontend
+      contextDir: /backend
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
+      dockerfile: |-
+        FROM mhart/alpine-node:10
+        WORKDIR /app
+        COPY . .
+        RUN npm install --prod
+        EXPOSE 8080
+        CMD ["npm", "run", "start"]
     strategy:
-      sourceStrategy:
-        env:
-        - name: NPM_RUN
-          value: "build"
-        - name: PATH_ROOT
-          value: "${PATH_ROOT}"
-        - name: REACT_APP_PATH_ROOT
-          value: "${PATH_ROOT}"
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
-      type: Source
+      dockerStrategy: {}
+      type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
@@ -74,7 +71,3 @@ parameters:
 - name: APP_NAME
   description: Application name
   required: true
-- name: PATH_ROOT
-  description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
-  required: true
-  value: "/mssc"

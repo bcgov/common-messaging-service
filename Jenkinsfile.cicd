@@ -71,9 +71,9 @@ pipeline {
       }
     }
 
-    stage('Backend Builder') {
+    stage('NpmImages') {
       steps {
-          notifyStageStatus('Backend Builder', 'PENDING')
+          notifyStageStatus('NpmImages', 'PENDING')
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
@@ -83,47 +83,84 @@ pipeline {
 
                 def packagesBackendUpdate = backendPackagesUpdated();
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
-                def backendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-builder:latest").exists()
-                echo "backend builder image exists: ${backendBuilderImageExists}"
+                def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm:latest").exists()
+                echo "backend builder image exists: ${backendNpmImageExists}"
 
-                if (packagesBackendUpdate || !backendBuilderImageExists) {
-                  echo "backend/packages.json updated or ImageStream ${APP_NAME}-${JOB_NAME}-backend-builder not exist, build/update image"
-                  echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-builder..."
-                  def bcBackendBuilderTemplate = openshift.process('-f',
-                    'openshift/backend-builder.bc.yaml',
-                    "REPO_NAME=${REPO_NAME}",
-                    "JOB_NAME=${JOB_NAME}",
-                    "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                    "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                    "APP_NAME=${APP_NAME}"
-                  )
+                def packagesFrontendUpdate = frontendPackagesUpdated();
+                echo "frontend/package.json updated: ${packagesFrontendUpdate}"
+                def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm:latest").exists()
+                echo "frontend npm image exists: ${frontendNpmImageExists}"
 
-                  echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-builder..."
-                  openshift.apply(bcBackendBuilderTemplate).narrow('bc').startBuild('-w').logs('-f')
 
-                } else {
-                  echo "backend/packages.json and builder image up to date."
-                }
+                parallel(
+                  Backend: {
+                    if (packagesBackendUpdate || !backendNpmImageExists) {
+                      echo "backend/packages.json updated or ImageStream ${APP_NAME}-${JOB_NAME}-backend-npm not exist, build/update image"
+                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
+                      def bcBackendNpmTemplate = openshift.process('-f',
+                        'openshift/backend-npm.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}"
+                      )
 
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-npm..."
+                      openshift.apply(bcBackendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                    } else {
+                      echo "backend/packages.json and npm image up to date."
+                    }
+
+                  },
+                  Frontend: {
+                    if (packagesFrontendUpdate || !frontendNpmImageExists) {
+                      echo "frontend/packages.json updated or ImageStream ${APP_NAME}-${JOB_NAME}-frontend-npm not exist, build/update image"
+                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                      def bcFrontendNpmTemplate = openshift.process('-f',
+                        'openshift/frontend-npm.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                      openshift.apply(bcFrontendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                    } else {
+                      echo "frontend/packages.json and npm image up to date."
+                    }
+
+                  }
+                )
               }
             }
           }
       }
       post {
         success {
-          echo 'Backend Builder successful'
-          notifyStageStatus('Backend Builder', 'SUCCESS')
+          echo 'NpmImages successful'
+          notifyStageStatus('NpmImages', 'SUCCESS')
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
                 if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
-                  def bcBackendBuilderConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-builder")
+                  def bcBackendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-npm")
+                  def bcFrontendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-npm")
 
-                  if(bcBackendBuilderConfig.exists()) {
-                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-builder..."
-                    bcBackendBuilderConfig.delete()
+                  if(bcBackendNpmConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
+                    bcBackendNpmConfig.delete()
+                  }
+
+                  if(bcFrontendNpmConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                    bcFrontendNpmConfig.delete()
                   }
                 }
               }
@@ -131,15 +168,15 @@ pipeline {
           }
         }
         unsuccessful {
-          echo 'Build Prep. failed'
-          notifyStageStatus('Build Prep.', 'FAILURE')
+          echo 'NpmImages failed'
+          notifyStageStatus('NpmImages', 'FAILURE')
         }
       }
     }
 
-    stage('Build Prep.') {
+    stage('BuilderImages') {
       steps {
-          notifyStageStatus('Build Prep.', 'PENDING')
+          notifyStageStatus('BuilderImages', 'PENDING')
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
@@ -147,27 +184,38 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                def bcFrontendBuilderTemplate = openshift.process('-f',
-                  'openshift/frontend-builder.bc.yaml',
-                  "REPO_NAME=${REPO_NAME}",
-                  "JOB_NAME=${JOB_NAME}",
-                  "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                  "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                  "APP_NAME=${APP_NAME}",
-                  "PATH_ROOT=${PATH_ROOT}"
-                )
+                def frontendUpdated = frontendUpdated();
+                echo "frontend/* updated: ${frontendUpdated}"
 
-                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                openshift.apply(bcFrontendBuilderTemplate).narrow('bc').startBuild('-w').logs('-f')
+                def frontendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-builder:latest").exists()
+                echo "frontend builder image exists: ${frontendBuilderImageExists}"
+
+                if (frontendUpdated || !frontendBuilderImageExists) {
+                  echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                  def bcFrontendBuilderTemplate = openshift.process('-f',
+                    'openshift/frontend-builder.bc.yaml',
+                    "REPO_NAME=${REPO_NAME}",
+                    "JOB_NAME=${JOB_NAME}",
+                    "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                    "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                    "APP_NAME=${APP_NAME}",
+                    "PATH_ROOT=${PATH_ROOT}"
+                  )
+
+                  echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                  openshift.apply(bcFrontendBuilderTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                } else {
+                  echo "frontend/* and builder image up to date."
+                }
               }
             }
           }
       }
       post {
         success {
-          echo 'Build Prep. successful'
-          notifyStageStatus('Build Prep.', 'SUCCESS')
+          echo 'BuilderImages successful'
+          notifyStageStatus('BuilderImages', 'SUCCESS')
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
@@ -186,8 +234,8 @@ pipeline {
           }
         }
         unsuccessful {
-          echo 'Build Prep. failed'
-          notifyStageStatus('Build Prep.', 'FAILURE')
+          echo 'BuilderImages'
+          notifyStageStatus('BuilderImages', 'FAILURE')
         }
       }
     }
@@ -510,5 +558,15 @@ def backendPackagesUpdated() {
 
 def backendUpdated() {
   def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0 && !(backendPackagesUpdated && commitFiles.length() == 1)
+  return commitFiles.length() > 0
+}
+
+def frontendPackagesUpdated() {
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  return commitFiles.length() == 1
+}
+
+def frontendUpdated() {
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  return commitFiles.length() > 0
 }
