@@ -57,6 +57,9 @@ pipeline {
             echo 'DEBUG - All pipeline environment variables:'
             echo sh(returnStdout: true, script: 'env')
           }
+
+          printChangeSet()
+
         }
       }
       post {
@@ -81,11 +84,11 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                def packagesBackendUpdate = checkFolderForDiffs('backend/packages.json')
+                def packagesBackendUpdate = backendPackagesUpdated()
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
                 def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
                 echo "backend builder image exists: ${backendNpmImageExists}"
-                def backendNpmTemplateChanged = checkFolderForDiffs('openshift/backend-npm.bc.yaml')
+                def backendNpmTemplateChanged = backendNpmTemplateUpdated()
                 echo "backend npm template updated: ${backendNpmTemplateChanged}"
 
                 def packagesFrontendUpdate = frontendPackagesUpdated();
@@ -595,14 +598,20 @@ def frontendUpdated() {
   return commitFiles.length() > 0
 }
 
-def checkFolderForDiffs(path) {
-    try {
-        // git diff will return 1 for changes (failure) which is caught in catch, or
-        // 0 meaning no changes
-        sh "git diff --quiet --exit-code HEAD~1..HEAD ${path}"
-        return false
-    } catch (err) {
-        return true
-    }
+def printChangeSet() {
+  def changeLogSets = currentBuild.rawBuild.changeSets
+  for (int i = 0; i < changeLogSets.size(); i++) {
+      def entries = changeLogSets[i].items
+      for (int j = 0; j < entries.length; j++) {
+          def entry = entries[j]
+          echo "${entry.commitId} by ${entry.author} on ${new Date(entry.timestamp)}: ${entry.msg}"
+          def files = new ArrayList(entry.affectedFiles)
+          for (int k = 0; k < files.size(); k++) {
+              def file = files[k]
+              echo "  ${file.editType.name} ${file.path}"
+          }
+      }
+  }
 }
+
 
