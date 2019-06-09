@@ -44,25 +44,15 @@ objects:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
-      images:
-      - as: null
+    strategy:
+      sourceStrategy:
+        env:
+        - name: "NPM_RUN"
+          value: "start"
         from:
           kind: ImageStreamTag
           name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
-          namespace: "${NAMESPACE}"
-        paths:
-        - destinationDir: ./app/node_modules
-          sourcePath: /app/node_modules
-      type: Dockerfile
-      dockerfile: |-
-        FROM docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-backend-npm:latest
-        WORKDIR /app
-        COPY . .
-        EXPOSE 8080
-        CMD ["npm", "run", "start"]
-    strategy:
-      dockerStrategy: {}
-      type: Docker
+      type: Source
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
@@ -79,7 +69,4 @@ parameters:
   required: true
 - name: APP_NAME
   description: Application name
-  required: true
-- name: NAMESPACE
-  description: Target namespace reference (i.e. 'k8vopl-dev')
   required: true

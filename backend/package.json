@@ -17,7 +17,8 @@
     "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules' **.js **/www",
     "lint:fix": "node_modules/.bin/eslint . --fix --ignore-pattern 'node_modules' **.js **/www",
     "clean": "rm -rf node_modules && rm -rf static && rm -rf uploads",
-    "clean:build": "npm run clean && npm install"
+    "clean:build": "npm run clean && npm install",
+    "noop": "echo \"Do nothing...\" && exit 1"
   },
   "dependencies": {
     "axios": "^0.19.0",
