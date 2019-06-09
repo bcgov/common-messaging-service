@@ -95,8 +95,7 @@ pipeline {
                     "JOB_NAME=${JOB_NAME}",
                     "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                     "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                    "APP_NAME=${APP_NAME}",
-                    "PATH_ROOT=${PATH_ROOT}"
+                    "APP_NAME=${APP_NAME}"
                   )
 
                   echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-builder..."
