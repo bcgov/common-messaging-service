@@ -86,7 +86,7 @@ pipeline {
                 def backendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-builder:latest").exists()
                 echo "backend builder image exists: ${backendBuilderImageExists}"
 
-                if (packagesBackendUpdate || backendBuilderImageExists) {
+                if (packagesBackendUpdate || !backendBuilderImageExists) {
                   echo "backend/packages.json updated or ImageStream ${APP_NAME}-${JOB_NAME}-backend-builder not exist, build/update image"
                   echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-builder..."
                   def bcBackendBuilderTemplate = openshift.process('-f',
