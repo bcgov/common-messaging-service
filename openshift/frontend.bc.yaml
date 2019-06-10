@@ -41,16 +41,15 @@ objects:
     source:
       dockerfile: |-
         FROM docker-registry.default.svc:5000/bcgov/s2i-caddy:v1-stable
-        COPY /app/build /var/www/html
-        COPY /app/Caddyfile /etc/Caddyfile
-        CMD /scripts/run
+        COPY /tmp/build /var/www/html
+        COPY /tmp/Caddyfile /etc/Caddyfile
       images:
       - as: null
         from:
           kind: ImageStreamTag
           name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
         paths:
-        - destinationDir: app
+        - destinationDir: tmp
           sourcePath: /app
       type: Dockerfile
     strategy:
