@@ -46,6 +46,9 @@ objects:
       type: Git
     strategy:
       sourceStrategy:
+        env:
+        - name: NPM_RUN
+          value: "noop"
         from:
           kind: ImageStreamTag
           name: nodejs:10
