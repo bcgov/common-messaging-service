@@ -397,7 +397,6 @@ pipeline {
     stage('Deploy - Dev') {
       steps {
         script {
-          return true
           deployStage('Dev', DEV_PROJECT, DEV_HOST, PATH_ROOT)
         }
       }
@@ -499,6 +498,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
           def frontendDc = openshift.apply(dcFrontendTemplate).narrow('dc').rollout().latest()
           def latestFrontendDeploymentVersion = openshift.selector('dc',"${APP_NAME}-${JOB_NAME}-frontend").object().status.latestVersion
+          echo "latestFrontendDeploymentVersion = ${latestFrontendDeploymentVersion}"
           def frontendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-frontend-${latestFrontendDeploymentVersion}")
           timeout (time: 10, unit: 'MINUTES') {
             frontendRc.untilEach(1){
