@@ -48,7 +48,7 @@ objects:
       - as: null
         from:
           kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-npm:latest"
+          name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
         paths:
         - destinationDir: ./app/node_modules
           sourcePath: /opt/app-root/src/node_modules
