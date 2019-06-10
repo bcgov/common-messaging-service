@@ -50,11 +50,12 @@ objects:
           kind: ImageStreamTag
           name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
         paths:
-        - destinationDir: ./app/node_modules
+        - destinationDir: ./npm/node_modules
           sourcePath: /app/node_modules
       type: Dockerfile
       dockerfile: |-
         FROM mhart/alpine-node:10
+        COPY /npm/node_modules /app/node_modules
         WORKDIR /app
         COPY . .
         CMD ["npm", "run", "build"]
