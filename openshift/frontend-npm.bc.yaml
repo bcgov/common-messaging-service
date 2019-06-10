@@ -51,7 +51,7 @@ objects:
           value: "true"
         from:
           kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-node:latest"
+          name: "${APP_NAME}-${JOB_NAME}-nodejs:latest"
         incremental: true
       type: Source
     successfulBuildsHistoryLimit: 5
