@@ -44,12 +44,19 @@ objects:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
-    strategy:
-      sourceStrategy:
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
-      type: Source
+      type: Dockerfile
+      dockerfile: |-
+        FROM mhart/alpine-node:10
+        WORKDIR /app
+        COPY . .
+        EXPOSE 8080
+        CMD ["npm", "run", "start"]
+      strategy:
+        dockerStrategy:
+          from:
+            kind: ImageStreamTag
+            name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
+        type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
