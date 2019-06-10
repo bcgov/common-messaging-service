@@ -74,6 +74,8 @@ pipeline {
 
     stage('NpmImages') {
       steps {
+                  return true
+
           notifyStageStatus('NpmImages', 'PENDING')
           script {
             openshift.withCluster() {
@@ -183,6 +185,8 @@ pipeline {
 
     stage('BuilderImages') {
       steps {
+                  return true
+
           notifyStageStatus('BuilderImages', 'PENDING')
           script {
             openshift.withCluster() {
@@ -251,6 +255,7 @@ pipeline {
 
     stage('RuntimeImages') {
       steps {
+        return true
         notifyStageStatus('RuntimeImages', 'PENDING')
         script {
           openshift.withCluster() {
@@ -394,6 +399,7 @@ pipeline {
     stage('Deploy - Dev') {
       steps {
         script {
+          return true
           deployStage('Dev', DEV_PROJECT, DEV_HOST, PATH_ROOT)
         }
       }
@@ -457,56 +463,77 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       //
       // so build out in parallel with explicit wait
 
-      timeout(10) {
-        parallel(
-          Backend: {
-            echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
-            def dcBackendTemplate = openshift.process('-f',
-              'openshift/backend.dc.yaml',
-              "REPO_NAME=${REPO_NAME}",
-              "JOB_NAME=${JOB_NAME}",
-              "NAMESPACE=${projectEnv}",
-              "APP_NAME=${APP_NAME}"
-            )
-            echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
-            createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcBackendTemplate).narrow('dc').rollout().latest().status()
-          },
 
-          Frontend: {
-            echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-frontend..."
-            def dcFrontendTemplate = openshift.process('-f',
-              'openshift/frontend.dc.yaml',
-              "REPO_NAME=${REPO_NAME}",
-              "JOB_NAME=${JOB_NAME}",
-              "NAMESPACE=${projectEnv}",
-              "APP_NAME=${APP_NAME}",
-              "PATH_ROOT=${pathEnv}"
-            )
-            echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
-            createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcFrontendTemplate).narrow('dc').rollout().latest().status()
-          },
-
-          ReverseProxy: {
-            echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-            def dcProxyTemplate = openshift.process('-f',
-              'openshift/reverse-proxy.dc.yaml',
-              "REPO_NAME=${REPO_NAME}",
-              "JOB_NAME=${JOB_NAME}",
-              "NAMESPACE=${projectEnv}",
-              "APP_NAME=${APP_NAME}",
-              "HOST_ROUTE=${hostEnv}",
-              "PATH_ROOT=${pathEnv}"
-            )
-            echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-            createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-            openshift.apply(dcProxyTemplate).narrow('dc').rollout().latest().status()
-
+      parallel(
+        Backend: {
+          echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
+          def dcBackendTemplate = openshift.process('-f',
+            'openshift/backend.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
+            "JOB_NAME=${JOB_NAME}",
+            "NAMESPACE=${projectEnv}",
+            "APP_NAME=${APP_NAME}"
+          )
+          echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
+          createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+          def backendDc = openshift.apply(dcBackendTemplate).narrow('dc')
+          backendDc.rollout().latest()
+          def backendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-backend-${latestDeploymentVersion}")
+          timeout (time: 10, unit: 'MINUTES') {
+            backendRc.untilEach(1){
+              def backendRc = it.object()
+              return (backendRc.status.replicas.equals(backendRc.status.readyReplicas))
+            }
           }
+        },
 
-        )
-      }
+        Frontend: {
+          echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-frontend..."
+          def dcFrontendTemplate = openshift.process('-f',
+            'openshift/frontend.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
+            "JOB_NAME=${JOB_NAME}",
+            "NAMESPACE=${projectEnv}",
+            "APP_NAME=${APP_NAME}",
+            "PATH_ROOT=${pathEnv}"
+          )
+          echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
+          createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+          def frontendDc = openshift.apply(dcFrontendTemplate).narrow('dc')
+          frontendDc.rollout().latest()
+          def frontendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-frontend-${latestDeploymentVersion}")
+          timeout (time: 10, unit: 'MINUTES') {
+            frontendRc.untilEach(1){
+              def frontendRcMap = it.object()
+              return (frontendRcMap.status.replicas.equals(frontendRcMap.status.readyReplicas))
+            }
+          }
+        },
+
+        ReverseProxy: {
+          echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+          def dcProxyTemplate = openshift.process('-f',
+            'openshift/reverse-proxy.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
+            "JOB_NAME=${JOB_NAME}",
+            "NAMESPACE=${projectEnv}",
+            "APP_NAME=${APP_NAME}",
+            "HOST_ROUTE=${hostEnv}",
+            "PATH_ROOT=${pathEnv}"
+          )
+          echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+          createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+          def proxyDc = openshift.apply(dcProxyTemplate).narrow('dc')
+          proxyDc.rollout().latest()
+          def proxyRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-reverse-proxy-${latestDeploymentVersion}")
+          timeout (time: 10, unit: 'MINUTES') {
+            proxyRc.untilEach(1){
+              def proxyRcMap = it.object()
+              return (proxyRcMap.status.replicas.equals(proxyRcMap.status.readyReplicas))
+            }
+          }
+        }
+      )
     }
   }
 }
