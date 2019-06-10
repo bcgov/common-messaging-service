@@ -83,6 +83,10 @@ pipeline {
                 }
 
                 def pipelineUpdated = jenkinsFileUpdated()
+                echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
+
+                def changed = inChangeSet('Jenkinsfile.cicd');
+                echo "Jenkinsfile.cicd changed: ${changed}"
 
                 def packagesBackendUpdate = backendPackagesUpdated()
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
@@ -584,6 +588,12 @@ def commentOnPR(String comment) {
     GitHubHelper.commentOnPullRequest(this, comment)
   }
 }
+
+def inChangeSet(path) {
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^${path}' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  return commitFiles.length() > 0
+}
+
 
 def jenkinsFileUpdated() {
   def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^Jenkinsfile.cicd' || echo -n ''", returnStatus: false, returnStdout: true).trim()

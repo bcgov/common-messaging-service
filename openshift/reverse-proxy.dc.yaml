@@ -82,7 +82,7 @@ objects:
           - name: PROXY_SERVICE_PORT
             value: "2015"
           image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-reverse-proxy:latest"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
             httpGet:
