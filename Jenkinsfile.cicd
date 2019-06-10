@@ -11,6 +11,9 @@ pipeline {
     // Enable pipeline verbose debug output if greater than 0
     DEBUG_OUTPUT = 'false'
 
+    // Enable this to rebuild everything
+    REBUILD_BASE_IMAGES = 'true'
+
     // Get projects/namespaces from config maps
     DEV_PROJECT = new File('/var/run/configs/ns/project.dev').getText('UTF-8').trim()
     TEST_PROJECT = new File('/var/run/configs/ns/project.test').getText('UTF-8').trim()
@@ -82,27 +85,10 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                def pipelineUpdated = jenkinsFileUpdated();
-                echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
-
-                def packagesBackendUpdate = backendPackagesUpdated()
-                echo "backend/package.json updated: ${packagesBackendUpdate}"
-                def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
-                echo "backend npm image exists: ${backendNpmImageExists}"
-                def backendNpmTemplateChanged = backendNpmTemplateUpdated()
-                echo "backend npm template updated: ${backendNpmTemplateChanged}"
-
-                def packagesFrontendUpdate = frontendPackagesUpdated();
-                echo "frontend/package.json updated: ${packagesFrontendUpdate}"
-                def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm").exists()
-                echo "frontend npm image exists: ${frontendNpmImageExists}"
-                def frontendNpmTemplateChanged = frontendNpmTemplateUpdated()
-                echo "frontend npm template updated: ${frontendNpmTemplateChanged}"
-
 
                 parallel(
                   Backend: {
-                    if (pipelineUpdated || packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists) {
+                    if (rebuildBackendNpm()) {
                       echo "Changes to backend NPM, update and build..."
                       echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
                       def bcBackendNpmTemplate = openshift.process('-f',
@@ -123,7 +109,7 @@ pipeline {
 
                   },
                   Frontend: {
-                    if (pipelineUpdated || packagesFrontendUpdate || frontendNpmTemplateChanged || !frontendNpmImageExists) {
+                    if (rebuildFrontendNpm()) {
                       echo "Changes to frontend NPM, update and build..."
                       echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
                       def bcFrontendNpmTemplate = openshift.process('-f',
@@ -192,14 +178,7 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                def frontendChanged = frontendUpdated();
-                echo "frontend/* updated: ${frontendChanged}"
-                def frontendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-builder").exists()
-                echo "frontend builder image exists: ${frontendBuilderImageExists}"
-                def frontendBuilderTemplateChanged = frontendBuilderTemplateUpdated()
-                echo "frontend builder template updated: ${frontendBuilderTemplateChanged}"
-
-                if (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists) {
+                if (rebuildFrontendBuilder()) {
                   echo "Changes to frontend builder, update and build..."
                   echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
                   def bcFrontendBuilderTemplate = openshift.process('-f',
@@ -592,7 +571,6 @@ def inChangeSet(path) {
 }
 
 def jenkinsFileUpdated() {
-  // when we change this file, we rebuild everything...
   return inChangeSet('Jenkinsfile.cicd')
 }
 
@@ -624,4 +602,53 @@ def frontendUpdated() {
   return inChangeSet('frontend/')
 }
 
+def rebuildBackendNpm() {
+  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
+    return true
+  }
+
+  def pipelineUpdated = jenkinsFileUpdated();
+  echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
+
+  def packagesBackendUpdate = backendPackagesUpdated()
+  echo "backend/package.json updated: ${packagesBackendUpdate}"
+  def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
+  echo "backend npm image exists: ${backendNpmImageExists}"
+  def backendNpmTemplateChanged = backendNpmTemplateUpdated()
+  echo "backend npm template updated: ${backendNpmTemplateChanged}"
+
+  return (pipelineUpdated || packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists)
+}
+
+def rebuildFrontendNpm() {
+  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
+    return true
+  }
+
+  def pipelineUpdated = jenkinsFileUpdated();
+  echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
+
+  def packagesFrontendUpdate = frontendPackagesUpdated();
+  echo "frontend/package.json updated: ${packagesFrontendUpdate}"
+  def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm").exists()
+  echo "frontend npm image exists: ${frontendNpmImageExists}"
+  def frontendNpmTemplateChanged = frontendNpmTemplateUpdated()
+  echo "frontend npm template updated: ${frontendNpmTemplateChanged}"
+
+  return (pipelineUpdated || packagesFrontendUpdate || frontendNpmTemplateChanged || !frontendNpmImageExists)
+}
+
+def rebuildFrontendBuilder() {
+  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
+    return true
+  }
+  def frontendChanged = frontendUpdated();
+  echo "frontend/* updated: ${frontendChanged}"
+  def frontendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-builder").exists()
+  echo "frontend builder image exists: ${frontendBuilderImageExists}"
+  def frontendBuilderTemplateChanged = frontendBuilderTemplateUpdated()
+  echo "frontend builder template updated: ${frontendBuilderTemplateChanged}"
+
+  return (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists)
+}
 
