@@ -82,7 +82,7 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                def pipelineUpdated = inChangeSet('Jenkinsfile.cicd');
+                def pipelineUpdated = jenkinsFileUpdated();
                 echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
 
                 def packagesBackendUpdate = backendPackagesUpdated()
