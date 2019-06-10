@@ -44,15 +44,17 @@ objects:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
-      dockerfile: |-
-        FROM mhart/alpine-node:10
-        WORKDIR /app
-        COPY ./package.json .
-        COPY ./package-lock.json .
-        RUN npm install --prod
     strategy:
-      dockerStrategy: {}
-      type: Docker
+      sourceStrategy:
+        env:
+        - name: DEV_MODE
+          value: true
+        from:
+          kind: ImageStreamTag
+          name: nodejs:10
+          namespace: openshift
+        incremental: true
+      type: Source
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
