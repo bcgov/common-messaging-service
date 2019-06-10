@@ -60,7 +60,7 @@ objects:
         EXPOSE 8080
         CMD ["npm", "run", "start"]
     strategy:
-      dockerStrategy:{}
+      dockerStrategy: {}
       type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:
