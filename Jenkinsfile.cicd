@@ -82,13 +82,8 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                def pipelineUpdated = jenkinsFileUpdated()
+                def pipelineUpdated = inChangeSet('Jenkinsfile.cicd');
                 echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
-
-                def changed = inChangeSet('Jenkinsfile.cicd');
-                echo "Jenkinsfile.cicd changed: ${changed}"
-                def openshiftChanged = inChangeSet('openshift/');
-                echo "openshift/ls  changed: ${openshiftChanged}"
 
                 def packagesBackendUpdate = backendPackagesUpdated()
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
@@ -596,45 +591,36 @@ def inChangeSet(path) {
   return commitFiles.length() > 0
 }
 
-
 def jenkinsFileUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^Jenkinsfile.cicd' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('Jenkinsfile.cicd')
 }
 
 def backendPackagesUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('backend/package.json')
 }
 
 def backendNpmTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/backend-npm.bc.yaml' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('openshift/backend-npm.bc.yaml')
 }
 
 def backendUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^backend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('backend/')
 }
 
 def frontendPackagesUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/package.json' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('frontend/package.json')
 }
 
 def frontendNpmTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-npm.bc.yaml' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('openshift/frontend-npm.bc.yaml')
 }
 
 def frontendBuilderTemplateUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^openshift/frontend-builder.bc.yaml' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('openshift/frontend-builder.bc.yaml')
 }
 
 def frontendUpdated() {
-  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^frontend/' || echo -n ''", returnStatus: false, returnStdout: true).trim()
-  return commitFiles.length() > 0
+  return inChangeSet('frontend/')
 }
 
 
