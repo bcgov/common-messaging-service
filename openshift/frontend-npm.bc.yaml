@@ -47,6 +47,8 @@ objects:
     strategy:
       sourceStrategy:
         env:
+        - name: NODE_ENV
+          value: development
         - name: NPM_RUN
           value: "noop"
         from:
