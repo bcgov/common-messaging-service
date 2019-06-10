@@ -19,6 +19,7 @@ log.addLevel('debug', 1500, { fg: 'green' });
 // Print out configuration settings in verbose startup
 log.verbose(utils.prettyStringify(config));
 
+// host our main msg service at /api/v1/
 app.use('/api/v1', msgService);
 
 // Handle 500
