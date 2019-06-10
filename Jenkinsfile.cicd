@@ -74,10 +74,9 @@ pipeline {
 
     stage('NpmImages') {
       steps {
-                  return true
-
           notifyStageStatus('NpmImages', 'PENDING')
           script {
+          return true
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
                 if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
@@ -185,10 +184,9 @@ pipeline {
 
     stage('BuilderImages') {
       steps {
-                  return true
-
           notifyStageStatus('BuilderImages', 'PENDING')
           script {
+          return true
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
                 if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
@@ -255,9 +253,9 @@ pipeline {
 
     stage('RuntimeImages') {
       steps {
-        return true
         notifyStageStatus('RuntimeImages', 'PENDING')
         script {
+          return true
           openshift.withCluster() {
             openshift.withProject(TOOLS_PROJECT) {
               if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
