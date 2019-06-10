@@ -48,6 +48,7 @@ objects:
         FROM mhart/alpine-node:10
         WORKDIR /app
         COPY ./package.json .
+        COPY ./package-lock.json .
         RUN npm install --prod
     strategy:
       dockerStrategy: {}

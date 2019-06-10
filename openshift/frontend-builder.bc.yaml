@@ -44,23 +44,28 @@ objects:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
+      images:
+      - as: null
+        from:
+          kind: ImageStreamTag
+          name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
+        paths:
+        - destinationDir: ./app/node_modules
+          sourcePath: /app/node_modules
+      type: Dockerfile
       dockerfile: |-
-        FROM mhart/alpine-node:10
+        FROM docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend-npm:latest
         WORKDIR /app
         COPY . .
-        EXPOSE 8080
         CMD ["npm", "run", "build"]
     strategy:
-      sourceStrategy:
+      dockerStrategy:
         env:
         - name: PATH_ROOT
           value: "${PATH_ROOT}"
         - name: REACT_APP_PATH_ROOT
           value: "${PATH_ROOT}"
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
-      type: Source
+      type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
@@ -82,3 +87,6 @@ parameters:
   description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
   required: true
   value: "/mssc"
+- name: NAMESPACE
+  description: Target namespace reference (i.e. 'k8vopl-dev')
+  required: true
