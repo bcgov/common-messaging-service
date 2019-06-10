@@ -48,7 +48,7 @@ objects:
       sourceStrategy:
         env:
         - name: DEV_MODE
-          value: true
+          value: "true"
         from:
           kind: ImageStreamTag
           name: nodejs:10
