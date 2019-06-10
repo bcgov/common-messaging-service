@@ -47,12 +47,11 @@ objects:
     strategy:
       sourceStrategy:
         env:
-        - name: DEV_MODE
+        - name: NPM_INSTALL_ONLY
           value: "true"
         from:
           kind: ImageStreamTag
-          name: nodejs:10
-          namespace: openshift
+          name: "${APP_NAME}-${JOB_NAME}-node:latest"
         incremental: true
       type: Source
     successfulBuildsHistoryLimit: 5

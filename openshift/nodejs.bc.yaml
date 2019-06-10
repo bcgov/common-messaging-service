@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: "${APP_NAME}-${JOB_NAME}-frontend-builder-bc-template"
+  template: "${APP_NAME}-${JOB_NAME}-nodejs-bc-template"
 metadata:
-  name: "${APP_NAME}-${JOB_NAME}-frontend-builder-bc"
+  name: "${APP_NAME}-${JOB_NAME}-nodejs-bc"
 objects:
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+    name: "${APP_NAME}-${JOB_NAME}-nodejs"
   spec:
     lookupPolicy:
       local: false
@@ -20,7 +20,7 @@ objects:
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+    name: "${APP_NAME}-${JOB_NAME}-nodejs"
   spec:
     completionDeadlineSeconds: 600
     failedBuildsHistoryLimit: 5
@@ -28,7 +28,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
+        name: "${APP_NAME}-${JOB_NAME}-nodejs:latest"
     postCommit: {}
     resources:
       requests:
@@ -36,25 +36,17 @@ objects:
         memory: 1Gi
       limits:
         cpu: 2000m
-        memory: 1Gi
+        memory: 2Gi
     runPolicy: Serial
     source:
-      contextDir: /frontend
+      contextDir: /openshift/nodejs-container
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
     strategy:
-      sourceStrategy:
-        env:
-        - name: PATH_ROOT
-          value: "${PATH_ROOT}"
-        - name: REACT_APP_PATH_ROOT
-          value: "${PATH_ROOT}"
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
-      type: Source
+      dockerStrategy: {}
+      type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
@@ -72,7 +64,3 @@ parameters:
 - name: APP_NAME
   description: Application name
   required: true
-- name: PATH_ROOT
-  description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
-  required: true
-  value: "/mssc"

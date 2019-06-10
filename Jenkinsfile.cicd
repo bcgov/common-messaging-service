@@ -74,6 +74,69 @@ pipeline {
         }
       }
     }
+    stage('NodeJsImage') {
+      steps {
+          notifyStageStatus('NodeJsImage', 'PENDING')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                }
+
+                timeout(10) {
+                  if (rebuildNodeJs()) {
+                    echo "Changes to NodeJs, update and build..."
+                    echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-nodejs..."
+                    def bcNodeJsTemplate = openshift.process('-f',
+                      'openshift/nodejs.bc.yaml',
+                      "REPO_NAME=${REPO_NAME}",
+                      "JOB_NAME=${JOB_NAME}",
+                      "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                      "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                      "APP_NAME=${APP_NAME}"
+                    )
+
+                    echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-nodejs..."
+                    openshift.apply(bcNodeJsTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                  } else {
+                    echo "nodejs up to date."
+                  }
+
+                }
+              }
+            }
+          }
+      }
+      post {
+        success {
+          echo 'NodeJsImage successful'
+          notifyStageStatus('NodeJsImage', 'SUCCESS')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                } else {
+                  def bcNodejsConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-nodejs")
+
+                  if(bcNodejsConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-nodejs..."
+                    bcNodejsConfig.delete()
+                  }
+
+                }
+              }
+            }
+          }
+        }
+        unsuccessful {
+          echo 'NodeJsImage failed'
+          notifyStageStatus('NodeJsImage', 'FAILURE')
+        }
+      }
+    }
 
     stage('NpmImages') {
       steps {
