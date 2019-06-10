@@ -54,7 +54,7 @@ objects:
           sourcePath: /app/node_modules
       type: Dockerfile
       dockerfile: |-
-        FROM docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend-npm:latest
+        FROM mhart/alpine-node:10
         WORKDIR /app
         COPY . .
         CMD ["npm", "run", "build"]
@@ -87,6 +87,3 @@ parameters:
   description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
   required: true
   value: "/mssc"
-- name: NAMESPACE
-  description: Target namespace reference (i.e. 'k8vopl-dev')
-  required: true
