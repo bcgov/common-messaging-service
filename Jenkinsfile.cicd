@@ -592,6 +592,7 @@ def inChangeSet(path) {
 }
 
 def jenkinsFileUpdated() {
+  // when we change this file, we rebuild everything...
   return inChangeSet('Jenkinsfile.cicd')
 }
 
