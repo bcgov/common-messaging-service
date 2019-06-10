@@ -87,7 +87,7 @@ pipeline {
                 def packagesBackendUpdate = backendPackagesUpdated()
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
                 def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
-                echo "backend builder image exists: ${backendNpmImageExists}"
+                echo "backend npm image exists: ${backendNpmImageExists}"
                 def backendNpmTemplateChanged = backendNpmTemplateUpdated()
                 echo "backend npm template updated: ${backendNpmTemplateChanged}"
 

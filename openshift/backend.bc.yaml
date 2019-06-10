@@ -48,7 +48,7 @@ objects:
       - as: null
         from:
           kind: ImageStreamTag
-          name: chained-build-npm:latest
+          name: "${APP_NAME}-${JOB_NAME}-npm:latest"
         paths:
         - destinationDir: ./app/node_modules
           sourcePath: /opt/app-root/src/node_modules
