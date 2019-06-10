@@ -474,9 +474,9 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-          def backendDc = openshift.apply(dcBackendTemplate).narrow('dc')
-          backendDc.rollout().latest()
-          def backendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-backend-${latestDeploymentVersion}")
+          def backendDc = openshift.apply(dcBackendTemplate).narrow('dc').rollout().latest()
+          def latestBackendDeploymentVersion = openshift.selector('dc',"${APP_NAME}-${JOB_NAME}-backend").object().status.latestVersion
+          def backendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-backend-${latestBackendDeploymentVersion}")
           timeout (time: 10, unit: 'MINUTES') {
             backendRc.untilEach(1){
               def backendRcMap = it.object()
@@ -497,9 +497,9 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-          def frontendDc = openshift.apply(dcFrontendTemplate).narrow('dc')
-          frontendDc.rollout().latest()
-          def frontendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-frontend-${latestDeploymentVersion}")
+          def frontendDc = openshift.apply(dcFrontendTemplate).narrow('dc').rollout().latest()
+          def latestFrontendDeploymentVersion = openshift.selector('dc',"${APP_NAME}-${JOB_NAME}-frontend").object().status.latestVersion
+          def frontendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-frontend-${latestFrontendDeploymentVersion}")
           timeout (time: 10, unit: 'MINUTES') {
             frontendRc.untilEach(1){
               def frontendRcMap = it.object()
@@ -521,9 +521,9 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-          def proxyDc = openshift.apply(dcProxyTemplate).narrow('dc')
-          proxyDc.rollout().latest()
-          def proxyRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-reverse-proxy-${latestDeploymentVersion}")
+          def proxyDc = openshift.apply(dcProxyTemplate).narrow('dc').rollout().latest()
+          def latestProxyDeploymentVersion = openshift.selector('dc',"${APP_NAME}-${JOB_NAME}-reverse-proxy").object().status.latestVersion
+          def proxyRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-reverse-proxy-${latestProxyDeploymentVersion}")
           timeout (time: 10, unit: 'MINUTES') {
             proxyRc.untilEach(1){
               def proxyRcMap = it.object()
