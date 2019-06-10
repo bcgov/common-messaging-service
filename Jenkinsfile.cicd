@@ -656,6 +656,20 @@ def frontendUpdated() {
   return inChangeSet('frontend/')
 }
 
+def rebuildNodeJs() {
+  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
+    return true
+  }
+  def nodeJsContainer = inChangeSet('nodejs-container/')
+  echo "nodejs-container/* updated: ${nodeJsContainer}"
+  def nodeJsImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-nodejs").exists()
+  echo "nodejs image exists: ${nodeJsImageExists}"
+  def nodeJsTemplateChanged = inChangeSet('openshift/nodejs.bc.yaml')
+  echo "nodejs template updated: ${nodeJsTemplateChanged}"
+
+  return (jenkinsFileUpdated() || nodeJsContainer || nodeJsTemplateChanged || !nodeJsImageExists)
+}
+
 def rebuildBackendNpm() {
   if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
     return true
