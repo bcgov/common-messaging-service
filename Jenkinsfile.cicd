@@ -481,8 +481,8 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           def backendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-backend-${latestDeploymentVersion}")
           timeout (time: 10, unit: 'MINUTES') {
             backendRc.untilEach(1){
-              def backendRc = it.object()
-              return (backendRc.status.replicas.equals(backendRc.status.readyReplicas))
+              def backendRcMap = it.object()
+              return (backendRcMap.status.replicas.equals(backendRcMap.status.readyReplicas))
             }
           }
         },
