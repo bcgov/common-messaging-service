@@ -39,7 +39,7 @@ objects:
         memory: 1Gi
     runPolicy: Serial
     source:
-      contextDir: /frontend
+      contextDir: /frontend/openshift/frontend-npm
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"

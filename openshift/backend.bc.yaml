@@ -44,11 +44,14 @@ objects:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
+      dockerfile: |-
+        FROM mhart/alpine-node:10
+        WORKDIR /app
+        COPY . .
+        EXPOSE 8080
+        CMD ["npm", "run", "start"]
     strategy:
       sourceStrategy:
-        env:
-        - name: NPM_RUN
-          value: "start"
         from:
           kind: ImageStreamTag
           name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"

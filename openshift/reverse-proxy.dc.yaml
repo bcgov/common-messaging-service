@@ -83,15 +83,15 @@ objects:
             value: "2015"
           image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-reverse-proxy:latest"
           imagePullPolicy: Always
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: "${PATH_ROOT}"
-              port: 2015
-              scheme: HTTP
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 10
+          # livenessProbe:
+          #  failureThreshold: 3
+          #  httpGet:
+          #    path: "${PATH_ROOT}"
+          #    port: 2015
+          #    scheme: HTTP
+          #  periodSeconds: 10
+          #  successThreshold: 1
+          #  timeoutSeconds: 10
           name: "${APP_NAME}-${JOB_NAME}-reverse-proxy"
           ports:
           - containerPort: 2015

@@ -54,15 +54,15 @@ objects:
         containers:
         - image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-backend:latest"
           imagePullPolicy: Always
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: "/api/v1/health"
-              port: 8080
-              scheme: HTTP
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 10
+          # livenessProbe:
+          #  failureThreshold: 3
+          #  httpGet:
+          #    path: "/api/v1/health"
+          #    port: 8080
+          #    scheme: HTTP
+          #  periodSeconds: 10
+          #  successThreshold: 1
+          #  timeoutSeconds: 10
           name: "${APP_NAME}-${JOB_NAME}-backend"
           ports:
           - containerPort: 8080
