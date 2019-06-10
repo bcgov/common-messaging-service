@@ -44,24 +44,15 @@ objects:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
-      images:
-      - as: null
+    strategy:
+      sourceStrategy:
+        env:
+        - name: NPM_RUN
+          value: "start"
         from:
           kind: ImageStreamTag
           name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
-        paths:
-        - destinationDir: ./app/node_modules
-          sourcePath: /opt/app-root/src/node_modules
-      type: Dockerfile
-      dockerfile: |-
-        FROM mhart/alpine-node:10
-        WORKDIR /app
-        COPY . .
-        EXPOSE 8080
-        CMD ["npm", "run", "start"]
-    strategy:
-      dockerStrategy: {}
-      type: Docker
+      type: Source
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME

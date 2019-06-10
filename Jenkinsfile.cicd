@@ -87,6 +87,8 @@ pipeline {
 
                 def changed = inChangeSet('Jenkinsfile.cicd');
                 echo "Jenkinsfile.cicd changed: ${changed}"
+                def openshiftChanged = inChangeSet('openshift/');
+                echo "openshift/ls  changed: ${openshiftChanged}"
 
                 def packagesBackendUpdate = backendPackagesUpdated()
                 echo "backend/package.json updated: ${packagesBackendUpdate}"
