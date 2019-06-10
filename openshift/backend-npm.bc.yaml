@@ -39,7 +39,7 @@ objects:
         memory: 2Gi
     runPolicy: Serial
     source:
-      contextDir: /openshift/backend-npm
+      contextDir: /openshift/backend-npm-image
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
