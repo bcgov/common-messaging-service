@@ -50,12 +50,12 @@ objects:
           kind: ImageStreamTag
           name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
         paths:
-        - destinationDir: ./npm/node_modules
-          sourcePath: /app/node_modules
+        - destinationDir: tmp
+          sourcePath: /app
       type: Dockerfile
       dockerfile: |-
         FROM mhart/alpine-node:10
-        COPY /npm/node_modules /app/node_modules
+        COPY /tmp/node_modules /app/node_modules
         WORKDIR /app
         COPY . .
         EXPOSE 8080
