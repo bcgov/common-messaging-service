@@ -41,19 +41,23 @@ objects:
     source:
       dockerfile: |-
         FROM docker-registry.default.svc:5000/bcgov/s2i-caddy:v1-stable
-        COPY /tmp/build /var/www/html
-        COPY /tmp/Caddyfile /etc/Caddyfile
+        COPY /tmp/src/build /var/www/html
+        COPY /tmp/src/Caddyfile /etc/Caddyfile
+        CMD /tmp/scripts/run
       images:
-      - as: null
+      - as:
         from:
           kind: ImageStreamTag
           name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
         paths:
         - destinationDir: tmp
-          sourcePath: /app
+          sourcePath: /opt/app-root/src
       type: Dockerfile
     strategy:
-      dockerStrategy: {}
+      dockerStrategy:
+        from:
+          kind: ImageStreamTag
+          name: s2i-caddy:v1-stable
       type: Docker
     successfulBuildsHistoryLimit: 3
 parameters:

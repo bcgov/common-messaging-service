@@ -44,29 +44,17 @@ objects:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
-      images:
-      - as: null
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
-        paths:
-        - destinationDir: tmp
-          sourcePath: /app
-      type: Dockerfile
-      dockerfile: |-
-        FROM mhart/alpine-node:10
-        COPY /tmp/node_modules /app/node_modules
-        WORKDIR /app
-        COPY . .
-        CMD ["npm", "run", "build"]
     strategy:
-      dockerStrategy:
+      sourceStrategy:
         env:
         - name: PATH_ROOT
           value: "${PATH_ROOT}"
         - name: REACT_APP_PATH_ROOT
           value: "${PATH_ROOT}"
-      type: Docker
+        from:
+          kind: ImageStreamTag
+          name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
+      type: Source
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME

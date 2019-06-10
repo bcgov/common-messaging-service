@@ -39,20 +39,18 @@ objects:
         memory: 1Gi
     runPolicy: Serial
     source:
-      contextDir: /frontend
+      contextDir: /openshift/frontend-npm
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
-      dockerfile: |-
-        FROM mhart/alpine-node:10
-        WORKDIR /app
-        COPY ./package.json .
-        COPY ./package-lock.json .
-        RUN npm install --prod
     strategy:
-      dockerStrategy: {}
-      type: Docker
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: nodejs:10
+          namespace: openshift
+      type: Source
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
