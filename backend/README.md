@@ -1,5 +1,5 @@
 # The Messaging Service ShowCase (MSSC) Application
-The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [backend](./README.md)) self hosting a [React.js](https://reactjs.org) UI (see [frontend](../frontend)). 
+The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [backend](./README.md)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
 
 ## Backend
 The backend is a node server that demonstrates how one could call the Common Messaging Service (CMSG) and integrate it into an application.
@@ -19,7 +19,7 @@ To configure the application for local development, we have a few options.  Sinc
 
 #### local.json
 
-```json 
+```json
 {
   "server": {
     "logLevel": "verbose"
@@ -41,17 +41,17 @@ To configure the application for local development, we have a few options.  Sinc
 
 ### Notes
 
-The entry point for the application is `bin/www`. This is the server.  `app.js` configures the routing and how requests will be handled.  
+The entry point for the application is `bin/www`. This is the server.  `app.js` configures the routing and how requests will be handled.
 
-Since CMSG can handle attachments, we have a file upload endpoint.  We are using [multer](https://www.npmjs.com/package/multer) and we wrap that in our own piece of middleware [upload.js](middleware/upload.js). 
+Since CMSG can handle attachments, we have a file upload endpoint.  We are using [multer](https://www.npmjs.com/package/multer) and we wrap that in our own piece of middleware [upload.js](middleware/upload.js).
 
-To get our application authorized, we need to call WebADE with our credentials and check that we have the correct permissions (scopes) for CMSG.  This is handled in [webadeSvc](oauthService/webadeSvc.js).  
+To get our application authorized, we need to call WebADE with our credentials and check that we have the correct permissions (scopes) for CMSG.  This is handled in [webadeSvc](oauthService/webadeSvc.js).
 
-The demonstration and usage of CMSG is in [cmsgSvc](msgService/cmsgSvc.js).  Note that in sendEmail, the attachments is a listing of paths to previously uploaded files.   
+The demonstration and usage of CMSG is in [cmsgSvc](msgService/cmsgSvc.js).  Note that in sendEmail, the attachments is a listing of paths to previously uploaded files.
 
 ## Project scripts
 
-Assumption is you have installed node 10.15.3 and npm 6.4.1.  
+Assumption is you have installed node 10.15.3 and npm 6.4.1.
 
 ``` sh
 cd backend
@@ -59,10 +59,11 @@ npm install
 ```
 
 ### Run the server
-Note that by default, we are running on localhost:3001.  This is to help local development where the frontend react app will be running on localhost:3000.  The port can be overridden in the configuration.  
+Note that by default, we are running on localhost:3001.  This is to help local development where the frontend react app will be running on localhost:3000.  The port can be overridden in the configuration.
 
 ``` sh
 npm run start
 ```
 
+The application will be accessible at http://localhost:3001/api/v1/, try http://localhost:3001/api/v1/health first.
 
