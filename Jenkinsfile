@@ -484,9 +484,16 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
           def dcBackend = openshift.apply(dcBackendTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
-            def bmf = dcBackend.rollout()
-            bmf.latest()
-            bmf.status()
+           try {
+              def bmf = dcFrontend.rollout()
+              bmf.latest()
+              bmf.status()
+            } catch (e) {
+              // deployments are unreliable to track when rolling and multiple pods...
+              // infrequently throw an error that deploy is already happening.
+              // when you process a deployconfig without triggers, openshift will still create a Config change trigger, so timing is everything
+              echo "Backend error on rollout: ${e}"
+            }
           }
         },
 
@@ -504,9 +511,16 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
           def dcFrontend = openshift.apply(dcFrontendTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
-            def rmf = dcFrontend.rollout()
-            rmf.latest()
-            rmf.status()
+           try {
+              def rmf = dcFrontend.rollout()
+              rmf.latest()
+              rmf.status()
+            } catch (e) {
+              // deployments are unreliable to track when rolling and multiple pods...
+              // infrequently throw an error that deploy is already happening.
+              // when you process a deployconfig without triggers, openshift will still create a Config change trigger, so timing is everything
+              echo "Frontend error on rollout: ${e}"
+            }
           }
         },
 
@@ -525,9 +539,17 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
           def dcProxy = openshift.apply(dcProxyTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
-            def pmf = dcProxy.rollout()
-            pmf.latest()
-            pmf.status()
+            try {
+              def pmf = dcProxy.rollout()
+              pmf.latest()
+              pmf.status()
+            } catch (e) {
+              // deployments are unreliable to track when rolling and multiple pods...
+              // infrequently throw an error that deploy is already happening.
+              // when you process a deployconfig without triggers, openshift will still create a Config change trigger, so timing is everything
+             echo "Proxy error on rollout: ${e}"
+            }
+
           }
         }
       )
@@ -591,7 +613,7 @@ def inChangeSet(path) {
 }
 
 def jenkinsFileUpdated() {
-  return inChangeSet('Jenkinsfile.cicd')
+  return inChangeSet('Jenkinsfile')
 }
 
 def backendPackagesUpdated() {
