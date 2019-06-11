@@ -38,6 +38,7 @@ objects:
         cpu: 2000m
         memory: 2Gi
     runPolicy: Serial
+    source:
       images:
       - from:
           kind: ImageStreamTag
