@@ -51,8 +51,6 @@ objects:
         FROM mhart/alpine-node:10
         WORKDIR /opt/app-root/src
         COPY npm-latest/src/node_modules ./node_modules
-        CMD ["ls", "-al", "/opt/app-root/src"]
-        CMD ["ls", "-al", "/opt/app-root/src/node_modules"]
     strategy:
       dockerStrategy: {}
       type: Docker

@@ -44,10 +44,8 @@ objects:
         FROM mhart/alpine-node:10
         WORKDIR /opt/app-root/src
         COPY . .
-        ENV PATH_ROOT ${PATH_ROOT}
-        ENV REACT_APP_PATH_ROOT ${PATH_ROOT}
-        CMD ["ls", "-al", "/opt/app-root/src"]
-        CMD ["ls", "-al", "/opt/app-root/src/node_modules"]
+        ENV PATH_ROOT "${PATH_ROOT}
+        ENV REACT_APP_PATH_ROOT "${PATH_ROOT}"
         RUN npm run build
       git:
         ref: "${SOURCE_REPO_REF}"
