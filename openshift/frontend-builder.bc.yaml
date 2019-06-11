@@ -44,6 +44,8 @@ objects:
         FROM mhart/alpine-node:10
         WORKDIR /opt/app-root/src
         COPY . .
+        ENV PATH_ROOT ${PATH_ROOT}
+        ENV REACT_APP_PATH_ROOT ${PATH_ROOT}
         RUN npm run build
       git:
         ref: "${SOURCE_REPO_REF}"
@@ -51,11 +53,6 @@ objects:
       type: Git
     strategy:
       dockerStrategy:
-      - env:
-        - name: PATH_ROOT
-          value: "${PATH_ROOT}"
-        - name: REACT_APP_PATH_ROOT
-          value: "${PATH_ROOT}"
         from:
           kind: DockerImage
           name: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend-modules:latest"

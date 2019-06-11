@@ -304,7 +304,8 @@ pipeline {
                 "JOB_NAME=${JOB_NAME}",
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}"
+                "APP_NAME=${APP_NAME}",
+                "NAMESPACE=${TOOLS_PROJECT}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
