@@ -49,6 +49,8 @@ objects:
         WORKDIR /opt/app-root/src
         COPY package*.json ./
         RUN npm ci
+        CMD ["ls", "-al", "/opt/app-root/src"]
+        CMD ["ls", "-al", "/opt/app-root/src/node_modules"]
     strategy:
       dockerStrategy: {}
       type: Docker
