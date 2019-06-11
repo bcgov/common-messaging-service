@@ -462,21 +462,12 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       // "move" images from tools project to our target environment and deploy from there...
       echo "Tagging Image ${APP_NAME}-${JOB_NAME}-backend:latest..."
       openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-backend:latest", "${APP_NAME}-${JOB_NAME}-backend:latest")
-      def imgBackend = openshift.selector( 'is/${APP_NAME}-${JOB_NAME}-backend' ).object()
-      imgBackend.metadata.labels['app']='${APP_NAME}-${JOB_NAME}'
-      openshift.apply(imgBackend)
 
       echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend:latest..."
       openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-frontend:latest", "${APP_NAME}-${JOB_NAME}-frontend:latest")
-      def imgFrontend = openshift.selector( 'is/${APP_NAME}-${JOB_NAME}-frontend' ).object()
-      imgFrontend.metadata.labels['app']='${APP_NAME}-${JOB_NAME}'
-      openshift.apply(imgFrontend)
 
       echo "Tagging Image ${APP_NAME}-${JOB_NAME}-reverse-proxy:latest..."
       openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-reverse-proxy:latest", "${APP_NAME}-${JOB_NAME}-reverse-proxy:latest")
-      def imgProxy = openshift.selector( 'is/${APP_NAME}-${JOB_NAME}-reverse-proxy' ).object()
-      imgProxy.metadata.labels['app']='${APP_NAME}-${JOB_NAME}'
-      openshift.apply(imgProxy)
 
       parallel(
         Backend: {
