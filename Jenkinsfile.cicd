@@ -490,7 +490,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-          def dcBackend openshift.apply(dcBackendTemplate).narrow('dc')
+          def dcBackend = openshift.apply(dcBackendTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
             dcBackend.rollout().status('--watch=true')
           }
