@@ -482,7 +482,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-          openshift.apply(dcBackendTemplate).narrow('dc').rollout().latest()
+          openshift.apply(dcBackendTemplate).narrow('dc').rollout()
           def latestBackendDeploymentVersion = openshift.selector('dc',"${APP_NAME}-${JOB_NAME}-backend").object().status.latestVersion
           echo "Backend Deployment Version = ${latestBackendDeploymentVersion}"
           def backendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-backend-${latestBackendDeploymentVersion}")
@@ -506,7 +506,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-          openshift.apply(dcFrontendTemplate).narrow('dc').rollout().latest()
+          openshift.apply(dcFrontendTemplate).narrow('dc').rollout()
           def latestFrontendDeploymentVersion = openshift.selector('dc',"${APP_NAME}-${JOB_NAME}-frontend").object().status.latestVersion
           echo "Frontend Deployment Version = ${latestFrontendDeploymentVersion}"
           def frontendRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-frontend-${latestFrontendDeploymentVersion}")
@@ -531,7 +531,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-          openshift.apply(dcProxyTemplate).narrow('dc').rollout().latest()
+          openshift.apply(dcProxyTemplate).narrow('dc').rollout()
           def latestProxyDeploymentVersion = openshift.selector('dc',"${APP_NAME}-${JOB_NAME}-reverse-proxy").object().status.latestVersion
           echo "Reverse Proxy Deployment Version = ${latestProxyDeploymentVersion}"
           def proxyRc = openshift.selector('rc', "${APP_NAME}-${JOB_NAME}-reverse-proxy-${latestProxyDeploymentVersion}")
