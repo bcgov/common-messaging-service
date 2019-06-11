@@ -11,6 +11,9 @@ pipeline {
     // Enable pipeline verbose debug output if greater than 0
     DEBUG_OUTPUT = 'false'
 
+    // Enable this to rebuild everything
+    REBUILD_BASE_IMAGES = 'false'
+
     // Get projects/namespaces from config maps
     DEV_PROJECT = new File('/var/run/configs/ns/project.dev').getText('UTF-8').trim()
     TEST_PROJECT = new File('/var/run/configs/ns/project.test').getText('UTF-8').trim()
@@ -40,7 +43,8 @@ pipeline {
     PATH_ROOT = "/${APP_NAME}"
   }
 
- stages {
+
+  stages {
     stage('Init') {
       steps {
         notifyStageStatus('Init', 'PENDING')
@@ -60,6 +64,7 @@ pipeline {
             echo 'DEBUG - All pipeline environment variables:'
             echo sh(returnStdout: true, script: 'env')
           }
+
         }
       }
       post {
@@ -74,9 +79,9 @@ pipeline {
       }
     }
 
-    stage('Build Prep.') {
+    stage('NpmImages') {
       steps {
-          notifyStageStatus('Build Prep.', 'PENDING')
+          notifyStageStatus('NpmImages', 'PENDING')
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
@@ -84,27 +89,165 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
-                echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                def bcFrontendBuilderTemplate = openshift.process('-f',
-                  'openshift/frontend-builder.bc.yaml',
-                  "REPO_NAME=${REPO_NAME}",
-                  "JOB_NAME=${JOB_NAME}",
-                  "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                  "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                  "APP_NAME=${APP_NAME}",
-                  "PATH_ROOT=${PATH_ROOT}"
-                )
 
-                echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
-                openshift.apply(bcFrontendBuilderTemplate).narrow('bc').startBuild('-w').logs('-f')
+                parallel(
+                  Backend: {
+                    if (rebuildBackendNpm()) {
+                      echo "Changes to backend NPM, update and build..."
+                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
+                      def bcBackendNpmTemplate = openshift.process('-f',
+                        'openshift/backend-npm.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-npm..."
+                      openshift.apply(bcBackendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      def bcBackendModulesTemplate = openshift.process('-f',
+                        'openshift/backend-modules.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}",
+                        "NAMESPACE=${TOOLS_PROJECT}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-modules..."
+                      openshift.apply(bcBackendModulesTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                    } else {
+                      echo "backend npm up to date."
+                    }
+
+                  },
+                  Frontend: {
+                    if (rebuildFrontendNpm()) {
+                      echo "Changes to frontend NPM, update and build..."
+                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                      def bcFrontendNpmTemplate = openshift.process('-f',
+                        'openshift/frontend-npm.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                      openshift.apply(bcFrontendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      def bcFrontendModulesTemplate = openshift.process('-f',
+                        'openshift/frontend-modules.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}",
+                        "NAMESPACE=${TOOLS_PROJECT}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-modules..."
+                      openshift.apply(bcFrontendModulesTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                    } else {
+                      echo "frontend npm up to date."
+                    }
+
+                  }
+                )
               }
             }
           }
       }
       post {
         success {
-          echo 'Build Prep. successful'
-          notifyStageStatus('Build Prep.', 'SUCCESS')
+          echo 'NpmImages successful'
+          notifyStageStatus('NpmImages', 'SUCCESS')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                } else {
+                  def bcBackendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-npm")
+                  def bcFrontendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-npm")
+                  def bcBackendModulesConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-modules")
+                  def bcFrontendModulesConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-modules")
+
+                  if(bcBackendNpmConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
+                    bcBackendNpmConfig.delete()
+                  }
+
+                  if(bcFrontendNpmConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                    bcFrontendNpmConfig.delete()
+                  }
+
+                  if(bcBackendModulesConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-modules..."
+                    bcBackendModulesConfig.delete()
+                  }
+
+                  if(bcFrontendModulesConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-modules..."
+                    bcFrontendModulesConfig.delete()
+                  }
+                }
+              }
+            }
+          }
+        }
+        unsuccessful {
+          echo 'NpmImages failed'
+          notifyStageStatus('NpmImages', 'FAILURE')
+        }
+      }
+    }
+
+    stage('BuilderImages') {
+      steps {
+          notifyStageStatus('BuilderImages', 'PENDING')
+          script {
+            openshift.withCluster() {
+              openshift.withProject(TOOLS_PROJECT) {
+                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
+                  echo "DEBUG - Using project: ${openshift.project()}"
+                }
+
+                if (rebuildFrontendBuilder()) {
+                  echo "Changes to frontend builder, update and build..."
+                  echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                  def bcFrontendBuilderTemplate = openshift.process('-f',
+                    'openshift/frontend-builder.bc.yaml',
+                    "REPO_NAME=${REPO_NAME}",
+                    "JOB_NAME=${JOB_NAME}",
+                    "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                    "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                    "APP_NAME=${APP_NAME}",
+                    "PATH_ROOT=${PATH_ROOT}",
+                    "NAMESPACE=${TOOLS_PROJECT}"
+                  )
+
+                  echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
+                  openshift.apply(bcFrontendBuilderTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                } else {
+                  echo "frontend/* and builder image up to date."
+                }
+              }
+            }
+          }
+      }
+      post {
+        success {
+          echo 'BuilderImages successful'
+          notifyStageStatus('BuilderImages', 'SUCCESS')
           script {
             openshift.withCluster() {
               openshift.withProject(TOOLS_PROJECT) {
@@ -123,15 +266,15 @@ pipeline {
           }
         }
         unsuccessful {
-          echo 'Build Prep. failed'
-          notifyStageStatus('Build Prep.', 'FAILURE')
+          echo 'BuilderImages'
+          notifyStageStatus('BuilderImages', 'FAILURE')
         }
       }
     }
 
-    stage('Build') {
+    stage('RuntimeImages') {
       steps {
-        notifyStageStatus('Build', 'PENDING')
+        notifyStageStatus('RuntimeImages', 'PENDING')
         script {
           openshift.withCluster() {
             openshift.withProject(TOOLS_PROJECT) {
@@ -139,6 +282,14 @@ pipeline {
                 echo "DEBUG - Using project: ${openshift.project()}"
               }
 
+              // for whatever reason, watching related builds is not reliable.
+              // the watches don't always close even when build is complete.
+              //  openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-backend").related('builds').untilEach(1) {
+              //    echo "build: ${it.name()}, status.phase: ${it.object().status.phase}"
+              //    return (it.object().status.phase == "Complete")
+              //  }
+              //
+              // so build out in parallel with explicit wait
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
               def bcBackendTemplate = openshift.process('-f',
                 'openshift/backend.bc.yaml',
@@ -147,6 +298,7 @@ pipeline {
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
                 "APP_NAME=${APP_NAME}",
+                "NAMESPACE=${TOOLS_PROJECT}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -156,7 +308,8 @@ pipeline {
                 "JOB_NAME=${JOB_NAME}",
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}"
+                "APP_NAME=${APP_NAME}",
+                "NAMESPACE=${TOOLS_PROJECT}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
@@ -169,25 +322,56 @@ pipeline {
                 "APP_NAME=${APP_NAME}"
               )
 
-              echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
-              openshift.apply(bcBackendTemplate).narrow('bc').startBuild()
-
-              echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
-              openshift.apply(bcFrontendTemplate).narrow('bc').startBuild()
-
-              echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-              openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild()
-
               timeout(10) {
-                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-backend").related('builds').untilEach(1) {
-                  return (it.object().status.phase == "Complete")
-                }
-                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-frontend").related('builds').untilEach(1) {
-                  return (it.object().status.phase == "Complete")
-                }
-                openshift.selector("bc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('builds').untilEach(1) {
-                  return (it.object().status.phase == "Complete")
-                }
+                parallel(
+                  Backend: {
+                    try {
+                      notifyStageStatus('Backend', 'PENDING')
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
+                      openshift.apply(bcBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo 'Backend build successful'
+                      notifyStageStatus('Backend', 'SUCCESS')
+                    } catch (e) {
+                      echo 'Backend build failed'
+                      notifyStageStatus('Backend', 'FAILURE')
+                      throw e
+                    }
+                  },
+
+                  Frontend: {
+                    try {
+                      notifyStageStatus('Frontend', 'PENDING')
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
+                      openshift.apply(bcFrontendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo 'Frontend build successful'
+                      notifyStageStatus('Frontend', 'SUCCESS')
+                    } catch (e) {
+                      echo 'Frontend build failed'
+                      notifyStageStatus('Frontend', 'FAILURE')
+                      throw e
+                    }
+                  },
+
+                  ReverseProxy: {
+                    try {
+                      notifyStageStatus('ReverseProxy', 'PENDING')
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+                      openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo 'ReverseProxy build successful'
+                      notifyStageStatus('ReverseProxy', 'SUCCESS')
+                    } catch (e) {
+                      echo 'ReverseProxy build failed'
+                      notifyStageStatus('ReverseProxy', 'FAILURE')
+                      throw e
+                    }
+                  }
+                )
               }
             }
           }
@@ -195,8 +379,8 @@ pipeline {
       }
       post {
         success {
-          echo 'Build Success'
-          notifyStageStatus('Build', 'SUCCESS')
+          echo 'RuntimeImages Success'
+          notifyStageStatus('RuntimeImages', 'SUCCESS')
           echo 'Cleanup BuildConfigs...'
           script {
             openshift.withCluster() {
@@ -226,8 +410,8 @@ pipeline {
           }
         }
         unsuccessful {
-          echo 'Build failed'
-          notifyStageStatus('Build', 'FAILURE')
+          echo 'RuntimeImages failed'
+          notifyStageStatus('RuntimeImages', 'FAILURE')
         }
       }
     }
@@ -324,66 +508,67 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       echo "Tagging Image ${APP_NAME}-${JOB_NAME}-reverse-proxy:latest..."
       openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-reverse-proxy:latest", "${APP_NAME}-${JOB_NAME}-reverse-proxy:latest")
 
-      echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
-      def dcBackendTemplate = openshift.process('-f',
-        'openshift/backend.dc.yaml',
-        "REPO_NAME=${REPO_NAME}",
-        "JOB_NAME=${JOB_NAME}",
-        "NAMESPACE=${projectEnv}",
-        "APP_NAME=${APP_NAME}"
-      )
+      parallel(
+        Backend: {
+          echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
+          def dcBackendTemplate = openshift.process('-f',
+            'openshift/backend.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
+            "JOB_NAME=${JOB_NAME}",
+            "NAMESPACE=${projectEnv}",
+            "APP_NAME=${APP_NAME}"
+          )
+          echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
+          createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+          def dcBackend = openshift.apply(dcBackendTemplate).narrow('dc')
+          timeout (time: 10, unit: 'MINUTES') {
+            def bmf = dcBackend.rollout()
+            bmf.latest()
+            bmf.status()
+          }
+        },
 
-      echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-frontend..."
-      def dcFrontendTemplate = openshift.process('-f',
-        'openshift/frontend.dc.yaml',
-        "REPO_NAME=${REPO_NAME}",
-        "JOB_NAME=${JOB_NAME}",
-        "NAMESPACE=${projectEnv}",
-        "APP_NAME=${APP_NAME}",
-        "PATH_ROOT=${pathEnv}"
-      )
+        Frontend: {
+          echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-frontend..."
+          def dcFrontendTemplate = openshift.process('-f',
+            'openshift/frontend.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
+            "JOB_NAME=${JOB_NAME}",
+            "NAMESPACE=${projectEnv}",
+            "APP_NAME=${APP_NAME}",
+            "PATH_ROOT=${pathEnv}"
+          )
+          echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
+          createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+          def dcFrontend = openshift.apply(dcFrontendTemplate).narrow('dc')
+          timeout (time: 10, unit: 'MINUTES') {
+            def rmf = dcFrontend.rollout()
+            rmf.latest()
+            rmf.status()
+          }
+        },
 
-      echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
-      createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-      def dcBackendConfig = openshift.apply(dcBackendTemplate).narrow('dc')
-
-      echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
-      createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-      def dcFrontendConfig = openshift.apply(dcFrontendTemplate).narrow('dc')
-
-      // Wait for new deployment to roll out
-      timeout(10) {
-        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-backend").related('pods').untilEach(1) {
-          return (it.object().status.phase == "Running")
+        ReverseProxy: {
+          echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+          def dcProxyTemplate = openshift.process('-f',
+            'openshift/reverse-proxy.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
+            "JOB_NAME=${JOB_NAME}",
+            "NAMESPACE=${projectEnv}",
+            "APP_NAME=${APP_NAME}",
+            "HOST_ROUTE=${hostEnv}",
+            "PATH_ROOT=${pathEnv}"
+          )
+          echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+          createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+          def dcProxy = openshift.apply(dcProxyTemplate).narrow('dc')
+          timeout (time: 10, unit: 'MINUTES') {
+            def pmf = dcProxy.rollout()
+            pmf.latest()
+            pmf.status()
+          }
         }
-        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-frontend").related('pods').untilEach(1) {
-          return (it.object().status.phase == "Running")
-        }
-      }
-
-      // Do reverse proxy after back and front are running...
-
-      echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
-      def dcProxyTemplate = openshift.process('-f',
-        'openshift/reverse-proxy.dc.yaml',
-        "REPO_NAME=${REPO_NAME}",
-        "JOB_NAME=${JOB_NAME}",
-        "NAMESPACE=${projectEnv}",
-        "APP_NAME=${APP_NAME}",
-        "HOST_ROUTE=${hostEnv}",
-        "PATH_ROOT=${pathEnv}"
       )
-
-      echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
-      createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
-      def dcProxyConfig = openshift.apply(dcProxyTemplate).narrow('dc')
-
-      timeout(5){
-        openshift.selector("dc", "${APP_NAME}-${JOB_NAME}-reverse-proxy").related('pods').untilEach(1) {
-          return (it.object().status.phase == "Running")
-        }
-      }
-
     }
   }
 }
@@ -436,5 +621,92 @@ def commentOnPR(String comment) {
   if(JOB_BASE_NAME.startsWith('PR-')) {
     GitHubHelper.commentOnPullRequest(this, comment)
   }
+}
+
+def inChangeSet(path) {
+  def commitFiles = sh(script:"git diff --name-only HEAD~1..HEAD | grep '^${path}' || echo -n ''", returnStatus: false, returnStdout: true).trim()
+  return commitFiles.length() > 0
+}
+
+def jenkinsFileUpdated() {
+  return inChangeSet('Jenkinsfile.cicd')
+}
+
+def backendPackagesUpdated() {
+  return inChangeSet('backend/package.json')
+}
+
+def backendNpmTemplateUpdated() {
+  return inChangeSet('openshift/backend-npm.bc.yaml')
+}
+
+def backendUpdated() {
+  return inChangeSet('backend/')
+}
+
+def frontendPackagesUpdated() {
+  return inChangeSet('frontend/package.json')
+}
+
+def frontendNpmTemplateUpdated() {
+  return inChangeSet('openshift/frontend-npm.bc.yaml')
+}
+
+def frontendBuilderTemplateUpdated() {
+  return inChangeSet('openshift/frontend-builder.bc.yaml')
+}
+
+def frontendUpdated() {
+  return inChangeSet('frontend/')
+}
+
+def rebuildBackendNpm() {
+  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
+    return true
+  }
+
+  def pipelineUpdated = jenkinsFileUpdated();
+  echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
+
+  def packagesBackendUpdate = backendPackagesUpdated()
+  echo "backend/package.json updated: ${packagesBackendUpdate}"
+  def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
+  echo "backend npm image exists: ${backendNpmImageExists}"
+  def backendNpmTemplateChanged = backendNpmTemplateUpdated()
+  echo "backend npm template updated: ${backendNpmTemplateChanged}"
+
+  return (pipelineUpdated || packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists)
+}
+
+def rebuildFrontendNpm() {
+  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
+    return true
+  }
+
+  def pipelineUpdated = jenkinsFileUpdated();
+  echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
+
+  def packagesFrontendUpdate = frontendPackagesUpdated();
+  echo "frontend/package.json updated: ${packagesFrontendUpdate}"
+  def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm").exists()
+  echo "frontend npm image exists: ${frontendNpmImageExists}"
+  def frontendNpmTemplateChanged = frontendNpmTemplateUpdated()
+  echo "frontend npm template updated: ${frontendNpmTemplateChanged}"
+
+  return (pipelineUpdated || packagesFrontendUpdate || frontendNpmTemplateChanged || !frontendNpmImageExists)
+}
+
+def rebuildFrontendBuilder() {
+  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
+    return true
+  }
+  def frontendChanged = frontendUpdated();
+  echo "frontend/* updated: ${frontendChanged}"
+  def frontendBuilderImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-builder").exists()
+  echo "frontend builder image exists: ${frontendBuilderImageExists}"
+  def frontendBuilderTemplateChanged = frontendBuilderTemplateUpdated()
+  echo "frontend builder template updated: ${frontendBuilderTemplateChanged}"
+
+  return (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists)
 }
 
