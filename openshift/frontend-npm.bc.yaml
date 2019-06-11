@@ -39,21 +39,19 @@ objects:
         memory: 1Gi
     runPolicy: Serial
     source:
-      contextDir: /frontend
+      contextDir: /backend
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
+      dockerfile: |-
+        FROM mhart/alpine-node:10
+        WORKDIR /opt/app-root/src
+        COPY package*.json ./
+        RUN npm ci
     strategy:
-      sourceStrategy:
-        env:
-        - name: NPM_INSTALL_ONLY
-          value: "true"
-        from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-nodejs:latest"
-        incremental: true
-      type: Source
+      dockerStrategy: {}
+      type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME

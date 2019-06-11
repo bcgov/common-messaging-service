@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: "${APP_NAME}-${JOB_NAME}-backend-npm-bc-template"
+  template: "${APP_NAME}-${JOB_NAME}-backend-modules-bc-template"
 metadata:
-  name: "${APP_NAME}-${JOB_NAME}-backend-npm-bc"
+  name: "${APP_NAME}-${JOB_NAME}-backend-modules-bc"
 objects:
 - apiVersion: image.openshift.io/v1
   kind: ImageStream
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-backend-npm"
+    name: "${APP_NAME}-${JOB_NAME}-backend-modules"
   spec:
     lookupPolicy:
       local: false
@@ -20,7 +20,7 @@ objects:
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-backend-npm"
+    name: "${APP_NAME}-${JOB_NAME}-backend-modules"
   spec:
     completionDeadlineSeconds: 600
     failedBuildsHistoryLimit: 5
@@ -28,7 +28,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
+        name: "${APP_NAME}-${JOB_NAME}-backend-modules:latest"
     postCommit: {}
     resources:
       requests:
@@ -38,17 +38,18 @@ objects:
         cpu: 2000m
         memory: 2Gi
     runPolicy: Serial
-    source:
-      contextDir: /backend
-      git:
-        ref: "${SOURCE_REPO_REF}"
-        uri: "${SOURCE_REPO_URL}"
-      type: Git
+      images:
+      - from:
+          kind: ImageStreamTag
+          name: "${APP_NAME}-${JOB_NAME}-backend-npm:latest"
+          namespace: "${NAMESPACE}"
+        paths:
+        - destinationDir: npm-latest
+          sourcePath: /opt/app-root/src
       dockerfile: |-
         FROM mhart/alpine-node:10
         WORKDIR /opt/app-root/src
-        COPY package*.json ./
-        RUN npm ci --no-optional --production
+        COPY npm-latest/src/node_modules ./node_modules
     strategy:
       dockerStrategy: {}
       type: Docker
@@ -58,7 +59,7 @@ parameters:
   description: Application repository name
   required: true
 - name: JOB_NAME
-  description: Job identifier (i.e. 'pr-5' OR 'master')
+  description: Job identifier (i.e. 'pr-6' OR 'master')
   required: true
 - name: SOURCE_REPO_REF
   description: Git Pull Request Reference (i.e. 'pull/CHANGE_ID/head')
@@ -68,4 +69,7 @@ parameters:
   required: true
 - name: APP_NAME
   description: Application name
+  required: true
+- name: NAMESPACE
+  description: Target namespace reference (i.e. 'k8vopl-dev')
   required: true

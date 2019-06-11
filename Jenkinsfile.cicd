@@ -74,69 +74,6 @@ pipeline {
         }
       }
     }
-    stage('NodeJsImage') {
-      steps {
-          notifyStageStatus('NodeJsImage', 'PENDING')
-          script {
-            openshift.withCluster() {
-              openshift.withProject(TOOLS_PROJECT) {
-                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
-                  echo "DEBUG - Using project: ${openshift.project()}"
-                }
-
-                timeout(10) {
-                  if (rebuildNodeJs()) {
-                    echo "Changes to NodeJs, update and build..."
-                    echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-nodejs..."
-                    def bcNodeJsTemplate = openshift.process('-f',
-                      'openshift/nodejs.bc.yaml',
-                      "REPO_NAME=${REPO_NAME}",
-                      "JOB_NAME=${JOB_NAME}",
-                      "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                      "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                      "APP_NAME=${APP_NAME}"
-                    )
-
-                    echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-nodejs..."
-                    openshift.apply(bcNodeJsTemplate).narrow('bc').startBuild('-w').logs('-f')
-
-                  } else {
-                    echo "nodejs up to date."
-                  }
-
-                }
-              }
-            }
-          }
-      }
-      post {
-        success {
-          echo 'NodeJsImage successful'
-          notifyStageStatus('NodeJsImage', 'SUCCESS')
-          script {
-            openshift.withCluster() {
-              openshift.withProject(TOOLS_PROJECT) {
-                if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
-                  echo "DEBUG - Using project: ${openshift.project()}"
-                } else {
-                  def bcNodejsConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-nodejs")
-
-                  if(bcNodejsConfig.exists()) {
-                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-nodejs..."
-                    bcNodejsConfig.delete()
-                  }
-
-                }
-              }
-            }
-          }
-        }
-        unsuccessful {
-          echo 'NodeJsImage failed'
-          notifyStageStatus('NodeJsImage', 'FAILURE')
-        }
-      }
-    }
 
     stage('NpmImages') {
       steps {
@@ -166,6 +103,19 @@ pipeline {
                       echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-npm..."
                       openshift.apply(bcBackendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
 
+                      def bcBackendModulesTemplate = openshift.process('-f',
+                        'openshift/backend-modules.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}",
+                        "NAMESPACE=${TOOLS_PROJECT}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-modules..."
+                      openshift.apply(bcBackendModulesTemplate).narrow('bc').startBuild('-w').logs('-f')
+
                     } else {
                       echo "backend npm up to date."
                     }
@@ -186,6 +136,19 @@ pipeline {
 
                       echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-npm..."
                       openshift.apply(bcFrontendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      def bcFrontendModulesTemplate = openshift.process('-f',
+                        'openshift/frontend-modules.bc.yaml',
+                        "REPO_NAME=${REPO_NAME}",
+                        "JOB_NAME=${JOB_NAME}",
+                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                        "APP_NAME=${APP_NAME}",
+                        "NAMESPACE=${TOOLS_PROJECT}"
+                      )
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-modules..."
+                      openshift.apply(bcFrontendModulesTemplate).narrow('bc').startBuild('-w').logs('-f')
 
                     } else {
                       echo "frontend npm up to date."
@@ -209,6 +172,8 @@ pipeline {
                 } else {
                   def bcBackendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-npm")
                   def bcFrontendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-npm")
+                  def bcBackendModulesConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-modules")
+                  def bcFrontendModulesConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-modules")
 
                   if(bcBackendNpmConfig.exists()) {
                     echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
@@ -218,6 +183,16 @@ pipeline {
                   if(bcFrontendNpmConfig.exists()) {
                     echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
                     bcFrontendNpmConfig.delete()
+                  }
+
+                  if(bcBackendModulesConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-modules..."
+                    bcBackendModulesConfig.delete()
+                  }
+
+                  if(bcFrontendModulesConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-modules..."
+                    bcFrontendModulesConfig.delete()
                   }
                 }
               }
@@ -251,7 +226,8 @@ pipeline {
                     "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                     "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
                     "APP_NAME=${APP_NAME}",
-                    "PATH_ROOT=${PATH_ROOT}"
+                    "PATH_ROOT=${PATH_ROOT}",
+                    "NAMESPACE=${TOOLS_PROJECT}"
                   )
 
                   echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-builder..."
@@ -317,7 +293,8 @@ pipeline {
                 "JOB_NAME=${JOB_NAME}",
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}"
+                "APP_NAME=${APP_NAME}",
+                "NAMESPACE=${TOOLS_PROJECT}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -654,20 +631,6 @@ def frontendBuilderTemplateUpdated() {
 
 def frontendUpdated() {
   return inChangeSet('frontend/')
-}
-
-def rebuildNodeJs() {
-  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
-    return true
-  }
-  def nodeJsContainer = inChangeSet('nodejs-container/')
-  echo "nodejs-container/* updated: ${nodeJsContainer}"
-  def nodeJsImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-nodejs").exists()
-  echo "nodejs image exists: ${nodeJsImageExists}"
-  def nodeJsTemplateChanged = inChangeSet('openshift/nodejs.bc.yaml')
-  echo "nodejs template updated: ${nodeJsTemplateChanged}"
-
-  return (jenkinsFileUpdated() || nodeJsContainer || nodeJsTemplateChanged || !nodeJsImageExists)
 }
 
 def rebuildBackendNpm() {

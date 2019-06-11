@@ -40,21 +40,26 @@ objects:
     runPolicy: Serial
     source:
       contextDir: /frontend
+      dockerfile: |-
+        FROM mhart/alpine-node:10
+        WORKDIR /opt/app-root/src
+        COPY . .
+        RUN npm run build
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
       type: Git
     strategy:
-      sourceStrategy:
-        env:
+      dockerStrategy:
+      - env:
         - name: PATH_ROOT
           value: "${PATH_ROOT}"
         - name: REACT_APP_PATH_ROOT
           value: "${PATH_ROOT}"
         from:
-          kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
-      type: Source
+          kind: DockerImage
+          name: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend-modules:latest"
+      type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:
 - name: REPO_NAME
@@ -76,3 +81,6 @@ parameters:
   description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
   required: true
   value: "/mssc"
+- name: NAMESPACE
+  description: Target namespace reference (i.e. 'k8vopl-dev')
+  required: true
