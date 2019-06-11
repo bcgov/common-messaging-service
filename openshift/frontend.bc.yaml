@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: "${APP_NAME}-${JOB_NAME}-frontend-bc-template"
+metadata:
+  name: "${APP_NAME}-${JOB_NAME}-frontend-bc"
+objects:
+- apiVersion: image.openshift.io/v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend"
+  spec:
+    lookupPolicy:
+      local: false
+- apiVersion: build.openshift.io/v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend"
+  spec:
+    completionDeadlineSeconds: 600
+    failedBuildsHistoryLimit: 3
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: "${APP_NAME}-${JOB_NAME}-frontend:latest"
+    postCommit: {}
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: "1"
+        memory: 1Gi
+    runPolicy: SerialLatestOnly
+    source:
+      dockerfile: |-
+        FROM docker-registry.default.svc:5000/bcgov/s2i-caddy:v1-stable
+        COPY /tmp/src/build /var/www/html
+        COPY /tmp/src/Caddyfile /etc/Caddyfile
+        CMD /tmp/scripts/run
+      images:
+      - as:
+        from:
+          kind: ImageStreamTag
+          name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
+          namespace: "${NAMESPACE}"
+        paths:
+        - destinationDir: tmp
+          sourcePath: /opt/app-root/src
+      type: Dockerfile
+    strategy:
+      dockerStrategy: {}
+      type: Docker
+    successfulBuildsHistoryLimit: 3
+parameters:
+- name: REPO_NAME
+  description: Application repository name
+  required: true
+- name: JOB_NAME
+  description: Job identifier (i.e. 'pr-5' OR 'master')
+  required: true
+- name: SOURCE_REPO_REF
+  description: Git Pull Request Reference (i.e. 'pull/CHANGE_ID/head')
+  required: true
+- name: SOURCE_REPO_URL
+  description: Git Repository URL
+  required: true
+- name: APP_NAME
+  description: Application name
+  required: true
+- name: NAMESPACE
+  description: Target namespace reference (i.e. 'k8vopl-dev')
+  required: true
