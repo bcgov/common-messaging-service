@@ -44,7 +44,7 @@ objects:
         FROM mhart/alpine-node:10
         WORKDIR /opt/app-root/src
         COPY . .
-        RUN mkdir -p /opt/app-root/src/uploads
+        RUN mkdir -p /opt/app-root/src/uploads && chmod 777 /opt/app-root/src/uploads
         EXPOSE 8080
         CMD ["npm", "run", "start"]
       git:
