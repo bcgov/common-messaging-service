@@ -483,7 +483,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
           def dcBackend = openshift.apply(dcBackendTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
-            dcBackend.rollout().status('--watch=true')
+            dcBackend.rollout().latest().status()
           }
         },
 
@@ -501,7 +501,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
           def dcFrontend = openshift.apply(dcFrontendTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
-            dcFrontend.rollout().status('--watch=true')
+            dcFrontend.rollout().latest().status()
           }
         },
 
@@ -520,7 +520,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
           def dcProxy = openshift.apply(dcProxyTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
-            dcProxy.rollout().status('--watch=true')
+            dcProxy.rollout().latest().status()
           }
         }
       )
