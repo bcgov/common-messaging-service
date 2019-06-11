@@ -485,7 +485,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           def dcBackend = openshift.apply(dcBackendTemplate).narrow('dc')
           timeout (time: 10, unit: 'MINUTES') {
            try {
-              def bmf = dcFrontend.rollout()
+              def bmf = dcBackend.rollout()
               bmf.latest()
               bmf.status()
             } catch (e) {
