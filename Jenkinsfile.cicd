@@ -12,7 +12,7 @@ pipeline {
     DEBUG_OUTPUT = 'false'
 
     // Enable this to rebuild everything
-    REBUILD_BASE_IMAGES = 'true'
+    REBUILD_BASE_IMAGES = 'false'
 
     // Get projects/namespaces from config maps
     DEV_PROJECT = new File('/var/run/configs/ns/project.dev').getText('UTF-8').trim()
