@@ -9,6 +9,7 @@ This repository contains code to showcase the Common Messaging Service (CMSG).  
     docs/                      - Common Messaging Service documentation
     frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
+    reverse-proxy/             - Reverse Proxy code
     tools/                     - Devops utilities
     └── jenkins                - Jenkins standup
     CODE-OF-CONDUCT.md         - Code of Conduct
@@ -24,6 +25,7 @@ This repository contains code to showcase the Common Messaging Service (CMSG).  
 * [Tools Readme](tools/README.md)
 * [Backend Readme](backend/README.md)
 * [Front Readme](frontend/README.md)
+* [Reverse Proxy Readme](reverse-proxy/README.md)
 * [Openshift Readme](openshift/README.md)
 
 

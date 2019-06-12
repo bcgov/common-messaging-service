@@ -1,0 +1,136 @@
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: "${APP_NAME}-${JOB_NAME}-frontend-bc-template"
+metadata:
+  name: "${APP_NAME}-${JOB_NAME}-frontend-dc"
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend"
+  spec:
+    ports:
+    - name: 2015-tcp
+      port: 2015
+      protocol: TCP
+      targetPort: 2015
+    selector:
+      app: "${APP_NAME}-${JOB_NAME}"
+      deploymentconfig: "${APP_NAME}-${JOB_NAME}-frontend"
+    sessionAffinity: None
+    type: ClusterIP
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-frontend"
+  spec:
+    replicas: 2
+    selector:
+      app: "${APP_NAME}-${JOB_NAME}"
+      deploymentconfig: "${APP_NAME}-${JOB_NAME}-frontend"
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: "${APP_NAME}-${JOB_NAME}"
+          deploymentconfig: "${APP_NAME}-${JOB_NAME}-frontend"
+      spec:
+        containers:
+        - env:
+          - name: PATH_ROOT
+            value: "${PATH_ROOT}"
+          - name: UI_SERVICE_PORT
+            value: "2015"
+          - name: STATIC_FILES_PATH
+            value: "${STATIC_FILES_PATH}"
+          image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend:latest"
+          imagePullPolicy: Always
+          # livenessProbe:
+          #  failureThreshold: 3
+          #  httpGet:
+          #    path: "${PATH_ROOT}"
+          #    port: 2015
+          #    scheme: HTTP
+          #  periodSeconds: 10
+          #  successThreshold: 1
+          #  timeoutSeconds: 1
+          name: "${APP_NAME}-${JOB_NAME}-frontend"
+          ports:
+          - containerPort: 2015
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: "${PATH_ROOT}"
+              port: 2015
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+          resources:
+            requests:
+              cpu: "${CPU_REQUEST}"
+              memory: "${MEMORY_REQUEST}"
+            limits:
+              cpu: "${CPU_LIMIT}"
+              memory: "${MEMORY_LIMIT}"
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+parameters:
+- name: REPO_NAME
+  description: Application repository name
+  required: true
+- name: JOB_NAME
+  description: Job identifier (i.e. 'pr-5' OR 'master')
+  required: true
+- name: NAMESPACE
+  description: Target namespace reference (i.e. 'k8vopl-dev')
+  required: true
+- name: APP_NAME
+  description: Application name
+  required: true
+- name: CPU_REQUEST
+  description: Requested CPU per pod (in millicores ex. 500m)
+  required: true
+  value: 250m
+- name: MEMORY_REQUEST
+  description: Requested Memory per pod (in gigabytes Gi or megabytes Mi ex. 500Mi)
+  required: true
+  value: 500Mi
+- name: CPU_LIMIT
+  description: Limit Peak CPU per pod (in millicores ex. 1000m)
+  required: true
+  value: 500m
+- name: MEMORY_LIMIT
+  description: Limit Peak Memory per pod (in gigabytes Gi or megabytes Mi ex. 2Gi)
+  required: true
+  value: 1Gi
+- name: PATH_ROOT
+  description: Root of path where application is hosted (ex. '/pr-5' or '/mssc')
+  required: true
+  value: "/mssc"
+- name: STATIC_FILES_PATH
+  description: where files are physically located on frontend caddy server
+  required: true
+  value: "/var/www/html"
