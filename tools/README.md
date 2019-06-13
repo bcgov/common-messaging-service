@@ -1,15 +1,15 @@
 # Tools
 
-The Natural Resources Showcase Applications are currently hosted in [RedHat OpenShift](https://www.openshift.com) operated by [BCDevExchange](https://bcdevexchange.org).  We follow the guidelines and principles of the [BCDevOps](https://github.com/BCDevOps) team. We make every attempt to use, or build off the tooling and scripts that BCDevOps (through the [DevHub](https://developer.gov.bc.ca)) provides.    
+The Natural Resources Showcase Applications are currently hosted in [RedHat OpenShift](https://www.openshift.com) operated by [BCDevExchange](https://bcdevexchange.org).  We follow the guidelines and principles of the [BCDevOps](https://github.com/BCDevOps) team. We make every attempt to use, or build off the tooling and scripts that BCDevOps (through the [DevHub](https://developer.gov.bc.ca)) provides.
 
-As part of the BCDevOps community, for each project, we will have 4 OpenShift namespaces:  
+As part of the BCDevOps community, for each project, we will have 4 OpenShift namespaces:
 
-* Dev - development "environment", will contain a deployment from the master branch and N deployments for [pull requests](https://help.github.com/en/articles/about-pull-requests).  
-* Test - test and Quality Assurance, will contain deployment from master branch. Promotions to be manually approved. 
-* Prod - production. The user ready application. Promotions to be manually approved.  
-* Tools - devops namespace.   
+* Dev - development "environment", will contain a deployment from the master branch and N deployments for [pull requests](https://help.github.com/en/articles/about-pull-requests).
+* Test - test and Quality Assurance, will contain deployment from master branch. Promotions to be manually approved.
+* Prod - production. The user ready application. Promotions to be manually approved.
+* Tools - devops namespace.
 
-The tools directory contains all the infrastructure-as-code that we use devops. Although there are many ways to build/test/deploy, this is the way we are doing it.  We currently rely less on OpenShift to do promotions, and more on our own Continuous Integration/Continuous Delivery ([CI/CD](https://en.wikipedia.org/wiki/CI/CD)).  This affords us more control over the workflow and add tooling as needed.  
+The tools directory contains all the infrastructure-as-code that we use devops. Although there are many ways to build/test/deploy, this is the way we are doing it.  We currently rely less on OpenShift to do promotions, and more on our own Continuous Integration/Continuous Delivery ([CI/CD](https://en.wikipedia.org/wiki/CI/CD)).  This affords us more control over the workflow and add tooling as needed.
 
 ## Jenkins Setup Overview
 
@@ -35,10 +35,10 @@ The jobs that Jenkins creates and uses will also follow those principles and bui
 
 * **init.groovy.d/003-create-jobs.groovy**
 
-	This groovy script will build 2 jobs in Jenkins.  One that will build the master branch, and one that will build pull requests.  
-	
+	This groovy script will build 2 jobs in Jenkins.  One that will build the master branch, and one that will build pull requests.
+
 	To add or change the jobs, this is where you want to go.  The name of this file is important, as it needs to get run *BEFORE* the 003-register-github-webhooks.groovy included in the basic install.  Scripts are run alphabetically.  The jobs need to be created before the github webhooks are created.  Our jobs script will read secrets and configmaps created during this setup; described below.
-	
+
 	These jobs are configured to use [Jenkinsfile](../Jenkinsfile) and [Jenkinsfile.cicd](../Jenkinsfile.cicd) found at the root of this repository.  These Jenkinsfiles will make use of the OpenShift ConfigMaps we will create below.
 
 * **init.groovy.d/100-jenkins-config-set-admin-address.groovy**
@@ -56,7 +56,7 @@ You will need a github account and token (preferrably a team shared account) wit
 The following commands setup up Jenkins and uses this repository and specific OpenShift project namespaces.
 
 ### environment variables
-For the following examples, we will be using environment variable substitutions.  Set your environment variables as necessary.  This is not required, but will make using the provided OpenShift commands much easier.  
+For the following examples, we will be using environment variable substitutions.  Set your environment variables as necessary.  This is not required, but will make using the provided OpenShift commands much easier.
 
 #### namespaces
 ```sh
@@ -98,14 +98,14 @@ oc -n $tools process -f 'openshift/secrets.json' -p GH_USERNAME=$gh_username -p 
 ```
 
 ### create config map for related namespaces
-For our custom jobs scripts and Jenkinsfiles.  
+For our custom jobs scripts and Jenkinsfiles.
 
 ```sh
 oc -n $tools process -f 'openshift/ns-config.json' -p DEV=$dev -p TEST=$test -p PROD=$prod -p TOOLS=$tools | oc  -n $tools create -f -
 ```
 
 ### create config map for the application
-For our custom jobs scripts and Jenkinsfiles.  
+For our custom jobs scripts and Jenkinsfiles.
 
 ```sh
 oc -n $tools process -f 'openshift/jobs-config.json' -p REPO_OWNER=$repo_owner -p REPO_NAME=$repo_name -p APP_NAME=$app_name -p APP_DOMAIN=$app_domain | oc -n $tools create -f -
@@ -114,9 +114,9 @@ oc -n $tools process -f 'openshift/jobs-config.json' -p REPO_OWNER=$repo_owner -
 
 ### process the build config templates...
 
-These build configs have no build triggers, we start them manually - we don't want OpenShift to automatically deploy on a configuration change or an image change.  
+These build configs have no build triggers, we start them manually - we don't want OpenShift to automatically deploy on a configuration change or an image change.
 
-The parameters and labels we are providing match up with the BCDevOps pipeline-cli.  Although we are not using the pipeline-cli, we try to align ourselves with its philosophies.  We will consider this deployment of Jenkins to be our "prod" deployment.  We are not providing all the labels pipeline-cli would, but the most important ones for identifying the app and the environment.  
+The parameters and labels we are providing match up with the BCDevOps pipeline-cli.  Although we are not using the pipeline-cli, we try to align ourselves with its philosophies.  We will consider this deployment of Jenkins to be our "prod" deployment.  We are not providing all the labels pipeline-cli would, but the most important ones for identifying the app and the environment.
 
 #### master
 
@@ -146,7 +146,7 @@ oc -n $tools start-build bc/jenkins-slave-main-prod -F
 ### process the deployment templates
 
 #### master
-When this command completes, it will output a listing of objects it has created.  Ignore the following error (or similar):  
+When this command completes, it will output a listing of objects it has created.  Ignore the following error (or similar):
 > Error from server (AlreadyExists): imagestreams.image.openshift.io "jenkins" already exists
 
 ```sh
@@ -175,6 +175,21 @@ This will not clean up the initial secret and config maps we explicitly created
 oc delete all,template,secret,configmap,pvc,serviceaccount,rolebinding --selector app=jenkins-prod -n $tools
 ```
 
+# SonarQube
+
+## SonarQube Server
+To deploy a SonarQube server instance to our project we simply use the prebuilt server image provided by the BCDevOps organization.
+
+Full details should be found at the [BCDevOps SonarQube repository](https://github.com/BCDevOps/sonarqube).
+
+Do deploy the server and the backing PostgreSQL database clone the repo linked above and, from the root folder (where the template yaml is located), run the following command in the `Tools` project:
+
+    oc new-app -f sonarqube-postgresql-template.yaml --param=SONARQUBE_VERSION=6.7.5
+
+At the point this was done on the MSSC tools project, the BCDevOps SonarQube repo was at commit `bbb9f62e29706b61382cf24d7ad7e08f2476a01f` (on master branch).
+
+## SonarQube Scanner
+TBD
 
 
 
