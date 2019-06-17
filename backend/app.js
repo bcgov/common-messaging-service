@@ -1,4 +1,5 @@
 const config = require('config');
+const cors = require('cors');
 const express = require('express');
 const log = require('npmlog');
 const morgan = require('morgan');
@@ -12,6 +13,9 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
+
+app.use(cors());
+app.options('*', cors());
 
 app.use(morgan(config.get('server.morganFormat')));
 

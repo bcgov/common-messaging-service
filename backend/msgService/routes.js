@@ -33,8 +33,8 @@ routes.get('/health', login, wrap(async function (req, res) {
   await getHealth(req, res);
 }));
 
-routes.post('/email', login, authenticate, authorize(CREATE_MSG), wrap(async function (req, res) {
-  await sendEmail(req, res);
+routes.post('/email', login, authenticate, authorize(CREATE_MSG), wrap(async function (req, res, next) {
+  await sendEmail(req, res, next);
 }));
 
 routes.get('/email/:messageId/status', login, authenticate, authorize(CREATE_MSG), wrap(async function (req, res) {

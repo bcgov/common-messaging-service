@@ -63,7 +63,7 @@ const cmsgSvc = {
       log.error(`Error from Common Messaging: status = ${e.response.status}, msg = ${e.response.statusText}`);
       let cmsgErrors = [];
       if (e.response.data && e.response.data.errors) {
-        e.response.data.errors.map(e => {
+        cmsgErrors = e.response.data.errors.map(e => {
           log.error(`.. ${e.message}`);
           return e.message;
         });
@@ -100,7 +100,7 @@ const cmsgSvc = {
       log.error(`Error from Common Messaging: status = ${e.response.status}, msg = ${e.response.statusText}`);
       let cmsgErrors = [];
       if (e.response.data && e.response.data.errors) {
-        e.response.data.errors.map(e => {
+        cmsgErrors = e.response.data.errors.map(e => {
           log.error(`.. ${e.message}`);
           return e.message;
         });
