@@ -1,70 +1,71 @@
 const config = require('config');
 const fileUtils = require('../components/fileUtils');
-const log = require('npmlog');
 
-const clientScopes = config.get('services.cmsg.scopes.all');
-const clientId = config.get('services.cmsg.client.id');
-const clientSecret = config.get('services.cmsg.client.secret');
-
-const { webadeSvc } = require('../oauthService/webadeSvc');
+const {relatedLinks} = require('./relatedLinks');
 const { cmsgSvc } = require('../msgService/cmsgSvc');
 
+const getConfig = async (req, res) => {
+  let uploads = {... config.get('server.uploads')};
+  delete uploads.path;
+  res.status(200).json({
+    data: {
+      attachments: uploads,
+      defaultSender: config.get('services.cmsg.sender')
+    },
+    links: relatedLinks.createLinks(req)
+  });
+};
+
 const getHealth = async (req, res) => {
+  // we must have already used the login middleware.
+  // we examine what login has placed into our request.
+
   // need oauth token for our service client for the Common Messaging Service
   // need to check the credentials (valid/good, authenticated in env)
   // need to check the expected scopes (top level, create/send message)
   // finally need to ping the Common Messaging Service to see if it is up.
 
-  try {
-    let {token, status} = await login();
-    status.cmsgApiHealthy = false;
-    if (status.hasTopLevel) {
-      status.cmsgApiHealthy = await cmsgSvc.healthCheck(token);
-    }
 
-    // pass along configuration to the caller...
-    // these could change from deployment to deployment, so allow caller to match up with what we can handle.
-    status.attachmentsMaxSize = parseInt(config.get('server.uploads.fileSize'));
-    status.attachmentsMaxFiles = parseInt(config.get('server.uploads.fileCount'));
-    status.attachmentsAcceptedType = config.get('server.uploads.fileType');
-    status.sender = config.get('services.cmsg.sender');
-
-    res.status(200).json(status);
-  } catch (error) {
-    log.error('msgServer.getStatus', error.message);
-    res.status(500).json({error: {code: error.code, message: error.message}});
+  req.status.cmsgApiHealthy = false;
+  if (req.status.hasTopLevel) {
+    req.status.cmsgApiHealthy = await cmsgSvc.healthCheck(req.token);
   }
+
+  res.status(200).json({
+    data: {
+      cmsg: req.status
+    },
+    links: relatedLinks.createLinks(req)
+  });
+
 };
 
-const sendEmail = async (req, res) => {
+const sendEmail = async (req, res, next) => {
   let email = {};
   let filenames = [];
   let attachments = [];
   try {
-    let {token, status} = await login();
-    if (status.hasCreateMessage) {
-
-      // extract what we need from the request
-      email = req.body;
-      filenames = email.filenames;
-      // remove filenames field from email, we don't want to send this to the cmsg service.
-      delete email.filenames;
-      // convert our filenames to acceptable attachment model.
-      if (filenames && filenames.length > 0) {
-        attachments = await fileUtils.convertFiles(filenames);
-      }
-      // send the email and attachements
-      let {messageId} = await cmsgSvc.sendEmail(token, email, attachments);
-      // return the status from cmsg
-      let response = await cmsgSvc.getEmailStatus(token, messageId);
-      res.status(200).json(response);
-    } else {
-      res.status(401).json({error: {code: 401, message: 'Service is not authorized to send emails via Common Messaging Service'}});
+    // extract what we need from the request
+    email = req.body;
+    filenames = email.filenames;
+    // remove filenames field from email, we don't want to send this to the cmsg service.
+    delete email.filenames;
+    // convert our filenames to acceptable attachment model.
+    if (filenames && filenames.length > 0) {
+      attachments = await fileUtils.convertFiles(filenames);
     }
+    // send the email and attachements
+    let sendResponse = await cmsgSvc.sendEmail(req.token, email, attachments);
+    let messageId = cmsgSvc.parseMessageId(sendResponse);
+    res.status(200).json({
+      data: {
+        messageId: messageId
+      },
+      links: relatedLinks.createLinks(req, [{r:'status', m:'GET', p:[req.path, messageId, 'status'].join('/')}])
+    });
 
   } catch (error) {
-    log.error('msgServer.getStatus', error.message);
-    res.status(500).json({error: {code: error.code, message: error.message}});
+    next(error);
   } finally {
     // check for presence of uploaded files, delete them if they exist....
     if (filenames && filenames.length >0) {
@@ -74,28 +75,39 @@ const sendEmail = async (req, res) => {
 };
 
 const getEmailStatus = async (req, res) => {
-  try {
-    let {token} = await login();
-    let result = await cmsgSvc.getEmailStatus(token, req.params.messageId);
-    res.status(200).json(result);
 
-  } catch (error) {
-    log.error('msgServer.getStatus', error.message);
-    res.status(500).json({error: {code: error.code, message: error.message}});
+  let result = await cmsgSvc.getEmailStatus(req.token, req.params.messageId);
+  let statuses = [];
+
+  if (result.elements && result.elements.length > 0) {
+    statuses = result.elements.map((el) => {
+      let recipient = el.recipient.startsWith('EMAIL:') ? el.recipient.substring(6) : el.recipient;
+      return {messageId: el.messageIdentifier, recipient: recipient, type: el.type, content: el.content, date: el.date};
+    });
   }
-};
 
-const login = async () => {
-  let oauthData = await webadeSvc.getToken(clientId, clientSecret, clientScopes);
-  let oauthResult = webadeSvc.parseToken(oauthData);
-  let cmsgResult = cmsgSvc.parseScopes(oauthData);
-  let status = {...oauthResult.status, ...cmsgResult.status};
-  let token = oauthResult.token;
-  return {token, status};
+  res.status(200).json({
+    data: {
+      statuses: statuses
+    },
+    links: relatedLinks.createLinks(req)
+  });
+
 };
 
 const handleFiles = async (req, res) => {
-  res.status(200).json(req.files);
+  res.status(200).json({
+    data: {
+      files: req.files.map(f => {
+        let file = {... f};
+        delete file.fieldname;
+        delete file.destination;
+        delete file.path;
+        return file;
+      })
+    },
+    links: relatedLinks.createLinks(req, [{r:'email', m:'POST', p:'/email'}])
+  });
 };
 
-module.exports = {getHealth, sendEmail, getEmailStatus, handleFiles};
+module.exports = {getConfig, getHealth, sendEmail, getEmailStatus, handleFiles};

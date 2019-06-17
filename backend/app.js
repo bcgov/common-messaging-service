@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const msgService = require('./msgService/routes');
 const utils = require('./components/utils');
 
+const Problem = require('api-problem');
+
 const app = express();
 
 app.use(express.json());
@@ -26,20 +28,22 @@ app.use('/api/v1', msgService);
 // Handle 500
 // eslint-disable-next-line no-unused-vars
 app.use(function (err, req, res, next) {
-  res.status(500);
-  res.json({
-    status: 500,
-    message: err.stack.split('\n', 1)[0]
-  });
+  if (err.stack) {
+    log.error(err.stack);
+  }
+
+  if (err instanceof Problem) {
+    err.send(res, null);
+  } else {
+    let p = new Problem(500, 'Server Error', { detail: err.message } );
+    p.send(res, null);
+  }
 });
 
 // Handle 404
 app.use(function (req, res) {
-  res.status(404);
-  res.json({
-    status: 404,
-    message: 'Page Not Found'
-  });
+  let p = new Problem(404, 'Page Not Found', { detail: req.originalUrl } );
+  p.send(res, null);
 });
 
 // Prevent unhandled errors from crashing application

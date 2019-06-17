@@ -1,4 +1,10 @@
 {
+  "service" : {
+    "name": "sendEmail",
+    "description" : "BC Gov. Send Email microservice",
+    "version": "1",
+    "homepage": "http://localhost:3001/api/v1"
+  },
   "server": {
     "logLevel": "debug",
     "morganFormat": "dev",
@@ -9,7 +15,8 @@
       "fileSize": "5242880",
       "fileCount": "3",
       "fileType": "pdf"
-    }
+    },
+    "hostUrl": "http://localhost:3001"
   },
   "services": {
     "cmsg": {

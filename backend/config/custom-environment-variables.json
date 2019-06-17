@@ -1,4 +1,8 @@
 {
+  "service" : {
+    "version": "SERVICE_VERSION",
+    "homepage": "SERVICE_HOMEPAGE"
+  },
   "server": {
     "logLevel": "SERVER_LOGLEVEL",
     "morganFormat": "SERVER_MORGANFORMAT",
@@ -9,7 +13,8 @@
       "fileSize": "UPLOADS_FILE_SIZE",
       "fileCount": "UPLOADS_FILE_COUNT",
       "fileType": "UPLOADS_FILE_TYPE"
-    }
+    },
+    "hostUrl": "HOST_URL"
   },
   "services": {
     "cmsg": {
