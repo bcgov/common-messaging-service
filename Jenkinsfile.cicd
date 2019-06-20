@@ -38,6 +38,10 @@ pipeline {
     DEV_HOST = "${APP_NAME}-${DEV_PROJECT}.${APP_DOMAIN}"
     // will be added to the HOST_ROUTE
     PATH_ROOT = "/${JOB_NAME}"
+
+    // for the email microservice backend
+    APP_LABEL = "${APP_NAME}-${JOB_NAME}"
+    IMAGE_NAME = "${APP_NAME}-${JOB_NAME}-backend"
   }
 
   stages {
@@ -250,13 +254,9 @@ pipeline {
               // so build out in parallel with explicit wait
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
               def bcBackendTemplate = openshift.process('-f',
-                'openshift/backend.bc.yaml',
-                "REPO_NAME=${REPO_NAME}",
-                "JOB_NAME=${JOB_NAME}",
-                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}",
-                "NAMESPACE=${TOOLS_PROJECT}"
+                'https://raw.githubusercontent.com/bcgov/nr-email-microservice/feature/initial/openshift/api.bc.yaml',
+                "APP_LABEL=${REPO_NAME}",
+                "IMAGE_NAME=${JOB_NAME}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -435,11 +435,12 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
         Backend: {
           echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
           def dcBackendTemplate = openshift.process('-f',
-            'openshift/backend.dc.yaml',
-            "REPO_NAME=${REPO_NAME}",
-            "JOB_NAME=${JOB_NAME}",
+            'https://raw.githubusercontent.com/bcgov/nr-email-microservice/feature/initial/openshift/api.dc.yaml',
+            "APP_LABEL=${APP_LABEL}",
+            "IMAGE_NAME=${IMAGE_NAME}",
             "NAMESPACE=${projectEnv}",
-            "APP_NAME=${APP_NAME}"
+            "SECRET_NAME=cmsg-client",
+            "CONFIG_MAP_NAME=cmsg-config"
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
@@ -620,7 +621,7 @@ def rebuildBackendNpm() {
   def backendNpmTemplateChanged = backendNpmTemplateUpdated()
   echo "backend npm template updated: ${backendNpmTemplateChanged}"
 
-  return (pipelineUpdated || packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists)
+  return false;// (pipelineUpdated || packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists)
 }
 
 def rebuildFrontendNpm() {
