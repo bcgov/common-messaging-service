@@ -441,7 +441,6 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
           def dcBackendTemplate = openshift.process('-f',
             "${EMAIL_MICROSRV_DC}",
-            "SOURCE_REPO_REF=${EMAIL_MICROSRV_REF}",
             "APP_LABEL=${EMAIL_MICROSRV_APP_LABEL}",
             "IMAGE_NAME=${EMAIL_MICROSRV_IMAGE_NAME}",
             "NAMESPACE=${projectEnv}",
