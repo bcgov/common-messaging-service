@@ -256,8 +256,8 @@ pipeline {
               def bcBackendTemplate = openshift.process('-f',
                 'https://raw.githubusercontent.com/bcgov/nr-email-microservice/feature/initial/openshift/api.bc.yaml',
                 "SOURCE_REPO_REF=feature/initial",
-                "APP_LABEL=${REPO_NAME}",
-                "IMAGE_NAME=${JOB_NAME}"
+                "APP_LABEL=${APP_LABEL}",
+                "IMAGE_NAME=${IMAGE_NAME}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -640,7 +640,7 @@ def rebuildFrontendNpm() {
   def frontendNpmTemplateChanged = frontendNpmTemplateUpdated()
   echo "frontend npm template updated: ${frontendNpmTemplateChanged}"
 
-  return false;// return (pipelineUpdated || packagesFrontendUpdate || frontendNpmTemplateChanged || !frontendNpmImageExists)
+  return (pipelineUpdated || packagesFrontendUpdate || frontendNpmTemplateChanged || !frontendNpmImageExists)
 }
 
 def rebuildFrontendBuilder() {
@@ -654,6 +654,6 @@ def rebuildFrontendBuilder() {
   def frontendBuilderTemplateChanged = frontendBuilderTemplateUpdated()
   echo "frontend builder template updated: ${frontendBuilderTemplateChanged}"
 
-  return false;// return (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists)
+  return (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists)
 }
 
