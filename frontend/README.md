@@ -1,5 +1,5 @@
 # The Messaging Service ShowCase (MSSC) Application
-The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [backend](../backend/README.md)) and a [React.js](https://reactjs.org) UI (see [frontend](./README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
+The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice)) and a [React.js](https://reactjs.org) UI (see [frontend](./README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
 
 ## Frontend
 The frontend is a React.js application which provides an example UI for calling the Common Messaging Service. At this time, the only messaging transport is email.  This application demonstrates how to send both plain text emails and html emails to multiple recipients and includes support for attachments.
@@ -50,7 +50,7 @@ npm install
 ```
 
 ### Run the application locally
-Note that by default, we are running on localhost:3000.  By default, a local instance of the [backend](../backend) will run on localhost:3001.  In our package.json, we set a proxy to localhost:3001.  This means that we can run frontend and backend locally in development mode to debug both sides. All http calls that would go to our application root will proxy to the backend running on localhost:3001.
+Note that by default, we are running on localhost:3000.  By default, a local instance of the [email microservice](https://github.com/bcgov/nr-email-microservice) will run on localhost:8080.  In our package.json, we set a proxy to localhost:8080.  This means that we can run frontend and backend locally in development mode to debug both sides. All http calls that would go to our application root will proxy to the backend running on localhost:8080.
 
 ``` sh
 npm run start
@@ -72,7 +72,7 @@ Generally, REACT_APP_PATH_ROOT is the same as PATH_ROOT, but for serving locally
 ``` sh
 cd frontend
 
-export REACT_APP_PATH_ROOT=http://localhost:3001
+export REACT_APP_PATH_ROOT=http://localhost:8080
 npm run build
 
 export PATH_ROOT=/pr-5

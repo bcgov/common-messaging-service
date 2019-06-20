@@ -1,8 +1,8 @@
 # The Messaging Service ShowCase (MSSC) Application
-The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [backend](../backend/README.md)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
+The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
 
 
-For both the frontend and backend, we provide a set of npm scripts in their respective package.json files.  The most important of which are: backend "npm run start", and frontend is "npm run build".  The reverse proxy has no installation scripts (but does have runtime configuration requirements, see [../reverse-proxy](../reverse-proxy/README.md)).
+For both the frontend, we provide a set of npm scripts in [package.json](../frontend/package.json) file; the most important of which is: "npm run build".  The reverse proxy has no installation scripts (but does have runtime configuration requirements, see [../reverse-proxy](../reverse-proxy/README.md)).
 
 # OpenShift
 
@@ -17,6 +17,8 @@ There are some requirements for each namespace/environment, that are **NOT** bui
 
 At a minimum, you will need to have your a Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).  The service client id and password will be created through [Get Token](https://github.com/bcgov/nr-get-token).  You will need to get the Common Messaging Service (CMSG) api url and the OAuth url for whichever Common Services environment you are targetting.
 
+Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/openshift/README.md) for more details on secrets, configmap and other configuration details.
+
 #### Secrets/Environment variables
 The following oc command creates a new secret, cmsg-client, that will be used to set environment variables in the application.
 
@@ -28,22 +30,16 @@ oc create secret -n <namespace> generic cmsg-client --from-literal=username=<cli
 ```
 
 #### ConfigMap/Enviornment variables
-The following oc command creates a new configmap, cmsg-config, that will be used to set environment variables in the application.  At a minimum, OAUTH\_TOKEN\_URL and CMSG\_TOP\_LEVEL\_URL **must** be set.  These will be available as environment variables matching their name (hence the Uppercase underscore convention for their names).
+The following oc command creates a new configmap, cmsg-config, that will be used to set environment variables in the application.  OAUTH\_TOKEN\_URL and CMSG\_TOP\_LEVEL\_URL **must** be set.  These will be available as environment variables matching their name (hence the Uppercase underscore convention for their names).
 
 ```sh
 oc create configmap -n <namespace> cmsg-config --from-literal=OAUTH_TOKEN_URL=<oauth token url> --from-literal=CMSG_TOP_LEVEL_URL=<common messaging api top level url>
 ```
 
-#### Other configurable environment variables
-The above command can be expanded to include more configuration.  For the backend code, we use the npm library: [config](https://www.npmjs.com/package/config), which will pick up any of our environment variables that are set. The cmsg-config will be passed in its entirety to the application container, so any value set in the configmap will become an environment variable.
-
-See [backend/config/custom-environment-variables.json](../backend/config/custom-environment-variables.json) for the complete set of variables. [backend/config/default.json](../backend/config/default.json) contains all the default values to help clarify usage.
-
-
 ## Overview
 To deploy the 3 components (backend, frontend, reverse-proxy), into multiple enviroments (one per pull-request, one each for master in dev, test, and prod); we use a series of templates that allows us to configure these deployments.  We do our builds and deploys through Jenkins, and the coordination and configuration of the templates is done in Jenkinsfiles.  See [Jenkinsfile](../Jenkinsfile) and [Jenkinsfile.cicd](../Jenkinsfile.cicd) to see how the templates are used for building and deploying in our CI/CD pipeline.
 
-Since we employ node.js for both the backend and frontend builds, we have used chained builds to help reduce the time to deploy.  That is, we create an image that contains our required npm installs and we only re-build that image if the package.json changes.  Downloading and installing all the npm modules can be time consuming, so we do not want to incur that hit for each deployment.  Once we have our valid npm image, we can use that for our backend runtime image (with source code changes required for the deployment) and for our frontend build.
+Since we employ node.js for both the backend and frontend builds, we have used chained builds to help reduce the time to deploy.  That is, we create an image that contains our required npm installs and we only re-build that image if the package.json changes.  Downloading and installing all the npm modules can be time consuming, so we do not want to incur that hit for each deployment.  Once we have our valid npm image, we can use that for our frontend build.
 
 The overall build/deployment process is:
 1. Create/Update NPM Images (if needed)
@@ -55,16 +51,14 @@ The overall build/deployment process is:
 
 ## Templates
 
-### Build Template - backend-npm.bc.yaml
-This template is used to create our Backend specific NPM image.  This image will only be created and updated if the [backend/package.json](../backend/package.json) changes.  This becomes the "base" image for our Backend Runtime image.  We use an inline Dockerfile to create a fairly slim node.js container with only the libraries required to run our backend application in production mode.
+### Build Template - Backend (Email Microservice)
+The backend runtime is [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  We use their build config and we provide parameters specific for our needs.
 
-The template expects 5 parameters:
+We pass the following to the build template:
 
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* SOURCE\_REPO\_URL - complete url to the repo (including .git)
-* SOURCE\_REPO\_REF - master or pull request ref (ex. pull/3/head)
-* APP\_NAME - name of the application: mssc
+* SOURCE\_REPO\_REF - this is which tag, or release of the microservice we are building
+* APP\_LABEL - we want this to reflect our MSSC app label (ex. mssc-pr-5, mssc-master)
+* IMAGE\_NAME - this is the name we use for the objects required for the microservice (ex. mssc-pr-5-backend or mssc-master-backend)
 
 ### Build Template - frontend-npm.bc.yaml
 This template is used to create our Frontend specific NPM image.  This image will only be created and updated if the [frontend/package.json](../frontend/package.json) changes.  This becomes the "base" image for our Frontend Builder image.  We use an inline Dockerfile to create a fairly slim node.js container with libraries required to build our Frontend static file bundle.
@@ -90,18 +84,6 @@ The template expects 7 parameters:
 * NAMESPACE - the Openshift namespace where we can source our Frontend NPM image (ex. z208i4-tools)
 * PATH\_ROOT - compiled into our React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc)
 
-### Build Template - backend.bc.yaml
-This template is used to create our Backend Runtime image, it is 2nd in the Backend chained build and is based on backend-npm.bc.yaml.  This image will only be created and updated if the [backend/*](../backend) code changes - basically if we update any Backend code.  Our latest code is copied into place and we start the node server with "npm run start"
-
-The template expects 6 parameters:
-
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* SOURCE\_REPO\_URL - complete url to the repo (including .git)
-* SOURCE\_REPO\_REF - master or pull request ref (ex. pull/3/head)
-* APP\_NAME - name of the application: mssc
-* NAMESPACE - the Openshift namespace where we can source our Backend NPM image (ex. z208i4-tools)
-
 ### Build Template - frontend.bc.yaml
 This template is used to create our Frontend Runtime image, it is 3rd in the Frontend chained build and uses frontend-builder.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  The minified React production bundle is copied into a new image that is a Caddy server, which serves that static file.
 
@@ -125,15 +107,19 @@ The template expects 5 parameters:
 * SOURCE\_REPO\_REF - master or pull request ref (ex. pull/3/head)
 * APP\_NAME - name of the application: mssc
 
-### Deploy Template - backend.dc.yaml
+### Deploy Template - Backend (Email Microservice)
 This template deploys our Backend Runtime image (nodejs server) and creates a service for it.  This service is internal and used by the Reverse Proxy to handle backend requests.
 
-The template expects 4 parameters:
+We provide the following parameters to the deployment config:
 
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* APP\_NAME - name of the application: mssc
+* APP\_LABEL - we want this to reflect our MSSC app label (ex. mssc-pr-5, mssc-master)
+* IMAGE\_NAME - this is the name we use for the objects required for the microservice (ex. mssc-pr-5-backend or mssc-master-backend)
 * NAMESPACE - the Openshift namespace to which these objects are deployed (ex. z208i4-dev)
+* SECRET_NAME - this is the name of our secrets for CMSG Service Client: cmsg-client
+* CONFIG_MAP_NAME - this is the name of our config map for CMSG Service Client Urls: cmsg-config
+* CMSG_SENDER - the email address we use as our default sender. NR.CommonServiceShowcase@gov.bc.ca
+* HOST_URL - this is the full url that will be exposed by our reverse proxy.  (ex. https://${HOST\_ROUTE}${PATH\_ROOT}"
+
 
 ### Deploy Template - frontend.dc.yaml
 This template deploys our Frontend Runtime image (Caddy static files server) and creates a service for it.  This service is internal and used by the Reverse Proxy to handle frontend requests.
@@ -164,50 +150,5 @@ The deployment templates also accept parameters for resource limits and requests
 
 
 #### Examples
-The following will illustrate how to call the templates from the command line.  A manual pipeline...  Assuming you have already initialized the environment with the secret and configmap (see above).
-
-It is always good to namespace ALL of your commands, we will just set an environment variable to simplify.
-
-``` sh
-
-cd openshift
-export prj=<your namespace ex. idcqvl-dev>
-
-```
-
-Process the Build templates (we will just illustrate with the backend).
-
-``` sh
-
-oc -n $proj process -f backend-npm.bc.yaml -p REPO_NAME=nr-messaging-service-showcase -p JOB_NAME=master -p SOURCE_REPO_URL=https://github.com/bcgov/nr-messaging-service-showcase.git -p SOURCE_REPO_REF=master -p APP_NAME=mssc -o yaml | oc -n $proj apply -f -
-
-oc -n $proj process -f backend.bc.yaml -p REPO_NAME=nr-messaging-service-showcase -p JOB_NAME=master -p SOURCE_REPO_URL=https://github.com/bcgov/nr-messaging-service-showcase.git -p SOURCE_REPO_REF=master -p APP_NAME=mssc -p NAMESPACE=$proj -o yaml | oc -n $proj apply -f -
-
-```
-
-The followup to this would be to actually build the images.  Since we use chained builds (runtime depends on npm), order matters.
-
-```sh
-
-oc -n $proj start-build mssc-master-backend-npm --follow
-
-oc -n $proj start-build mssc-master-backend --follow
-
-```
-
-Once the runtime image has been built, we can process our deployment configuration.
-
-``` sh
-
-oc -n $proj process -f backend.dc.yaml -p REPO_NAME=nr-messaging-service-showcase -p JOB_NAME=master -p APP_NAME=mssc -p NAMESPACE=$proj -o yaml | oc -n $proj apply -f -
-
-```
-
-And then we trigger the deployment.
-
-```sh
-
-oc -n $proj rollout latest dc/mssc-master-backend
-
-```
+Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/openshift/README.md) for examples on how one would call openshift templates and provide parameters on the command line.
 
