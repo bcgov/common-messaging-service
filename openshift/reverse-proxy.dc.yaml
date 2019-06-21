@@ -139,11 +139,11 @@ parameters:
 - name: CPU_REQUEST
   description: Requested CPU per pod (in millicores ex. 500m)
   required: true
-  value: 250m
+  value: 100m
 - name: MEMORY_REQUEST
   description: Requested Memory per pod (in gigabytes Gi or megabytes Mi ex. 500Mi)
   required: true
-  value: 500Mi
+  value: 256Mi
 - name: CPU_LIMIT
   description: Limit Peak CPU per pod (in millicores ex. 1000m)
   required: true
