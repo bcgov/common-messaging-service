@@ -34,6 +34,9 @@ objects:
     path: "${PATH_ROOT}"
     port:
       targetPort: 2015-tcp
+    tls:
+      insecureEdgeTerminationPolicy: Redirect
+      termination: edge
     to:
       kind: Service
       name: "${APP_NAME}-${JOB_NAME}-reverse-proxy"

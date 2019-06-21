@@ -41,6 +41,14 @@ pipeline {
     PROD_HOST = "${APP_NAME}.${APP_DOMAIN}"
     // will be added to the HOST_ROUTE
     PATH_ROOT = "/${APP_NAME}"
+
+    // for the email microservice backend
+    EMAIL_MICROSRV_BC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/1.0.0/openshift/api.bc.yaml"
+    EMAIL_MICROSRV_DC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/1.0.0/openshift/api.dc.yaml"
+    EMAIL_MICROSRV_REF = "1.0.0"
+
+    EMAIL_MICROSRV_APP_LABEL = "${APP_NAME}-${JOB_NAME}"
+    EMAIL_MICROSRV_IMAGE_NAME = "${APP_NAME}-${JOB_NAME}-backend"
   }
 
 
@@ -89,51 +97,25 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 }
 
+                if (rebuildFrontendNpm()) {
+                  echo "Changes to frontend NPM, update and build..."
+                  echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                  def bcFrontendNpmTemplate = openshift.process('-f',
+                    'openshift/frontend-npm.bc.yaml',
+                    "REPO_NAME=${REPO_NAME}",
+                    "JOB_NAME=${JOB_NAME}",
+                    "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                    "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                    "APP_NAME=${APP_NAME}"
+                  )
 
-                parallel(
-                  Backend: {
-                    if (rebuildBackendNpm()) {
-                      echo "Changes to backend NPM, update and build..."
-                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
-                      def bcBackendNpmTemplate = openshift.process('-f',
-                        'openshift/backend-npm.bc.yaml',
-                        "REPO_NAME=${REPO_NAME}",
-                        "JOB_NAME=${JOB_NAME}",
-                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                        "APP_NAME=${APP_NAME}"
-                      )
+                  echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-npm..."
+                  openshift.apply(bcFrontendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend-npm..."
-                      openshift.apply(bcBackendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
+                } else {
+                  echo "frontend npm up to date."
+                }
 
-                    } else {
-                      echo "backend npm up to date."
-                    }
-
-                  },
-                  Frontend: {
-                    if (rebuildFrontendNpm()) {
-                      echo "Changes to frontend NPM, update and build..."
-                      echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
-                      def bcFrontendNpmTemplate = openshift.process('-f',
-                        'openshift/frontend-npm.bc.yaml',
-                        "REPO_NAME=${REPO_NAME}",
-                        "JOB_NAME=${JOB_NAME}",
-                        "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                        "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                        "APP_NAME=${APP_NAME}"
-                      )
-
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend-npm..."
-                      openshift.apply(bcFrontendNpmTemplate).narrow('bc').startBuild('-w').logs('-f')
-
-                    } else {
-                      echo "frontend npm up to date."
-                    }
-
-                  }
-                )
               }
             }
           }
@@ -148,13 +130,7 @@ pipeline {
                 if(DEBUG_OUTPUT.equalsIgnoreCase('true')) {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
-                  def bcBackendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend-npm")
                   def bcFrontendNpmConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend-npm")
-
-                  if(bcBackendNpmConfig.exists()) {
-                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend-npm..."
-                    bcBackendNpmConfig.delete()
-                  }
 
                   if(bcFrontendNpmConfig.exists()) {
                     echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend-npm..."
@@ -254,13 +230,10 @@ pipeline {
               // so build out in parallel with explicit wait
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
               def bcBackendTemplate = openshift.process('-f',
-                'openshift/backend.bc.yaml',
-                "REPO_NAME=${REPO_NAME}",
-                "JOB_NAME=${JOB_NAME}",
-                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
-                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
-                "APP_NAME=${APP_NAME}",
-                "NAMESPACE=${TOOLS_PROJECT}"
+                "${EMAIL_MICROSRV_BC}",
+                "SOURCE_REPO_REF=${EMAIL_MICROSRV_REF}",
+                "APP_LABEL=${EMAIL_MICROSRV_APP_LABEL}",
+                "IMAGE_NAME=${EMAIL_MICROSRV_IMAGE_NAME}"
               )
 
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -474,11 +447,14 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
         Backend: {
           echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-backend..."
           def dcBackendTemplate = openshift.process('-f',
-            'openshift/backend.dc.yaml',
-            "REPO_NAME=${REPO_NAME}",
-            "JOB_NAME=${JOB_NAME}",
+            "${EMAIL_MICROSRV_DC}",
+            "APP_LABEL=${EMAIL_MICROSRV_APP_LABEL}",
+            "IMAGE_NAME=${EMAIL_MICROSRV_IMAGE_NAME}",
             "NAMESPACE=${projectEnv}",
-            "APP_NAME=${APP_NAME}"
+            "SECRET_NAME=cmsg-client",
+            "CONFIG_MAP_NAME=cmsg-config",
+            "CMSG_SENDER=NR.CommonServiceShowcase@gov.bc.ca",
+            "HOST_URL=https://${hostEnv}${pathEnv}"
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
@@ -613,19 +589,7 @@ def inChangeSet(path) {
 }
 
 def jenkinsFileUpdated() {
-  return inChangeSet('Jenkinsfile')
-}
-
-def backendPackagesUpdated() {
-  return inChangeSet('backend/package.json')
-}
-
-def backendNpmTemplateUpdated() {
-  return inChangeSet('openshift/backend-npm.bc.yaml')
-}
-
-def backendUpdated() {
-  return inChangeSet('backend/')
+  return inChangeSet('Jenkinsfile.cicd')
 }
 
 def frontendPackagesUpdated() {
@@ -642,24 +606,6 @@ def frontendBuilderTemplateUpdated() {
 
 def frontendUpdated() {
   return inChangeSet('frontend/')
-}
-
-def rebuildBackendNpm() {
-  if (REBUILD_BASE_IMAGES.equalsIgnoreCase('true')) {
-    return true
-  }
-
-  def pipelineUpdated = jenkinsFileUpdated();
-  echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
-
-  def packagesBackendUpdate = backendPackagesUpdated()
-  echo "backend/package.json updated: ${packagesBackendUpdate}"
-  def backendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-backend-npm").exists()
-  echo "backend npm image exists: ${backendNpmImageExists}"
-  def backendNpmTemplateChanged = backendNpmTemplateUpdated()
-  echo "backend npm template updated: ${backendNpmTemplateChanged}"
-
-  return (pipelineUpdated || packagesBackendUpdate || backendNpmTemplateChanged || !backendNpmImageExists)
 }
 
 def rebuildFrontendNpm() {

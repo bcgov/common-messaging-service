@@ -3,7 +3,8 @@ import './EmailForm.css';
 import TinyMceEditor from '../htmlText/TinyMceEditor';
 import Dropzone from 'react-dropzone';
 
-const MSG_SERVICE_PATH = `${process.env.REACT_APP_PATH_ROOT}/api/v1`;
+const PATH_ROOT = process.env.REACT_APP_PATH_ROOT || '';
+const MSG_SERVICE_PATH = `${PATH_ROOT}/api/v1`;
 // email message media types: we are allowed to send the body of the email as html or plain text
 const MEDIA_TYPES = ['text/plain', 'text/html'];
 
@@ -101,8 +102,12 @@ class EmailForm extends Component {
     try {
       this.setState({busy: true});
 
-      let data = await this.healthCheck();
-      let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy, attachmentsMaxSize, attachmentsMaxFiles, attachmentsAcceptedType, sender} = data;
+      let health = await this.healthCheck();
+      let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = health.data.cmsg;
+
+      let config = await this.getConfig();
+      let {fileSize, fileCount, fileType} = config.data.attachments;
+      let {defaultSender} = config.data;
 
       this.setState({
         busy: false,
@@ -114,10 +119,10 @@ class EmailForm extends Component {
           cmsgApiHealthy: cmsgApiHealthy
         },
         config: {
-          attachmentsMaxSize: attachmentsMaxSize,
-          attachmentsMaxFiles: attachmentsMaxFiles,
-          attachmentsAcceptedType: attachmentsAcceptedType.startsWith('.') ? attachmentsAcceptedType : '.'.concat(attachmentsAcceptedType),
-          sender: sender
+          attachmentsMaxSize: parseInt(fileSize),
+          attachmentsMaxFiles: parseInt(fileCount),
+          attachmentsAcceptedType: fileType.startsWith('.') ? fileType : '.'.concat(fileType),
+          sender: defaultSender
         }
       });
 
@@ -140,6 +145,16 @@ class EmailForm extends Component {
     const response = await fetch(`${MSG_SERVICE_PATH}/health`);
     if (!response.ok) {
       throw Error('Could not connect to Showcase Messaging API for health check: ' + response.statusText);
+    }
+    return await response.json().catch(error => {
+      throw Error(error.message);
+    });
+  }
+
+  async getConfig() {
+    const response = await fetch(`${MSG_SERVICE_PATH}/config`);
+    if (!response.ok) {
+      throw Error('Could not connect to Showcase Messaging API for configuration: ' + response.statusText);
     }
     return await response.json().catch(error => {
       throw Error(error.message);

@@ -1,5 +1,5 @@
 # The Messaging Service ShowCase (MSSC) Application
-The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [backend](../backend/README.md)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](./README.md)).
+The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](./README.md)).
 
 
 ## Reverse Proxy
@@ -28,13 +28,13 @@ To run and test this locally, you will need to configure and stand up [backend](
 export PROXY_SERVICE_PORT=2020
 export PATH_ROOT=/pr-5
 export API_SERVICE_NAME=localhost
-export API_SERVICE_PORT=3030
+export API_SERVICE_PORT=8080
 export UI_SERVICE_NAME=localhost
 export UI_SERVICE_PORT=2021
 ```
 
 ``` sh
-cd backend
+# download nr-email-microservice, configure according to their instructions, and go to the /api directory
 # set env vars
 # assumes that other configuration is done for Oauth urls, CMSG urls and service clients
 export PORT=$API_SERVICE_PORT

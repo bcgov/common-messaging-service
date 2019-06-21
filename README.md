@@ -1,12 +1,10 @@
 # Natural Resources Messaging Service Showcase
 
-This repository contains code to showcase the Common Messaging Service (CMSG).  It demonstrates how to authenticate use the CMSG API.  We will also provide a simple UI to integrate the CMSG capabilities into an application. The technologies we use for this example are: [Node.js](https://nodejs.org/) for the backend server (calls to CMSG) and [React.js](https://reactjs.org) for the frontend UI.
+This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG).  We [React.js](https://reactjs.org) for the frontend UI.
 
 ## Directory Structure
 
     .github/                   - PR and Issue templates
-    backend/                   - Node.js Application Server codebase
-    docs/                      - Common Messaging Service documentation
     frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
     reverse-proxy/             - Reverse Proxy code
@@ -20,13 +18,13 @@ This repository contains code to showcase the Common Messaging Service (CMSG).  
 
 ## Documentation
 
-* [CMSG Overview](docs/overview.md)
-* [CMSG Developer Guide](docs/developer-guide.md)
-* [Tools Readme](tools/README.md)
-* [Backend Readme](backend/README.md)
+* [Email Microservice](https://github.com/bcgov/nr-email-microservice/README.md)
+* [CMSG Overview](https://github.com/bcgov/nr-email-microservice/docs/overview.md)
+* [CMSG Developer Guide](https://github.com/bcgov/nr-email-microservice/docs/developer-guide.md)
 * [Front Readme](frontend/README.md)
 * [Reverse Proxy Readme](reverse-proxy/README.md)
 * [Openshift Readme](openshift/README.md)
+* [Tools Readme](tools/README.md)
 
 
 ## Getting Help or Reporting an Issue
