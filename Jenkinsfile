@@ -43,9 +43,10 @@ pipeline {
     PATH_ROOT = "/${APP_NAME}"
 
     // for the email microservice backend
-    EMAIL_MICROSRV_BC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/1.0.0/openshift/api.bc.yaml"
-    EMAIL_MICROSRV_DC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/1.0.0/openshift/api.dc.yaml"
-    EMAIL_MICROSRV_REF = "1.0.0"
+    EMAIL_MICROSRV_REF = '1.0.0'
+    EMAIL_MICROSRV_BC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.bc.yaml"
+    EMAIL_MICROSRV_DC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.dc.yaml"
+
 
     EMAIL_MICROSRV_APP_LABEL = "${APP_NAME}-${JOB_NAME}"
     EMAIL_MICROSRV_IMAGE_NAME = "${APP_NAME}-${JOB_NAME}-backend"
@@ -451,10 +452,14 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             "APP_LABEL=${EMAIL_MICROSRV_APP_LABEL}",
             "IMAGE_NAME=${EMAIL_MICROSRV_IMAGE_NAME}",
             "NAMESPACE=${projectEnv}",
-            "SECRET_NAME=cmsg-client",
-            "CONFIG_MAP_NAME=cmsg-config",
-            "CMSG_SENDER=NR.CommonServiceShowcase@gov.bc.ca",
-            "HOST_URL=https://${hostEnv}${pathEnv}"
+            'SECRET_NAME=cmsg-client',
+            'CONFIG_MAP_NAME=cmsg-config',
+            'CMSG_SENDER=NR.CommonServiceShowcase@gov.bc.ca',
+            "HOST_URL=https://${hostEnv}${pathEnv}",
+            'CPU_REQUEST=100m',
+            'MEMORY_REQUEST=256Mi',
+            'CPU_LIMIT=500m',
+            'MEMORY_LIMIT=1Gi'
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)

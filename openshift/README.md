@@ -2,7 +2,7 @@
 The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
 
 
-For both the frontend, we provide a set of npm scripts in [package.json](../frontend/package.json) file; the most important of which is: "npm run build".  The reverse proxy has no installation scripts (but does have runtime configuration requirements, see [../reverse-proxy](../reverse-proxy/README.md)).
+For both the frontend, we provide a set of npm scripts in [package.json](../frontend/package.json) file; the most important of which is: `npm run build`.  The reverse proxy has no installation scripts (but does have runtime configuration requirements, see [../reverse-proxy](../reverse-proxy/README.md)).
 
 # OpenShift
 
