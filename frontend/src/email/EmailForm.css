@@ -72,3 +72,11 @@
   text-align: left;
   font-size: smaller;
 }
+
+th {
+  font-size: small;
+}
+
+td {
+  font-size: smaller;
+}
