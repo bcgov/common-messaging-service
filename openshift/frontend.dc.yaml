@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: "${APP_NAME}-${JOB_NAME}-frontend-bc-template"
+  template: "${APP_NAME}-${JOB_NAME}-frontend-dc-template"
 metadata:
   name: "${APP_NAME}-${JOB_NAME}-frontend-dc"
 objects:
@@ -71,13 +71,13 @@ objects:
                 name: "${OIDC_SECRET_NAME}"
           - name: REACT_APP_OIDC_ISSUER
             valueFrom:
-              configMapRef:
+              configMapKeyRef:
                 key: OIDC_ISSUER
                 name: "${OIDC_CONFIG_MAP_NAME}"
           image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend:latest"
           imagePullPolicy: Always
           command:
-            - 'cd /var/src && chmod +x ./env.sh && ./env.sh && cp -rf /var/src/env-config.js /var/www/html'
+            - 'cd /var/src && chmod +x ./env.sh && ./env.sh && cp -rf env-config.js /var/www/html'
           # livenessProbe:
           #  failureThreshold: 3
           #  httpGet:

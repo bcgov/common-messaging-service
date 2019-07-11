@@ -11,11 +11,8 @@
     "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
   },
   "scripts": {
-    "envconf": "chmod +x ./env.sh && ./env.sh && cp -rf env-config.js ./public/ ",
-    "envconf:build": "npm run envconf && npm run build",
-    "envconf:start": "npm run envconf && react-scripts start",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "chmod +x ./env.sh && ./env.sh && cp -rf env-config.js ./public/ && react-scripts start",
+    "build": "chmod +x ./env.sh && ./env.sh && cp -rf env-config.js ./public/ && react-scripts build",
     "test": "CI=true react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",

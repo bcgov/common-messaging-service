@@ -48,9 +48,6 @@ objects:
         ENV REACT_APP_API_ROOT "${PATH_ROOT}"
         ENV REACT_APP_UI_ROOT "${PATH_ROOT}"
         RUN npm run build
-        RUN chmod +x env.sh
-        RUN env.sh
-        COPY env-config.js /opt/app-root/src/public/
       git:
         ref: "${SOURCE_REPO_REF}"
         uri: "${SOURCE_REPO_URL}"
