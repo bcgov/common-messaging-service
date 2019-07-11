@@ -1,18 +1,13 @@
 # Natural Resources Messaging Service Showcase
 
-This tool showcases a simple Email-sending application implementation. It requires a valid Service Client which has the appropriate CMSG scopes.
-
-## Project Status
-
-TBD - This will have build status and badges
+This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG).  We use [React.js](https://reactjs.org) for the frontend UI.
 
 ## Directory Structure
 
     .github/                   - PR and Issue templates
-    backend/                   - Node.js Application Server codebase
-    docs/                      - Documentation
     frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
+    reverse-proxy/             - Reverse Proxy code
     tools/                     - Devops utilities
     └── jenkins                - Jenkins standup
     CODE-OF-CONDUCT.md         - Code of Conduct
@@ -23,9 +18,14 @@ TBD - This will have build status and badges
 
 ## Documentation
 
-* [Backend Readme](backend/README.md)
+* [Email Microservice](https://github.com/bcgov/nr-email-microservice/README.md)
+* [CMSG Overview](https://github.com/bcgov/nr-email-microservice/docs/overview.md)
+* [CMSG Developer Guide](https://github.com/bcgov/nr-email-microservice/docs/developer-guide.md)
 * [Front Readme](frontend/README.md)
+* [Reverse Proxy Readme](reverse-proxy/README.md)
 * [Openshift Readme](openshift/README.md)
+* [Tools Readme](tools/README.md)
+
 
 ## Getting Help or Reporting an Issue
 
