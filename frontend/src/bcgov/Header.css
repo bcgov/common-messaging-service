@@ -1,0 +1,107 @@
+header {
+  background-color: #036;
+  border-bottom: 2px solid #fcba19;
+  padding: 0 65px 0 65px;
+  color: #fff;
+  display: flex;
+  height: 65px;
+  top: 0px;
+  /*position: fixed;*/
+  width: 100%;
+}
+
+header h1 {
+  font-family: 'Noto Sans', Verdana, Arial, sans-serif;
+  font-weight: normal;  /* 400 */
+  margin: 5px 5px 0 18px;
+}
+
+header .banner {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin: 0 10px 0 0;
+}
+
+header .other {
+  flex-grow: 1;
+  align-items: center;
+  justify-content: flex-end;
+  display: flex;
+}
+
+header :focus {
+  outline: 4px solid #3B99FC;
+  outline-offset: 1px;
+}
+
+header img {
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0;
+  border-style: none;
+}
+
+header img.logo-banner {
+  margin-bottom: 0;
+  width: 175px;
+}
+
+header .other a {
+  font-size: 0.813em;
+  font-weight: normal;  /* 400 */
+  color: #fff;
+  padding-left: 5px;
+  padding-right: 5px;
+
+}
+
+header .other a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+header .other :focus {
+  outline: none;
+  outline-offset: 0;
+}
+
+header .other button {
+  color: #fff;
+  background-color: #036;
+  border-width: 0;
+  border-style: none;
+}
+
+header .other button:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+@media screen and (max-width: 599px) {
+  header h1 {
+    font-size: .75rem;
+  }
+  header .other button {
+    font-size: .75rem;
+  }
+}
+
+@media screen and (min-width: 600px) and (max-width: 899px) {
+  header h1 {
+    font-size: 1.0rem;
+  }
+}
+
+@media screen and (min-width: 900px) {
+  header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+}

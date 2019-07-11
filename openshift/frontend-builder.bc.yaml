@@ -45,7 +45,8 @@ objects:
         WORKDIR /opt/app-root/src
         COPY . .
         ENV PATH_ROOT "${PATH_ROOT}"
-        ENV REACT_APP_PATH_ROOT "${PATH_ROOT}"
+        ENV REACT_APP_API_ROOT "${PATH_ROOT}"
+        ENV REACT_APP_UI_ROOT "${PATH_ROOT}"
         RUN npm run build
       git:
         ref: "${SOURCE_REPO_REF}"

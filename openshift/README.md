@@ -150,5 +150,33 @@ The deployment templates also accept parameters for resource limits and requests
 
 
 #### Examples
-Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/openshift/README.md) for examples on how one would call openshift templates and provide parameters on the command line.
+Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for examples on how one would call openshift templates and provide parameters on the command line.
 
+``` sh
+cd openshift
+
+export proj=<project namespace>
+
+export REPO_NAME=nr-email-microservice
+export JOB_NAME=pr-x
+export SOURCE_REPO_URL=https://github.com/bcgov/nr-email-microservice.git
+export SOURCE_REPO_REF=feature/openid-connect
+export APP_NAME=mssc
+export NAMESPACE=$proj
+export PATH_ROOT=/pr-x
+
+
+oc -n $proj process -f frontend-builder.bc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -p PATH_ROOT=$PATH_ROOT -p NAMESPACE=$NAMESPACE  -o yaml | oc -n $proj create -f -
+
+oc -n $proj start-build mssc-pr-x-frontend-builder
+
+oc logs build/mssc-pr-x-frontend-builder-1 --follow
+
+
+
+
+
+
+oc -n $proj  delete all,template,secret,configmap,pvc,serviceaccount,rolebinding --selector app=$APP_NAME-$JOB_NAME
+
+```

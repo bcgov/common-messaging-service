@@ -58,8 +58,26 @@ objects:
             value: "2015"
           - name: STATIC_FILES_PATH
             value: "${STATIC_FILES_PATH}"
+          - name: REACT_APP_API_ROOT
+            value: "${PATH_ROOT}"
+          - name: REACT_APP_UI_ROOT
+            value: "${PATH_ROOT}"
+          - name: REACT_APP_PUBLIC_URL
+            value: "${HOST_URL}"
+          - name: REACT_APP_OIDC_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: "${OIDC_SECRET_NAME}"
+          - name: REACT_APP_OIDC_ISSUER
+            valueFrom:
+              configMapRef:
+                key: OIDC_ISSUER
+                name: "${OIDC_CONFIG_MAP_NAME}"
           image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend:latest"
           imagePullPolicy: Always
+          command:
+            - 'cd /var/src && chmod +x ./env.sh && ./env.sh && cp -rf /var/src/env-config.js /var/www/html'
           # livenessProbe:
           #  failureThreshold: 3
           #  httpGet:
@@ -134,3 +152,14 @@ parameters:
   description: where files are physically located on frontend caddy server
   required: true
   value: "/var/www/html"
+- name: HOST_URL
+  description: The full url for the application - the exposed route
+  required: true
+- name: OIDC_SECRET_NAME
+  description: name of the User Auth / OIDC secret to pass in as environment variables
+  required: true
+  value: email-microsrv-oidc-client
+- name: OIDC_CONFIG_MAP_NAME
+  description: name of the User Auth / OIDC config map to pass in as environment variables
+  required: true
+  value: email-microsrv-oidc

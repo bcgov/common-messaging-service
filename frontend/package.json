@@ -11,8 +11,8 @@
     "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "chmod +x ./env.sh && ./env.sh && cp -rf env-config.js ./public/ && react-scripts start",
+    "build": "chmod +x ./env.sh && ./env.sh && cp -rf env-config.js ./public/ && react-scripts build",
     "test": "CI=true react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",
@@ -22,11 +22,14 @@
   },
   "dependencies": {
     "@babel/runtime": "7.4.4",
+    "axios": "^0.19.0",
     "loglevel": "^1.6.1",
+    "oidc-client": "^1.8.2",
     "prop-types": "15.7.2",
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "react-dropzone": "^10.1.4",
+    "react-router-dom": "5.0.1",
     "react-scripts": "3.0.1",
     "tinymce": "5.0.5"
   },
@@ -56,6 +59,7 @@
         "version": "detect"
       }
     },
+    "parser": "babel-eslint",
     "parserOptions": {
       "ecmaFeatures": {
         "jsx": true
@@ -100,5 +104,5 @@
     ]
   },
   "homepage": ".",
-  "proxy": "http://localhost:8080/"
+  "proxy": "http://localhost:8080"
 }

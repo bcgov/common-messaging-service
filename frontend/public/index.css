@@ -1,0 +1,54 @@
+@font-face {
+  font-family: "Noto Sans";
+  src: local('NotoSans-Regular'), url(./fonts/NotoSans-Regular.woff) format('woff');
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: local('NotoSans-Italic'), url(./fonts/NotoSans-Italic.woff) format('woff');
+  font-style: italic;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: local('NotoSans-BoldItalic'), url(./fonts/NotoSans-BoldItalic.woff) format('woff');
+  font-style: italic;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: local('NotoSans-Bold'), url(./fonts/NotoSans-Bold.woff) format('woff');
+  font-weight: 700;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans', Verdana, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.bcgov {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans', Verdana, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+p {
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 36px;
+  color: #494949;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+  monospace;
+}
