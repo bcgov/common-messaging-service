@@ -9,7 +9,7 @@ echo "window._env_ = {" >> ./env-config.js
 
 # Read each line in .env file
 # Each line represents key=value pairs
-while read -r line || [[ -n "$line" ]];
+while IFS="" read -r line
 do
   # Split env variables by character `=`
   if printf '%s\n' "$line" | grep -q -e '='; then
