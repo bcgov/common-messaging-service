@@ -76,8 +76,6 @@ objects:
                 name: "${OIDC_CONFIG_MAP_NAME}"
           image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend:latest"
           imagePullPolicy: Always
-          command:
-            - 'cd /var/src && chmod +x ./env.sh && ./env.sh && cp -rf env-config.js /var/www/html'
           # livenessProbe:
           #  failureThreshold: 3
           #  httpGet:
