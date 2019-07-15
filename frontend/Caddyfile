@@ -14,5 +14,18 @@
     log stdout
 
     errors stdout
+
+
+    # we have some internal routing for authentication and callbacks
+    # under /auth... so let's pass those through.
+    rewrite /auth {
+        # everything after /auth/ becomes {1}
+        # see if {1} matches a static file or directory
+        # see if /auth/{1} ({path}) is a static file or directory
+        # finally, just pass it (/auth/{1}) into the app and let it handle it (which is what we want)
+
+        r ^\/(.*)
+        to {1} {1}/ {path} {path}/ /
+    }
 }
 

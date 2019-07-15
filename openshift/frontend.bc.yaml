@@ -41,9 +41,12 @@ objects:
     source:
       dockerfile: |-
         FROM docker-registry.default.svc:5000/bcgov/s2i-caddy:v1-stable
+        RUN mkdir -p /tmp/work \
+            && chmod g+wx /tmp/work
+        COPY /tmp/src /tmp/work
         COPY /tmp/src/build /var/www/html
         COPY /tmp/src/Caddyfile /etc/Caddyfile
-        CMD /tmp/scripts/run
+        CMD cd /tmp/work && ./env.sh && cp -rf /tmp/work/env-config.js /var/www/html && /tmp/scripts/run
       images:
       - as:
         from:
