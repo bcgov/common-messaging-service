@@ -150,7 +150,7 @@ The deployment templates also accept parameters for resource limits and requests
 
 
 #### Examples
-Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for examples on how one would call openshift templates and provide parameters on the command line.
+Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for examples on how one would call openshift templates and provide parameters on the command line.  The following demonstrates calls to test a branch before a pull request is made.  Not all possible parameters are passed in, we make use of some defaults for secrets and config map names.
 
 ``` sh
 cd openshift
@@ -169,41 +169,44 @@ export HOST_URL=https://$APP_NAME-dev.pathfinder.gov.bc.ca$PATH_ROOT
 
 oc -n $proj process -f frontend-npm.bc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -o yaml | oc -n $proj create -f -
 
-imagestream.image.openshift.io/mssc-pr-x-frontend-npm created
-buildconfig.build.openshift.io/mssc-pr-x-frontend-npm created
+  imagestream.image.openshift.io/mssc-pr-x-frontend-npm created
+  buildconfig.build.openshift.io/mssc-pr-x-frontend-npm created
 
 oc -n $proj start-build mssc-pr-x-frontend-npm
 
-build.build.openshift.io/mssc-pr-x-frontend-npm-1 started
+  build.build.openshift.io/mssc-pr-x-frontend-npm-1 started
 
 oc logs build/mssc-pr-x-frontend-npm-1 --follow
 
 
 oc -n $proj process -f frontend-builder.bc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -p PATH_ROOT=$PATH_ROOT -p NAMESPACE=$NAMESPACE -o yaml | oc -n $proj create -f -
 
-imagestream.image.openshift.io/mssc-pr-x-frontend-builder created
-buildconfig.build.openshift.io/mssc-pr-x-frontend-builder created
+  imagestream.image.openshift.io/mssc-pr-x-frontend-builder created
+  buildconfig.build.openshift.io/mssc-pr-x-frontend-builder created
 
 oc -n $proj start-build mssc-pr-x-frontend-builder
 
-build.build.openshift.io/mssc-pr-x-frontend-builder-1 started
+  build.build.openshift.io/mssc-pr-x-frontend-builder-1 started
 
 oc logs build/mssc-pr-x-frontend-builder-1 --follow
 
 oc -n $proj process -f frontend.bc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -p NAMESPACE=$NAMESPACE -o yaml | oc -n $proj create -f -
 
-imagestream.image.openshift.io/mssc-pr-x-frontend created
-buildconfig.build.openshift.io/mssc-pr-x-frontend created
+  imagestream.image.openshift.io/mssc-pr-x-frontend created
+  buildconfig.build.openshift.io/mssc-pr-x-frontend created
 
 oc -n $proj start-build mssc-pr-x-frontend
 
-build.build.openshift.io/mssc-pr-x-frontend-1 started
+  build.build.openshift.io/mssc-pr-x-frontend-1 started
 
 oc logs build/mssc-pr-x-frontend-1 --follow
 
-oc -n $proj process -f frontend.dc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p APP_NAME=$APP_NAME -p NAMESPACE=$NAMESPACE -p PATH_ROOT=$PATH_ROOT -p PUBLIC_URL=$HOST_URL -o yaml | oc -n $proj create -f -
+oc -n $proj process -f frontend.dc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p APP_NAME=$APP_NAME -p NAMESPACE=$NAMESPACE -p PATH_ROOT=$PATH_ROOT -p HOST_URL=$HOST_URL -o yaml | oc -n $proj create -f -
 
+  service/mssc-pr-x-frontend created
+  deploymentconfig.apps.openshift.io/mssc-pr-x-frontend created
 
+oc -n $proj rollout latest dc/mssc-pr-x-frontend
 
 oc -n $proj  delete all,template,secret,configmap,pvc,serviceaccount,rolebinding --selector app=$APP_NAME-$JOB_NAME
 
