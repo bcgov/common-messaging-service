@@ -21,22 +21,23 @@
     "clean:build": "npm run clean && npm install && npm run build"
   },
   "dependencies": {
-    "@babel/runtime": "7.4.4",
+    "@babel/runtime": "^7.5.4",
     "axios": "^0.19.0",
-    "loglevel": "^1.6.1",
+    "loglevel": "^1.6.3",
     "oidc-client": "^1.8.2",
     "prop-types": "15.7.2",
     "react": "16.8.6",
     "react-dom": "16.8.6",
-    "react-dropzone": "^10.1.4",
+    "react-dropzone": "^10.1.5",
     "react-router-dom": "5.0.1",
     "react-scripts": "3.0.1",
-    "tinymce": "5.0.5"
+    "tinymce": "^5.0.11"
   },
   "devDependencies": {
     "eslint": "5.16.0",
-    "eslint-plugin-react": "7.13.0",
-    "jest": "24.7.1"
+    "eslint-plugin-react": "^7.14.2",
+    "jest": "^24.8.0",
+    "lodash": "4.17.14"
   },
   "eslintConfig": {
     "env": {
