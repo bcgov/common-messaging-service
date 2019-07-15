@@ -30,7 +30,7 @@ objects:
       app: "${APP_NAME}-${JOB_NAME}"
     name: "${APP_NAME}-${JOB_NAME}-frontend"
   spec:
-    replicas: 2
+    replicas: 1
     selector:
       app: "${APP_NAME}-${JOB_NAME}"
       deploymentconfig: "${APP_NAME}-${JOB_NAME}-frontend"
