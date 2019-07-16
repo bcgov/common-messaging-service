@@ -17,7 +17,7 @@ There are some requirements for each namespace/environment, that are **NOT** bui
 
 At a minimum, you will need to have your a Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).  The service client id and password will be created through [Get Token](https://github.com/bcgov/nr-get-token).  You will need to get the Common Messaging Service (CMSG) api url and the OAuth url for whichever Common Services environment you are targetting.
 
-Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/openshift/README.md) for more details on secrets, configmap and other configuration details.
+Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for more details on secrets, configmap and other configuration details.
 
 #### Secrets/Environment variables
 The following oc command creates a new secret, cmsg-client, that will be used to set environment variables in the application.
@@ -35,6 +35,9 @@ The following oc command creates a new configmap, cmsg-config, that will be used
 ```sh
 oc create configmap -n <namespace> cmsg-config --from-literal=OAUTH_TOKEN_URL=<oauth token url> --from-literal=CMSG_TOP_LEVEL_URL=<common messaging api top level url>
 ```
+
+#### Backend - NR Email Microservice Config
+We also need to set up secrets and config map for our backend deployment.  See [User Authentication Secrets and ConfigMap](https://github.com/bcgov/nr-email-microservice/blob/master/README.md) in the microservice project for more.
 
 ## Overview
 To deploy the 3 components (backend, frontend, reverse-proxy), into multiple enviroments (one per pull-request, one each for master in dev, test, and prod); we use a series of templates that allows us to configure these deployments.  We do our builds and deploys through Jenkins, and the coordination and configuration of the templates is done in Jenkinsfiles.  See [Jenkinsfile](../Jenkinsfile) and [Jenkinsfile.cicd](../Jenkinsfile.cicd) to see how the templates are used for building and deploying in our CI/CD pipeline.
@@ -55,93 +58,101 @@ The overall build/deployment process is:
 The backend runtime is [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  We use their build config and we provide parameters specific for our needs.
 
 We pass the following to the build template:
-
-* SOURCE\_REPO\_REF - this is which tag, or release of the microservice we are building
-* APP\_LABEL - we want this to reflect our MSSC app label (ex. mssc-pr-5, mssc-master)
-* IMAGE\_NAME - this is the name we use for the objects required for the microservice (ex. mssc-pr-5-backend or mssc-master-backend)
+| Name | Description |
+| --- | --- |
+| SOURCE_REPO_REF| this is which tag, or release of the microservice we are building |
+| APP_LABEL| we want this to reflect our MSSC app label (ex. mssc-pr-5, mssc-master) |
+| IMAGE_NAME| this is the name we use for the objects required for the microservice (ex. mssc-pr-5-backend or mssc-master-backend) |
 
 ### Build Template - frontend-npm.bc.yaml
 This template is used to create our Frontend specific NPM image.  This image will only be created and updated if the [frontend/package.json](../frontend/package.json) changes.  This becomes the "base" image for our Frontend Builder image.  We use an inline Dockerfile to create a fairly slim node.js container with libraries required to build our Frontend static file bundle.
 
 The template expects 5 parameters:
-
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* SOURCE\_REPO\_URL - complete url to the repo (including .git)
-* SOURCE\_REPO\_REF - master or pull request ref (ex. pull/3/head)
-* APP\_NAME - name of the application: mssc
+| Name | Description |
+| --- | --- |
+| REPO_NAME | name of the repository |
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| SOURCE_REPO_URL | complete url to the repo (including .git) |
+| SOURCE_REPO_REF | master or pull request ref (ex. pull/3/head) |
+| APP_NAME | name of the application: mssc |
 
 ### Build Template - frontend-builder.bc.yaml
-This template is used to create our Frontend Builder image, it is 2nd in the Frontend chained build and is based on frontend-npm.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  This will call our frontend "npm run build" script and produce a minified React production bundle.  In order to have this bundle configured correctly, we need to tell it the relative path to our backend.  This is done with and parameter named PATH\_ROOT that will subsequently be used to configure an environment variable: REACT\_APP\_PATH\_ROOT that is compiled into the application.
+This template is used to create our Frontend Builder image, it is 2nd in the Frontend chained build and is based on frontend-npm.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  This will call our frontend "npm run build" script and produce a minified React production bundle.  In order to have this bundle configured correctly, we need to tell it the relative path to our backend.  This is done with and parameter named PATH\_ROOT that will subsequently be used to configure an environment variable: REACT\_APP\_API\_ROOT that is compiled into the application.
 
 The template expects 7 parameters:
-
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* SOURCE\_REPO\_URL - complete url to the repo (including .git)
-* SOURCE\_REPO\_REF - master or pull request ref (ex. pull/3/head)
-* APP\_NAME - name of the application: mssc
-* NAMESPACE - the Openshift namespace where we can source our Frontend NPM image (ex. z208i4-tools)
-* PATH\_ROOT - compiled into our React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc)
+| Name | Description |
+| --- | --- |
+| REPO_NAME | name of the repository
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| SOURCE_REPO_URL | complete url to the repo (including .git) |
+| SOURCE_REPO_REF | master or pull request ref (ex. pull/3/head) |
+| APP_NAME | name of the application: mssc |
+| NAMESPACE | the Openshift namespace where we can source our Frontend NPM image (ex. z208i4-tools) |
+| PATH_ROOT | compiled into our React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc) |
 
 ### Build Template - frontend.bc.yaml
 This template is used to create our Frontend Runtime image, it is 3rd in the Frontend chained build and uses frontend-builder.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  The minified React production bundle is copied into a new image that is a Caddy server, which serves that static file.
 
 The template expects 6 parameters:
-
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* SOURCE\_REPO\_URL - complete url to the repo (including .git)
-* SOURCE\_REPO\_REF - master or pull request ref (ex. pull/3/head)
-* APP\_NAME - name of the application: mssc
-* NAMESPACE - the Openshift namespace where we can source our Frontend Builder image (ex. z208i4-tools)
+| Name | Description |
+| --- | --- |
+| REPO_NAME | name of the repository |
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| SOURCE_REPO_URL | complete url to the repo (including .git) |
+| SOURCE_REPO_REF | master or pull request ref (ex. pull/3/head) |
+| APP_NAME | name of the application: mssc |
+| NAMESPACE | the Openshift namespace where we can source our Frontend Builder image (ex. z208i4-tools) |
 
 ### Build Template - reverse-proxy.bc.yaml
 This template is used to create our Reverse Proxy Runtime image.  Our source (a Caddyfile) is copied into a BcGov Caddy base image.
 
 The template expects 5 parameters:
-
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* SOURCE\_REPO\_URL - complete url to the repo (including .git)
-* SOURCE\_REPO\_REF - master or pull request ref (ex. pull/3/head)
-* APP\_NAME - name of the application: mssc
+| Name | Description |
+| --- | --- |
+| REPO_NAME | name of the repository |
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| SOURCE_REPO_URL | complete url to the repo (including .git) |
+| SOURCE_REPO_REF | master or pull request ref (ex. pull/3/head) |
+| APP_NAME | name of the application: mssc |
 
 ### Deploy Template - Backend (Email Microservice)
 This template deploys our Backend Runtime image (nodejs server) and creates a service for it.  This service is internal and used by the Reverse Proxy to handle backend requests.
 
 We provide the following parameters to the deployment config:
-
-* APP\_LABEL - we want this to reflect our MSSC app label (ex. mssc-pr-5, mssc-master)
-* IMAGE\_NAME - this is the name we use for the objects required for the microservice (ex. mssc-pr-5-backend or mssc-master-backend)
-* NAMESPACE - the Openshift namespace to which these objects are deployed (ex. z208i4-dev)
-* SECRET_NAME - this is the name of our secrets for CMSG Service Client: cmsg-client
-* CONFIG_MAP_NAME - this is the name of our config map for CMSG Service Client Urls: cmsg-config
-* CMSG_SENDER - the email address we use as our default sender. NR.CommonServiceShowcase@gov.bc.ca
-* HOST_URL - this is the full url that will be exposed by our reverse proxy.  (ex. https://${HOST\_ROUTE}${PATH\_ROOT}"
+| Name | Description |
+| --- | --- |
+| APP_LABEL | we want this to reflect our MSSC app label (ex. mssc-pr-5, mssc-master) |
+| IMAGE_NAME | this is the name we use for the objects required for the microservice (ex. mssc-pr-5-backend or mssc-master-backend) |
+| NAMESPACE | the Openshift namespace to which these objects are deployed (ex. z208i4-dev) |
+| SECRET_NAME | this is the name of our secrets for CMSG Service Client: cmsg-client |
+| CONFIG_MAP_NAME | this is the name of our config map for CMSG Service Client Urls: cmsg-config |
+| CMSG_SENDER | the email address we use as our default sender. NR.CommonServiceShowcase@gov.bc.ca |
+| HOST_URL | this is the full url that will be exposed by our reverse proxy.  (ex. https://${HOST\_ROUTE}${PATH\_ROOT}) |
 
 
 ### Deploy Template - frontend.dc.yaml
 This template deploys our Frontend Runtime image (Caddy static files server) and creates a service for it.  This service is internal and used by the Reverse Proxy to handle frontend requests.
 
 The template expects 5 parameters:
-
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* APP\_NAME - name of the application: mssc
-* NAMESPACE - the Openshift namespace to which these objects are deployed (ex. z208i4-dev)
-* PATH\_ROOT - Same as we used to build the React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc)
+| Name | Description |
+| --- | --- |
+| REPO_NAME | name of the repository |
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| APP_NAME | name of the application: mssc |
+| NAMESPACE | the Openshift namespace to which these objects are deployed (ex. z208i4-dev) |
+| PATH_ROOT | Same as we used to build the React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc) |
 
 ### Deploy Template - reverse-proxy.dc.yaml
 This template deploys our Reverse Proxy Runtime image (Caddy reverse proxy server), creates a service for it and exposes a route (publicly accessible Url).
 
 The template expects 6 parameters:
-
-* REPO\_NAME - name of the repository
-* JOB\_NAME - this will be master or a pull request (ex. pr-3)
-* APP\_NAME - name of the application: mssc
-* HOST\_ROUTE - domain for this instance (ex. z208i4-dev.pathfinder.gov.bc.ca)
-* PATH\_ROOT - Same as we used to build the React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc)
+| Name | Description |
+| --- | --- |
+| REPO_NAME | name of the repository |
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| APP_NAME | name of the application: mssc |
+| HOST_ROUTE | domain for this instance (ex. z208i4-dev.pathfinder.gov.bc.ca) |
+| PATH_ROOT | Same as we used to build the React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc) |
 
 HOST\_ROUTE and PATH\_ROOT are combined to make the Url.
 
@@ -150,5 +161,64 @@ The deployment templates also accept parameters for resource limits and requests
 
 
 #### Examples
-Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/openshift/README.md) for examples on how one would call openshift templates and provide parameters on the command line.
+Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for examples on how one would call openshift templates and provide parameters on the command line.  The following demonstrates calls to test a branch before a pull request is made.  Not all possible parameters are passed in, we make use of some defaults for secrets and config map names.
 
+``` sh
+cd openshift
+
+export proj=<project namespace>
+
+export REPO_NAME=nr-email-microservice
+export JOB_NAME=pr-x
+export SOURCE_REPO_URL=https://github.com/bcgov/nr-email-microservice.git
+export SOURCE_REPO_REF=feature/oidc-auth
+export APP_NAME=mssc
+export NAMESPACE=$proj
+export PATH_ROOT=/pr-x
+export HOST_URL=https://$APP_NAME-dev.pathfinder.gov.bc.ca$PATH_ROOT
+
+
+oc -n $proj process -f frontend-npm.bc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -o yaml | oc -n $proj create -f -
+
+  imagestream.image.openshift.io/mssc-pr-x-frontend-npm created
+  buildconfig.build.openshift.io/mssc-pr-x-frontend-npm created
+
+oc -n $proj start-build mssc-pr-x-frontend-npm
+
+  build.build.openshift.io/mssc-pr-x-frontend-npm-1 started
+
+oc logs build/mssc-pr-x-frontend-npm-1 --follow
+
+
+oc -n $proj process -f frontend-builder.bc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -p PATH_ROOT=$PATH_ROOT -p NAMESPACE=$NAMESPACE -o yaml | oc -n $proj create -f -
+
+  imagestream.image.openshift.io/mssc-pr-x-frontend-builder created
+  buildconfig.build.openshift.io/mssc-pr-x-frontend-builder created
+
+oc -n $proj start-build mssc-pr-x-frontend-builder
+
+  build.build.openshift.io/mssc-pr-x-frontend-builder-1 started
+
+oc logs build/mssc-pr-x-frontend-builder-1 --follow
+
+oc -n $proj process -f frontend.bc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -p NAMESPACE=$NAMESPACE -o yaml | oc -n $proj create -f -
+
+  imagestream.image.openshift.io/mssc-pr-x-frontend created
+  buildconfig.build.openshift.io/mssc-pr-x-frontend created
+
+oc -n $proj start-build mssc-pr-x-frontend
+
+  build.build.openshift.io/mssc-pr-x-frontend-1 started
+
+oc logs build/mssc-pr-x-frontend-1 --follow
+
+oc -n $proj process -f frontend.dc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p APP_NAME=$APP_NAME -p NAMESPACE=$NAMESPACE -p PATH_ROOT=$PATH_ROOT -p HOST_URL=$HOST_URL -o yaml | oc -n $proj create -f -
+
+  service/mssc-pr-x-frontend created
+  deploymentconfig.apps.openshift.io/mssc-pr-x-frontend created
+
+oc -n $proj rollout latest dc/mssc-pr-x-frontend
+
+oc -n $proj  delete all,template,secret,configmap,pvc,serviceaccount,rolebinding --selector app=$APP_NAME-$JOB_NAME
+
+```

@@ -43,9 +43,9 @@ pipeline {
     PATH_ROOT = "/${APP_NAME}"
 
     // for the email microservice backend
-    EMAIL_MICROSRV_REF = '1.0.0'
+    EMAIL_MICROSRV_REF = '1.1.0'
     EMAIL_MICROSRV_BC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.bc.yaml"
-    EMAIL_MICROSRV_DC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.dc.yaml"
+    EMAIL_MICROSRV_DC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.dc.user-auth.yaml"
 
 
     EMAIL_MICROSRV_APP_LABEL = "${APP_NAME}-${JOB_NAME}"
@@ -428,8 +428,10 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       }
 
       echo "Checking for ConfigMaps and Secrets in project ${openshift.project()}..."
-      if(!(openshift.selector('cm', "cmsg-config").exists() &&
-      openshift.selector('secret', "cmsg-client").exists())) {
+      if(!(openshift.selector('cm', 'cmsg-config').exists() &&
+          openshift.selector('secret', 'cmsg-client').exists() &&
+          openshift.selector('cm', 'email-microsrv-oidc').exists() &&
+          openshift.selector('secret', 'email-microsrv-oidc-client').exists())) {
         echo 'Some ConfigMaps and/or Secrets are missing. Please consult the openshift readme for details.'
         throw e
       }
@@ -454,6 +456,8 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             "NAMESPACE=${projectEnv}",
             'SECRET_NAME=cmsg-client',
             'CONFIG_MAP_NAME=cmsg-config',
+            'OIDC_SECRET_NAME=email-microsrv-oidc-client',
+            'OIDC_CONFIG_MAP_NAME=email-microsrv-oidc',
             'CMSG_SENDER=NR.CommonServiceShowcase@gov.bc.ca',
             "HOST_URL=https://${hostEnv}${pathEnv}",
             'CPU_REQUEST=100m',
@@ -486,7 +490,10 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             "JOB_NAME=${JOB_NAME}",
             "NAMESPACE=${projectEnv}",
             "APP_NAME=${APP_NAME}",
-            "PATH_ROOT=${pathEnv}"
+            "PATH_ROOT=${pathEnv}",
+            "HOST_URL=https://${hostEnv}${pathEnv}",
+            'OIDC_SECRET_NAME=email-microsrv-oidc-client',
+            'OIDC_CONFIG_MAP_NAME=email-microsrv-oidc'
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-frontend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)

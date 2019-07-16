@@ -5,13 +5,14 @@ dist
 coverage
 
 
-backend/static
-backend/uploads
 frontend/build
 
 # local env files
 .env.local
 .env.*.local
+
+# output of shell command
+env-config.js
 
 #local npmlog configs
 **/config/local*

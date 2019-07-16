@@ -31,12 +31,14 @@ export API_SERVICE_NAME=localhost
 export API_SERVICE_PORT=8080
 export UI_SERVICE_NAME=localhost
 export UI_SERVICE_PORT=2021
+
 ```
 
 ``` sh
 # download nr-email-microservice, configure according to their instructions, and go to the /api directory
 # set env vars
 # assumes that other configuration is done for Oauth urls, CMSG urls and service clients
+# ensure that the OIDC configuration is correct and that we use the same config for frontend
 export PORT=$API_SERVICE_PORT
 npm run start
 ```
@@ -44,8 +46,13 @@ npm run start
 ``` sh
 cd frontend
 # set env vars
-export REACT_APP_PATH_ROOT=$PATH_ROOT
+export REACT_APP_API_ROOT=$PATH_ROOT
+export REACT_APP_UI_ROOT=$PATH_ROOT
+export REACT_APP_PUBLIC_URL=http://localhost:$PROXY_SERVICE_PORT$PATH_ROOT
 export STATIC_FILES_PATH=./build
+# this is for configuring the KeyCloak and OIDC, fill with appropriate values - see above for microservice
+export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+export REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
 
 npm run build
 

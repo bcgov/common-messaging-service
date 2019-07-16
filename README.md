@@ -18,9 +18,9 @@ This repository contains code to provide a simple UI for the [NR Email Microserv
 
 ## Documentation
 
-* [Email Microservice](https://github.com/bcgov/nr-email-microservice/README.md)
-* [CMSG Overview](https://github.com/bcgov/nr-email-microservice/docs/overview.md)
-* [CMSG Developer Guide](https://github.com/bcgov/nr-email-microservice/docs/developer-guide.md)
+* [Email Microservice](https://github.com/bcgov/nr-email-microservice/blob/master/README.md)
+* [CMSG Overview](https://github.com/bcgov/nr-email-microservice/blob/master/docs/overview.md)
+* [CMSG Developer Guide](https://github.com/bcgov/nr-email-microservice/blob/master/docs/developer-guide.md)
 * [Front Readme](frontend/README.md)
 * [Reverse Proxy Readme](reverse-proxy/README.md)
 * [Openshift Readme](openshift/README.md)
