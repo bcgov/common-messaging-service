@@ -45,7 +45,7 @@ export default class AuthService {
   signinRedirectCallback = () => {
     this.UserManager.signinRedirectCallback()
       .then(() => {
-        '';
+        console.log('signin redirect callback executed');
       })
       .catch(err => {
         console.log(err);
