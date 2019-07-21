@@ -634,7 +634,7 @@ def jenkinsFileUpdated() {
 }
 
 def frontendPackagesUpdated() {
-  return inChangeSet('frontend/package.json')
+  return inChangeSet('frontend/package-lock.json')
 }
 
 def frontendNpmTemplateUpdated() {
@@ -658,7 +658,7 @@ def rebuildFrontendNpm() {
   echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
 
   def packagesFrontendUpdate = frontendPackagesUpdated();
-  echo "frontend/package.json updated: ${packagesFrontendUpdate}"
+  echo "frontend/package-lock.json updated: ${packagesFrontendUpdate}"
   def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm").exists()
   echo "frontend npm image exists: ${frontendNpmImageExists}"
   def frontendNpmTemplateChanged = frontendNpmTemplateUpdated()
