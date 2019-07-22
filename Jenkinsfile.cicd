@@ -101,8 +101,8 @@ pipeline {
             try {
               timeout(10) {
                 echo 'Installing NPM Dependencies...'
-                sh "npm config set registry '${NPM_MIRROR}'"
-                sh 'npm ci'
+                sh "npm set registry '${NPM_MIRROR}'"
+                sh 'npm ci --loglevel verbose'
 
                 echo 'Linting and Testing Frontend...'
                 sh 'npm run test'

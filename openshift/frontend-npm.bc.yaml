@@ -48,8 +48,8 @@ objects:
         FROM mhart/alpine-node:10
         WORKDIR /opt/app-root/src
         COPY package*.json ./
-        RUN npm config set registry "${NPM_MIRROR}"
-        RUN npm ci
+        RUN npm set registry "${NPM_MIRROR}"
+        RUN npm ci --loglevel verbose
     strategy:
       dockerStrategy: {}
       type: Docker
