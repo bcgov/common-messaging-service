@@ -106,14 +106,13 @@ pipeline {
           dir('frontend') {
             try {
               timeout(10) {
-              echo 'Installing NPM Dependencies...'
-              sh 'npm ci'
+                echo 'Installing NPM Dependencies...'
+                sh 'npm ci'
 
-              echo 'Linting and Testing Frontend...'
-              sh 'npm run test'
+                echo 'Linting and Testing Frontend...'
+                sh 'npm run test'
 
-              echo 'Frontend Lint Checks and Tests passed'
-
+                echo 'Frontend Lint Checks and Tests passed'
               }
             } catch (e) {
               echo 'Frontend Lint Checks and Tests failed'
