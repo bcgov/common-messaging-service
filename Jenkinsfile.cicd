@@ -49,6 +49,7 @@ pipeline {
     // SonarQube Endpoint URL
     SONARQUBE_URL_INT = 'http://sonarqube:9000'
     SONARQUBE_URL_EXT = "https://sonarqube-${TOOLS_PROJECT}.${APP_DOMAIN}"
+    NPM_MIRROR = 'http://mssc-npm-mirror:4873'
   }
 
   options {
@@ -100,6 +101,7 @@ pipeline {
             try {
               timeout(10) {
                 echo 'Installing NPM Dependencies...'
+                sh "npm config set registry '${NPM_MIRROR}'"
                 sh 'npm ci'
 
                 echo 'Linting and Testing Frontend...'

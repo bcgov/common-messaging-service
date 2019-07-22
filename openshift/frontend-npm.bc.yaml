@@ -48,6 +48,7 @@ objects:
         FROM mhart/alpine-node:10
         WORKDIR /opt/app-root/src
         COPY package*.json ./
+        RUN npm config set registry "${NPM_MIRROR}"
         RUN npm ci
     strategy:
       dockerStrategy: {}
@@ -69,3 +70,7 @@ parameters:
 - name: APP_NAME
   description: Application name
   required: true
+- name: NPM_MIRROR
+  description: Project NPM mirror url
+  required: true
+  value: https://mssc-npm-mirror.pathfinder.gov.bc.ca/
