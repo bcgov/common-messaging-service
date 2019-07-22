@@ -2,13 +2,13 @@
 The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
 
 
-For both the frontend, we provide a set of npm scripts in [package.json](../frontend/package.json) file; the most important of which is: `npm run build`.  The reverse proxy has no installation scripts (but does have runtime configuration requirements, see [../reverse-proxy](../reverse-proxy/README.md)).
+For the frontend, we provide a set of npm scripts in [package.json](../frontend/package.json) file; the most important of which is: `npm run build`.  The reverse proxy has no installation scripts (but does have runtime configuration requirements, see [../reverse-proxy](../reverse-proxy/README.md)).
 
 # OpenShift
 
 The showcase application is deployed to OpenShift.  Here you will find documentation about how this application is built and deployed. Since this application is ready for deployment, we will also give some pointers on how to transistion from nothing in OpenShift to having ready-to-go build and deploy configurations. It is assumed that you are familiar with OpenShift commands and resources (ex. buildconfigs, deployconfigs, imagestreams, secrets, configmaps).
 
-Our builds and deployments are performed via Jenkins (see [tools](../tools/README.md)).  And see [Jenkinsfile](../Jenkinsfile) or [Jenkinsfile.cicd](../Jenkinsfile.cicd) to see how the templates are used for building and deploying in our CI/CD pipeline.
+Our builds and deployments are performed via Jenkins (see [tools](https://github.com/bcgov/nr-showcase-devops-tools/blob/master/tools/README.md)).  And see [Jenkinsfile](../Jenkinsfile) or [Jenkinsfile.cicd](../Jenkinsfile.cicd) to see how the templates are used for building and deploying in our CI/CD pipeline.
 
 
 ### Prepare the namespace/environment
@@ -17,7 +17,7 @@ There are some requirements for each namespace/environment, that are **NOT** bui
 
 At a minimum, you will need to have your a Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).  The service client id and password will be created through [Get Token](https://github.com/bcgov/nr-get-token).  You will need to get the Common Messaging Service (CMSG) api url and the OAuth url for whichever Common Services environment you are targetting.
 
-Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for more details on secrets, configmap and other configuration details.
+Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for more details on secrets, configmap and other configuration details.  We use the default names for secrets and config maps.
 
 #### Secrets/Environment variables
 The following oc command creates a new secret, cmsg-client, that will be used to set environment variables in the application.
@@ -29,7 +29,7 @@ cmsg-client.password sets enviornment variable CMSG_CLIENT_SECRET
 oc create secret -n <namespace> generic cmsg-client --from-literal=username=<client id> --from-literal=password=<client secret> --type=kubernetes.io/basic-auth
 ```
 
-#### ConfigMap/Enviornment variables
+#### ConfigMap/Environment variables
 The following oc command creates a new configmap, cmsg-config, that will be used to set environment variables in the application.  OAUTH\_TOKEN\_URL and CMSG\_TOP\_LEVEL\_URL **must** be set.  These will be available as environment variables matching their name (hence the Uppercase underscore convention for their names).
 
 ```sh
@@ -58,6 +58,7 @@ The overall build/deployment process is:
 The backend runtime is [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  We use their build config and we provide parameters specific for our needs.
 
 We pass the following to the build template:
+
 | Name | Description |
 | --- | --- |
 | SOURCE_REPO_REF| this is which tag, or release of the microservice we are building |
@@ -68,6 +69,7 @@ We pass the following to the build template:
 This template is used to create our Frontend specific NPM image.  This image will only be created and updated if the [frontend/package.json](../frontend/package.json) changes.  This becomes the "base" image for our Frontend Builder image.  We use an inline Dockerfile to create a fairly slim node.js container with libraries required to build our Frontend static file bundle.
 
 The template expects 5 parameters:
+
 | Name | Description |
 | --- | --- |
 | REPO_NAME | name of the repository |
@@ -80,6 +82,7 @@ The template expects 5 parameters:
 This template is used to create our Frontend Builder image, it is 2nd in the Frontend chained build and is based on frontend-npm.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  This will call our frontend "npm run build" script and produce a minified React production bundle.  In order to have this bundle configured correctly, we need to tell it the relative path to our backend.  This is done with and parameter named PATH\_ROOT that will subsequently be used to configure an environment variable: REACT\_APP\_API\_ROOT that is compiled into the application.
 
 The template expects 7 parameters:
+
 | Name | Description |
 | --- | --- |
 | REPO_NAME | name of the repository
@@ -94,6 +97,7 @@ The template expects 7 parameters:
 This template is used to create our Frontend Runtime image, it is 3rd in the Frontend chained build and uses frontend-builder.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  The minified React production bundle is copied into a new image that is a Caddy server, which serves that static file.
 
 The template expects 6 parameters:
+
 | Name | Description |
 | --- | --- |
 | REPO_NAME | name of the repository |
@@ -107,6 +111,7 @@ The template expects 6 parameters:
 This template is used to create our Reverse Proxy Runtime image.  Our source (a Caddyfile) is copied into a BcGov Caddy base image.
 
 The template expects 5 parameters:
+
 | Name | Description |
 | --- | --- |
 | REPO_NAME | name of the repository |
@@ -119,6 +124,7 @@ The template expects 5 parameters:
 This template deploys our Backend Runtime image (nodejs server) and creates a service for it.  This service is internal and used by the Reverse Proxy to handle backend requests.
 
 We provide the following parameters to the deployment config:
+
 | Name | Description |
 | --- | --- |
 | APP_LABEL | we want this to reflect our MSSC app label (ex. mssc-pr-5, mssc-master) |
@@ -134,6 +140,7 @@ We provide the following parameters to the deployment config:
 This template deploys our Frontend Runtime image (Caddy static files server) and creates a service for it.  This service is internal and used by the Reverse Proxy to handle frontend requests.
 
 The template expects 5 parameters:
+
 | Name | Description |
 | --- | --- |
 | REPO_NAME | name of the repository |
@@ -146,6 +153,7 @@ The template expects 5 parameters:
 This template deploys our Reverse Proxy Runtime image (Caddy reverse proxy server), creates a service for it and exposes a route (publicly accessible Url).
 
 The template expects 6 parameters:
+
 | Name | Description |
 | --- | --- |
 | REPO_NAME | name of the repository |

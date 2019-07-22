@@ -1,6 +1,8 @@
 #!groovy
 import bcgov.GitHubHelper
 
+def FE_COV_STASH = 'frontend-coverage'
+
 // --------------------
 // Declarative Pipeline
 // --------------------
@@ -50,8 +52,15 @@ pipeline {
 
     EMAIL_MICROSRV_APP_LABEL = "${APP_NAME}-${JOB_NAME}"
     EMAIL_MICROSRV_IMAGE_NAME = "${APP_NAME}-${JOB_NAME}-backend"
+
+    // SonarQube Endpoint URL
+    SONARQUBE_URL_INT = 'http://sonarqube:9000'
+    SONARQUBE_URL_EXT = "https://sonarqube-${TOOLS_PROJECT}.${APP_DOMAIN}"
   }
 
+  options {
+    parallelsAlwaysFailFast()
+  }
 
   stages {
     stage('Init') {
@@ -84,6 +93,44 @@ pipeline {
         unsuccessful {
           echo 'Init failed'
           notifyStageStatus('Init', 'FAILURE')
+        }
+      }
+    }
+
+    stage('Tests') {
+      agent any
+      steps {
+        notifyStageStatus('Tests', 'PENDING')
+
+        script {
+          dir('frontend') {
+            try {
+              timeout(10) {
+                echo 'Installing NPM Dependencies...'
+                sh 'npm ci'
+
+                echo 'Linting and Testing Frontend...'
+                sh 'npm run test'
+
+                echo 'Frontend Lint Checks and Tests passed'
+              }
+            } catch (e) {
+              echo 'Frontend Lint Checks and Tests failed'
+              throw e
+            }
+          }
+        }
+      }
+      post {
+        success {
+          stash name: FE_COV_STASH, includes: 'frontend/coverage/**'
+
+          echo 'All Lint Checks and Tests passed'
+          notifyStageStatus('Tests', 'SUCCESS')
+        }
+        failure {
+          echo 'Some Lint Checks and Tests failed'
+          notifyStageStatus('Tests', 'FAILURE')
         }
       }
     }
@@ -306,7 +353,20 @@ pipeline {
                       notifyStageStatus('ReverseProxy', 'FAILURE')
                       throw e
                     }
+                  },
+
+                  SonarQube: {
+                    unstash FE_COV_STASH
+
+                    echo 'Performing SonarQube static code analysis...'
+                    sh """
+                    sonar-scanner \
+                      -Dsonar.host.url='${SONARQUBE_URL_INT}' \
+                      -Dsonar.projectKey='${REPO_NAME}-${JOB_NAME}' \
+                      -Dsonar.projectName='NR MSSC (${JOB_NAME.toUpperCase()})'
+                    """
                   }
+
                 )
               }
             }
@@ -605,7 +665,7 @@ def jenkinsFileUpdated() {
 }
 
 def frontendPackagesUpdated() {
-  return inChangeSet('frontend/package.json')
+  return inChangeSet('frontend/package-lock.json')
 }
 
 def frontendNpmTemplateUpdated() {
@@ -629,7 +689,7 @@ def rebuildFrontendNpm() {
   echo "Jenkinsfile.cicd updated: ${pipelineUpdated}"
 
   def packagesFrontendUpdate = frontendPackagesUpdated();
-  echo "frontend/package.json updated: ${packagesFrontendUpdate}"
+  echo "frontend/package-lock.json updated: ${packagesFrontendUpdate}"
   def frontendNpmImageExists = openshift.selector('is', "${APP_NAME}-${JOB_NAME}-frontend-npm").exists()
   echo "frontend npm image exists: ${frontendNpmImageExists}"
   def frontendNpmTemplateChanged = frontendNpmTemplateUpdated()

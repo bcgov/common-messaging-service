@@ -8,13 +8,12 @@ This repository contains code to provide a simple UI for the [NR Email Microserv
     frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
     reverse-proxy/             - Reverse Proxy code
-    tools/                     - Devops utilities
-    └── jenkins                - Jenkins standup
     CODE-OF-CONDUCT.md         - Code of Conduct
     CONTRIBUTING.md            - Contributing Guidelines
     Jenkinsfile                - Top-level Pipeline
     Jenkinsfile.cicd           - Pull-Request Pipeline
     LICENSE                    - License
+    sonar-project.properties   - SonarQube configuration properties
 
 ## Documentation
 
@@ -24,7 +23,9 @@ This repository contains code to provide a simple UI for the [NR Email Microserv
 * [Front Readme](frontend/README.md)
 * [Reverse Proxy Readme](reverse-proxy/README.md)
 * [Openshift Readme](openshift/README.md)
-* [Tools Readme](tools/README.md)
+* [DevOps Tools Readme](https://github.com/bcgov/nr-showcase-devops-tools/blob/master/tools/README.md)
+* [Get Token Wiki](https://github.com/bcgov/nr-get-token/wiki)
+* [Showcase Team Roadmap](https://github.com/bcgov/nr-get-token/wiki/Product-Roadmap)
 
 
 ## Getting Help or Reporting an Issue
