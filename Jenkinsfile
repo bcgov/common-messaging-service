@@ -363,7 +363,7 @@ pipeline {
                     sonar-scanner \
                       -Dsonar.host.url='${SONARQUBE_URL_INT}' \
                       -Dsonar.projectKey='${REPO_NAME}-${JOB_NAME}' \
-                      -Dsonar.projectName='NR Get Token (${JOB_NAME.toUpperCase()})'
+                      -Dsonar.projectName='NR MSSC (${JOB_NAME.toUpperCase()})'
                     """
                   }
 
