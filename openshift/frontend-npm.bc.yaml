@@ -71,6 +71,6 @@ parameters:
   description: Application name
   required: true
 - name: NPM_MIRROR
-  description: Project NPM mirror url
+  description: Project NPM mirror url.
   required: true
   value: http://mssc-npm-mirror:4873
