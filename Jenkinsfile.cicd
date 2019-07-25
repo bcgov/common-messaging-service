@@ -1,8 +1,6 @@
 #!groovy
 import bcgov.GitHubHelper
 
-def FE_COV_STASH = 'frontend-coverage'
-
 pipeline {
   agent any
 
