@@ -1,8 +1,6 @@
 #!groovy
 import bcgov.GitHubHelper
 
-def FE_COV_STASH = 'frontend-coverage'
-
 // --------------------
 // Declarative Pipeline
 // --------------------
@@ -119,12 +117,17 @@ pipeline {
               throw e
             }
           }
+          echo 'Performing SonarQube static code analysis...'
+          sh """
+          sonar-scanner \
+            -Dsonar.host.url='${SONARQUBE_URL_INT}' \
+            -Dsonar.projectKey='${REPO_NAME}-${JOB_NAME}' \
+            -Dsonar.projectName='NR MSSC (${JOB_NAME.toUpperCase()})'
+          """
         }
       }
       post {
         success {
-          stash name: FE_COV_STASH, includes: 'frontend/coverage/**'
-
           echo 'All Lint Checks and Tests passed'
           notifyStageStatus('Tests', 'SUCCESS')
         }
@@ -353,20 +356,7 @@ pipeline {
                       notifyStageStatus('ReverseProxy', 'FAILURE')
                       throw e
                     }
-                  },
-
-                  SonarQube: {
-                    unstash FE_COV_STASH
-
-                    echo 'Performing SonarQube static code analysis...'
-                    sh """
-                    sonar-scanner \
-                      -Dsonar.host.url='${SONARQUBE_URL_INT}' \
-                      -Dsonar.projectKey='${REPO_NAME}-${JOB_NAME}' \
-                      -Dsonar.projectName='NR MSSC (${JOB_NAME.toUpperCase()})'
-                    """
                   }
-
                 )
               }
             }
