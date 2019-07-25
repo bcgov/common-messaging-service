@@ -111,14 +111,14 @@ pipeline {
               echo 'Frontend Lint Checks and Tests failed'
               throw e
             }
-            echo 'Performing SonarQube static code analysis...'
-            sh """
-            sonar-scanner \
-              -Dsonar.host.url='${SONARQUBE_URL_INT}' \
-              -Dsonar.projectKey='${REPO_NAME}-${JOB_NAME}' \
-              -Dsonar.projectName='NR MSSC (${JOB_NAME.toUpperCase()})'
-            """
           }
+          echo 'Performing SonarQube static code analysis...'
+          sh """
+          sonar-scanner \
+            -Dsonar.host.url='${SONARQUBE_URL_INT}' \
+            -Dsonar.projectKey='${REPO_NAME}-${JOB_NAME}' \
+            -Dsonar.projectName='NR MSSC (${JOB_NAME.toUpperCase()})'
+          """
         }
       }
       post {
