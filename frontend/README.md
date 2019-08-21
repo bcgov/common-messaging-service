@@ -14,11 +14,12 @@ We are using a KeyClock realm to provide user authentication.  We are using [Ope
 In production, the frontend is behind a [reverse proxy](../reverse-proxy/README.md).  This allows us to easily serve the application under any path structure we choose.  To acheive this portability, we set the homepage to "." in [package.json](package.json).  The frontend itself (once it has been built and minified for production), is served in it's own container on [Caddy](https://caddyserver.com).  See [Caddyfile](Caddyfile).
 
 In our Caddyfile, we expect certain environment variables:
-| Name | Description |
-| --- | --- |
-| UI_SERVICE_PORT | exposed port to access caddy server ex. 2015 |
-| PATH_ROOT | url path  ex. localhost:2015/mypath |
-| STATIC_FILES_PATH | physical path to the files ex. build |
+
+| Name | Description |  
+| --- | --- |  
+| UI_SERVICE_PORT | exposed port to access caddy server ex. 2015 |  
+| PATH_ROOT | url path  ex. localhost:2015/mypath |  
+| STATIC_FILES_PATH | physical path to the files ex. build |  
 
 ### Application Environment Variables
 Environment variables that we need can be set for developers in a root file .env.development.local - this should be ignored for our git commits.  Or they can be set at the command line.

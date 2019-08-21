@@ -27,5 +27,12 @@
         r ^\/(.*)
         to {1} {1}/ {path} {path}/ /
     }
+
+    rewrite {
+      # Check for a file, then a folder
+      # If neither exists, we would usually issue a 404
+      # Instead, here we rewrite to / (the root of the app).
+      to {path} {path}/ /
+    }
 }
 
