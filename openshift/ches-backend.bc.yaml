@@ -1,0 +1,87 @@
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: "${APP_NAME}-${JOB_NAME}-ches-bc"
+metadata:
+  name: "${APP_NAME}-${JOB_NAME}-ches-bc"
+objects:
+
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      labels:
+      app: "${APP_NAME}-${JOB_NAME}"
+    name: "${APP_NAME}-${JOB_NAME}-ches"
+    spec:
+      lookupPolicy:
+        local: false
+
+  - apiVersion: v1
+    kind: BuildConfig
+    metadata:
+      labels:
+        app: "${APP_NAME}-${JOB_NAME}"
+      name: "${APP_NAME}-${JOB_NAME}-ches-backend"
+    spec:
+      completionDeadlineSeconds: 600
+      failedBuildsHistoryLimit: 5
+      nodeSelector: null
+      output:
+        to:
+          kind: ImageStreamTag
+          name: "${APP_NAME}-${JOB_NAME}-ches-backend:latest"
+      postCommit: {}
+      resources:
+        requests:
+          cpu: "${CPU_REQUEST}"
+          memory: "${MEMORY_REQUEST}"
+        limits:
+          cpu: "${CPU_LIMIT}"
+          memory: "${MEMORY_LIMIT}"
+      runPolicy: Serial
+      source:
+        contextDir: /ches-backend
+        git:
+          ref: "${SOURCE_REPO_REF}"
+          uri: "${SOURCE_REPO_URL}"
+        type: Git
+      strategy:
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            name: nodejs:10
+            namespace: openshift
+          incremental: true
+      successfulBuildsHistoryLimit: 5
+
+parameters:
+  - name: SOURCE_REPO_URL
+    description: Git Repository URL
+    required: true
+  - name: SOURCE_REPO_REF
+    description: Check out a specific Git reference. A valid ref can be a SHA1 tag (i.e. 'release-1.0.0') or a branch name (i.e. 'master'), or pull request ref. (i.e. 'pull/CHANGE_ID/head')
+    required: true
+    value: master
+  - name: APP_NAME
+    description: Application name
+    required: true
+  - name: JOB_NAME
+    description: Job identifier (i.e. 'pr-5' OR 'master')
+    required: true
+  - name: CPU_REQUEST
+    description: Requested CPU per pod (in millicores ex. 500m)
+    required: true
+    value: 500m
+  - name: MEMORY_REQUEST
+    description: Requested Memory per pod (in gigabytes Gi or megabytes Mi ex. 500Mi)
+    required: true
+    value: 1Gi
+  - name: CPU_LIMIT
+    description: Limit Peak CPU per pod (in millicores ex. 1000m)
+    required: true
+    value: 1000m
+  - name: MEMORY_LIMIT
+    description: Limit Peak Memory per pod (in gigabytes Gi or megabytes Mi ex. 2Gi)
+    required: true
+    value: 2Gi

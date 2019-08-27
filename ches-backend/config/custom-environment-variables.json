@@ -1,0 +1,17 @@
+{
+  "server": {
+    "logLevel": "SERVER_LOGLEVEL",
+    "morganFormat": "SERVER_MORGANFORMAT",
+    "port": "PORT",
+    "hostUrl": "HOST_URL"
+  },
+  "services": {
+    "ches": {
+      "clientId": "CHES_CLIENT_ID",
+      "clientSecret": "CHES_CLIENT_SECRET",
+      "tokenUrl": "CHES_TOKEN_URL",
+      "apiUrl": "CHES_API_URL"
+    }
+  }
+}
+

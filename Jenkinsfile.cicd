@@ -280,6 +280,15 @@ pipeline {
                 "IMAGE_NAME=${EMAIL_MICROSRV_IMAGE_NAME}"
               )
 
+              echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-ches-backend..."
+              def bcChesBackendTemplate = openshift.process('-f',
+                'openshift/ches-backend.bc.yaml',
+                "JOB_NAME=${JOB_NAME}",
+                "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
+                "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
+                "APP_NAME=${APP_NAME}"
+              )
+
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
               def bcFrontendTemplate = openshift.process('-f',
                 'openshift/frontend.bc.yaml',
@@ -315,6 +324,22 @@ pipeline {
                     } catch (e) {
                       echo 'Backend build failed'
                       notifyStageStatus('Backend', 'FAILURE')
+                      throw e
+                    }
+                  },
+
+                  Ches: {
+                    try {
+                      notifyStageStatus('ChesBackend', 'PENDING')
+
+                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-ches-backend..."
+                      openshift.apply(bcChesBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo 'Ches Backend build successful'
+                      notifyStageStatus('ChesBackend', 'SUCCESS')
+                    } catch (e) {
+                      echo 'Ches Backend build failed'
+                      notifyStageStatus('ChesBackend', 'FAILURE')
                       throw e
                     }
                   },
@@ -368,12 +393,17 @@ pipeline {
                   echo "DEBUG - Using project: ${openshift.project()}"
                 } else {
                   def bcBackendConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-backend")
+                  def bcChesBackendConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-ches-backend")
                   def bcFrontendConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-frontend")
                   def bcReverseProxyConfig = openshift.selector('bc', "${APP_NAME}-${JOB_NAME}-reverse-proxy")
 
                   if(bcBackendConfig.exists()) {
                     echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-backend..."
                     bcBackendConfig.delete()
+                  }
+                  if(bcChesBackendConfig.exists()) {
+                    echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-ches-backend..."
+                    bcChesBackendConfig.delete()
                   }
                   if(bcFrontendConfig.exists()) {
                     echo "Removing BuildConfig ${APP_NAME}-${JOB_NAME}-frontend..."
@@ -446,7 +476,9 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       }
 
       echo "Checking for ConfigMaps and Secrets in project ${openshift.project()}..."
-      if(!(openshift.selector('cm', 'cmsg-config').exists() &&
+      if(!(openshift.selector('cm', 'ches-config').exists() &&
+          openshift.selector('secret', 'ches-client').exists() &&
+          openshift.selector('cm', 'cmsg-config').exists() &&
           openshift.selector('secret', 'cmsg-client').exists() &&
           openshift.selector('cm', 'email-microsrv-oidc').exists() &&
           openshift.selector('secret', 'email-microsrv-oidc-client').exists())) {
@@ -457,6 +489,9 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       // "move" images from tools project to our target environment and deploy from there...
       echo "Tagging Image ${APP_NAME}-${JOB_NAME}-backend:latest..."
       openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-backend:latest", "${APP_NAME}-${JOB_NAME}-backend:latest")
+
+      echo "Tagging Image ${APP_NAME}-${JOB_NAME}-ches-backend:latest..."
+      openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-ches-backend:latest", "${APP_NAME}-${JOB_NAME}-ches-backend:latest")
 
       echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend:latest..."
       openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-frontend:latest", "${APP_NAME}-${JOB_NAME}-frontend:latest")
@@ -496,6 +531,32 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
               // infrequently throw an error that deploy is already happening.
               // when you process a deployconfig without triggers, openshift will still create a Config change trigger, so timing is everything
               echo "Backend error on rollout: ${e}"
+            }
+          }
+        },
+
+        Ches: {
+          echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-ches-backend..."
+          def dcChesBackendTemplate = openshift.process('-f',
+            'openshift/ches-backend.dc.yaml',
+            "JOB_NAME=${JOB_NAME}",
+            "NAMESPACE=${projectEnv}",
+            "APP_NAME=${APP_NAME}",
+            "HOST_URL=https://${hostEnv}${pathEnv}",
+          )
+          echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-ches-backend..."
+          createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
+          def dcChesBackend = openshift.apply(dcChesBackendTemplate).narrow('dc')
+          timeout (time: 10, unit: 'MINUTES') {
+            try {
+              def cbmf = dcChesBackend.rollout()
+              cbmf.latest()
+              cbmf.status()
+            } catch (e) {
+              // deployments are unreliable to track when rolling and multiple pods...
+              // infrequently throw an error that deploy is already happening.
+              // when you process a deployconfig without triggers, openshift will still create a Config change trigger, so timing is everything
+              echo "Ches Backend error on rollout: ${e}"
             }
           }
         },
@@ -669,4 +730,3 @@ def rebuildFrontendBuilder() {
 
   return (jenkinsFileUpdated() || frontendChanged || frontendBuilderTemplateChanged || !frontendBuilderImageExists)
 }
-

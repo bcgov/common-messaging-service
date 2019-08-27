@@ -7,6 +7,13 @@
         header_downstream X-App-Token {~AppSession}
     }
 
+    proxy {$PATH_ROOT}/ches/v1/ {$CHES_SERVICE_NAME}:{$CHES_SERVICE_PORT} {
+        without {$PATH_ROOT}
+        transparent
+        header_upstream X-App-Token {~AppSession}
+        header_downstream X-App-Token {~AppSession}
+    }
+
     proxy {$PATH_ROOT} {$UI_SERVICE_NAME}:{$UI_SERVICE_PORT} {
         transparent
         header_upstream X-App-Token {~AppSession}

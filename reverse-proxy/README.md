@@ -20,7 +20,7 @@ Configuration of Caddy is done at deploy time through our build pipeline.  Revie
 
 ### Running locally
 
-To run and test this locally, you will need to configure and stand up [backend](../backend/README.md) and [frontend](../frontend/README.md).  Set the environment variables the same in 3 different sessions/terminals and stand each component up.
+To run and test this locally, you will need to configure and stand up [backend](../ches-backend/README.md) and [frontend](../frontend/README.md).  Set the environment variables the same in 3 different sessions/terminals and stand each component up.
 
 
 ``` sh

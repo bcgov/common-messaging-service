@@ -78,6 +78,10 @@ objects:
             value: "${APP_NAME}-${JOB_NAME}-backend"
           - name: API_SERVICE_PORT
             value: "8080"
+          - name: CHES_SERVICE_NAME
+            value: "${APP_NAME}-${JOB_NAME}-ches-backend"
+          - name: CHES_SERVICE_PORT
+            value: "8888"
           - name: UI_SERVICE_NAME
             value: "${APP_NAME}-${JOB_NAME}-frontend"
           - name: UI_SERVICE_PORT
