@@ -11,8 +11,8 @@ objects:
     kind: ImageStream
     metadata:
       labels:
-      app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-ches-backend"
+        app: "${APP_NAME}-${JOB_NAME}"
+      name: "${APP_NAME}-${JOB_NAME}-ches-backend"
     spec:
       lookupPolicy:
         local: false
