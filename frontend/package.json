@@ -17,7 +17,7 @@
     "eject": "react-scripts eject",
     "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",
     "lint:fix": "node_modules/.bin/eslint . --fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",
-    "clean": "rm -rf node_modules",
+    "clean": "rm -rf build && rm -rf coverage && rm -rf node_modules",
     "clean:build": "npm run clean && npm install && npm run build"
   },
   "dependencies": {

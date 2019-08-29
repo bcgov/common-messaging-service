@@ -7,8 +7,8 @@ import VersionTwo from './VersionTwo';
 const AppContentRouter = () => (
   <Switch>
     <Route exact={true} path='/' component={Home}/>
-    <Route exact={true} path='/v1' component={VersionOne}/>
-    <Route exact={true} path='/v2' component={VersionTwo}/>
+    <Route exact={true} path='/app/cmsg' component={VersionOne}/>
+    <Route exact={true} path='/app/ches' component={VersionTwo}/>
   </Switch>
 );
 
