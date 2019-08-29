@@ -3,7 +3,8 @@
     "logLevel": "info",
     "morganFormat": "dev",
     "port": "8888",
-    "hostUrl": "http://localhost:8888"
+    "hostUrl": "http://localhost:8888",
+    "requestSizeLimit": "100mb"
   },
   "services": {
     "ches": {

@@ -1,9 +1,11 @@
 import React from 'react';
 
+import ChesForm from './ches/ChesForm';
+
 const VersionTwo = () => (
   <div>
-    <p>This will showcase CMSG v2 - the common hosted email service</p>
+    <ChesForm />
   </div>
-)
+);
 
 export default VersionTwo;

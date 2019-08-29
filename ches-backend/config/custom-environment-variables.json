@@ -3,7 +3,8 @@
     "logLevel": "SERVER_LOGLEVEL",
     "morganFormat": "SERVER_MORGANFORMAT",
     "port": "PORT",
-    "hostUrl": "HOST_URL"
+    "hostUrl": "HOST_URL",
+    "requestSizeLimit": "REQUEST_SIZE_LIMIT"
   },
   "services": {
     "ches": {

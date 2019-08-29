@@ -1,3 +1,4 @@
+const bodyParser = require('body-parser');
 const config = require('config');
 const cors = require('cors');
 const express = require('express');
@@ -14,6 +15,8 @@ const state = {
 
 const app = express();
 
+app.use(bodyParser.json({limit: config.get('server.requestSizeLimit')}));
+app.use(bodyParser.urlencoded({limit: config.get('server.requestSizeLimit'), extended: true}));
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
@@ -40,7 +43,7 @@ app.use(function (err, req, res, next) {
   if (err instanceof Problem) {
     err.send(res, null);
   } else {
-    let p = new Problem(500, 'Server Error', { detail: err.message } );
+    let p = new Problem(500, 'MSSC-CHES Server Error', { detail: err.message } );
     p.send(res, null);
   }
 });

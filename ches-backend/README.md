@@ -16,6 +16,7 @@ We are using the npm library: [config](https://www.npmjs.com/package/config), to
 | CHES_API_URL | | The CHES url |  
 | HOST_URL | http://localhost:8888 | The domain/base url where we will expose the api. |  
 | PORT | 8888 | port for node to listen on. |  
+| REQUEST_SIZE_LIMIT | 10mb | Set the allowed request body size (will include encoded attachments). See [body-parser limit](https://github.com/expressjs/body-parser#limit) and [bytes lib](https://www.npmjs.com/package/bytes) |   
 | SERVER_LOGLEVEL | info | set the npm log level (verbose, debug, info, warn, error). |  
 | SERVER_MORGANFORMAT | dev | set the logging format for Morgan. |   
 

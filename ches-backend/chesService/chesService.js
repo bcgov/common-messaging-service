@@ -16,23 +16,21 @@ class ChesService {
   }
 
   async send(email) {
-    const response = await this.axios.post(
-      `${this.apiUrl}/email`,
-      JSON.stringify(email),
-      {
-        headers: {
-          'Content-Type':'application/json'
+    try {
+      const response = await this.axios.post(
+        `${this.apiUrl}/email`,
+        email,
+        {
+          headers: {
+            'Content-Type':'application/json'
+          }
         }
-      }
-    ).catch(e => {
-      // we could be getting specific errors back from cmsg.
-      log.error(`Error from CHES: status = ${e.response.status}, msg = ${e.response.statusText}`);
-      throw new Problem(e.response.status, 'CHES Email Message error', {detail: e.message});
-    });
-
-    // eslint-disable-next-line no-console
-    console.log(response);
-    return response.data;
+      );
+      return response.data;
+    } catch (e) {
+      log.error(`Error from CHES: status = ${e.response.status}, data : ${JSON.stringify(e.response.data, null, 2)}`);
+      throw new Problem(e.response.status, 'CHES Error', {detail: e.response.data.detail});
+    }
   }
 }
 
