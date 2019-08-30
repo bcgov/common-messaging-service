@@ -88,10 +88,10 @@ objects:
                   cpu: "${CPU_LIMIT}"
                   memory: "${MEMORY_LIMIT}"
               env:
-                - name: HOST_URL
-                  value: ${HOST_URL}
-                - name: PORT
-                  value: ${PORT}
+                - name: SERVER_HOST_URL
+                  value: ${SERVER_HOST_URL}
+                - name: SERVER_PORT
+                  value: ${SERVER_PORT}
                 - name: SERVER_LOGLEVEL
                   value: ${SERVER_LOGLEVEL}
                 - name: SERVER_MORGANFORMAT
@@ -126,11 +126,11 @@ parameters:
   - name: NAMESPACE
     description: OpenShift namespace containing our email microservice image to deploy (ex. idcqvl-dev)
     required: true
-  - name: HOST_URL
+  - name: SERVER_HOST_URL
     description: The domain/base url where we will expose the api
     required: true
-  - name: PORT
-    description: port for node to listen on.  Best to leave as the default 8080
+  - name: SERVER_PORT
+    description: port for node to listen on.  Best to leave as the default 8888
     required: true
     value: "8888"
   - name: SERVER_LOGLEVEL

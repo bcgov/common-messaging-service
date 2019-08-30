@@ -2,9 +2,9 @@
   "server": {
     "logLevel": "SERVER_LOGLEVEL",
     "morganFormat": "SERVER_MORGANFORMAT",
-    "port": "PORT",
-    "hostUrl": "HOST_URL",
-    "requestSizeLimit": "REQUEST_SIZE_LIMIT"
+    "port": "SERVER_PORT",
+    "hostUrl": "SERVER_HOST_URL",
+    "bodyLimit": "SERVER_BODYLIMIT"
   },
   "services": {
     "ches": {

@@ -49,7 +49,7 @@ oc create configmap -n <namespace> cmsg-config --from-literal=OAUTH_TOKEN_URL=<o
 The following oc command creates a new configmap, ches-config, that will be used to set environment variables in the application for the CHES backend.
 
 ```sh
-oc create configmap -n <namespace> ches-config --from-literal=CHES_API_URL=<ches token url> --from-literal=CHES_TOKEN_URL=<ches authorization token url> --from-literal=REQUEST_SIZE_LIMIT=100mb
+oc create configmap -n <namespace> ches-config --from-literal=CHES_API_URL=<ches token url> --from-literal=CHES_TOKEN_URL=<ches authorization token url> --from-literal=SERVER_BODYLIMIT=30mb
 ```
 
 #### Backend - NR Email Microservice Config
@@ -186,7 +186,7 @@ The template expects 4 parameters:
 | JOB_NAME | this will be master or a pull request (ex. pr-3) |
 | APP_NAME | name of the application: mssc |
 | NAMESPACE | the Openshift namespace to which these objects are deployed (ex. z208i4-dev) |
-| HOST_URL | this is the full url that will be exposed by our reverse proxy.  (ex. https://${HOST\_ROUTE}${PATH\_ROOT}) |
+| SERVER_HOST_URL | this is the full url that will be exposed by our reverse proxy.  (ex. https://${HOST\_ROUTE}${PATH\_ROOT}) |
 
 ### Deploy Template - reverse-proxy.dc.yaml
 This template deploys our Reverse Proxy Runtime image (Caddy reverse proxy server), creates a service for it and exposes a route (publicly accessible Url).
