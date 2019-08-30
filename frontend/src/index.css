@@ -57,6 +57,10 @@
   font-size: smaller;
 }
 
+#contextsText {
+  height: 240px;
+}
+
 #messageText {
   height: 480px;
 }
