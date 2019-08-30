@@ -1,3 +1,4 @@
+const bodyParser = require('body-parser');
 const config = require('config');
 const cors = require('cors');
 const express = require('express');
@@ -14,7 +15,9 @@ const state = {
 
 const app = express();
 
-app.use(express.json({limit: config.get('server.bodyLimit')}));
+app.use(bodyParser.json({limit: config.get('server.bodyLimit')}));
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
 app.use(cors());
