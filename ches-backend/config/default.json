@@ -1,0 +1,18 @@
+{
+  "server": {
+    "logLevel": "info",
+    "morganFormat": "dev",
+    "port": "8888",
+    "hostUrl": "http://localhost:8888",
+    "bodyLimit": "30mb"
+  },
+  "services": {
+    "ches": {
+      "clientId": "MSSC_SERVICE_CLIENT",
+      "clientSecret": "set in custom environment variables...",
+      "tokenUrl": "set in custom environment variables...",
+      "apiUrl": "set in custom environment variables..."
+    }
+  }
+}
+

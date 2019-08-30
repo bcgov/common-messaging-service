@@ -4,6 +4,7 @@ import TinyMceEditor from '../htmlText/TinyMceEditor';
 import Dropzone from 'react-dropzone';
 import AuthService from '../auth/AuthService';
 import axios from 'axios';
+import bytes from 'bytes';
 import { AuthConsumer } from '../auth/AuthProvider';
 
 const API_ROOT = process.env.REACT_APP_API_ROOT || '';
@@ -45,7 +46,7 @@ class EmailForm extends Component {
         mediaType: MEDIA_TYPES[0]
       },
       config: {
-        attachmentsMaxSize: 5242880,
+        attachmentsMaxSize: bytes.parse('5mb'),
         attachmentsMaxFiles: 3,
         attachmentsAcceptedType: '.pdf',
         sender: 'NR.CommonServiceShowcase@gov.bc.ca'
@@ -408,7 +409,7 @@ class EmailForm extends Component {
   }
 
   onFileDrop(acceptedFiles) {
-    let dropWarning = `Attachments are limited to ${this.state.config.attachmentsMaxFiles} total files of type ${this.state.config.attachmentsAcceptedType} and under ${this.state.config.attachmentsMaxSize} bytes in size.`;
+    let dropWarning = `Attachments are limited to ${this.state.config.attachmentsMaxFiles} total files of type ${this.state.config.attachmentsAcceptedType} and under ${bytes.format(this.state.config.attachmentsMaxSize)} in size.`;
     let form = this.state.form;
     let files = form.files;
     acceptedFiles.forEach((value) => {
@@ -574,7 +575,7 @@ class EmailForm extends Component {
                           <label htmlFor="attachments">Attachments</label>
                         </div>
                         <div className="row">
-                          <div className="col-sm-4">
+                          <div className="col-sm-3">
                             <Dropzone
                               onDrop={this.onFileDrop}
                               accept={this.state.config.attachmentsAcceptedType}
@@ -587,11 +588,12 @@ class EmailForm extends Component {
                               )}
                             </Dropzone>
                           </div>
-                          <div className="col-sm-8">
+                          <div className="col-sm-9">
                             {this.state.form.files.map(file => {
                               return (
                                 <div key={file.name} className="row">
                                   <div className="col-sm-7 dropzone-file m-auto">{file.name}</div>
+                                  <div className="col-sm-1 dropzone-file m-auto">{bytes.format(file.size)}</div>
                                   <div className="col-sm-1 m-auto"><button type="button" className="btn btn-sm" onClick={() => { this.removeFile(file.name); }}><i className="far fa-trash-alt"></i></button></div>
                                 </div>
                               );

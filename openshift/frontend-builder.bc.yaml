@@ -46,6 +46,7 @@ objects:
         COPY . .
         ENV PATH_ROOT "${PATH_ROOT}"
         ENV REACT_APP_API_ROOT "${PATH_ROOT}"
+        ENV REACT_APP_CHES_ROOT "${PATH_ROOT}"
         ENV REACT_APP_UI_ROOT "${PATH_ROOT}"
         RUN npm run build
       git:

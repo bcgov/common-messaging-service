@@ -14,11 +14,12 @@ We are using a KeyClock realm to provide user authentication.  We are using [Ope
 In production, the frontend is behind a [reverse proxy](../reverse-proxy/README.md).  This allows us to easily serve the application under any path structure we choose.  To acheive this portability, we set the homepage to "." in [package.json](package.json).  The frontend itself (once it has been built and minified for production), is served in it's own container on [Caddy](https://caddyserver.com).  See [Caddyfile](Caddyfile).
 
 In our Caddyfile, we expect certain environment variables:
-| Name | Description |
-| --- | --- |
-| UI_SERVICE_PORT | exposed port to access caddy server ex. 2015 |
-| PATH_ROOT | url path  ex. localhost:2015/mypath |
-| STATIC_FILES_PATH | physical path to the files ex. build |
+
+| Name | Description |  
+| --- | --- |  
+| UI_SERVICE_PORT | exposed port to access caddy server ex. 2015 |  
+| PATH_ROOT | url path  ex. localhost:2015/mypath |  
+| STATIC_FILES_PATH | physical path to the files ex. build |  
 
 ### Application Environment Variables
 Environment variables that we need can be set for developers in a root file .env.development.local - this should be ignored for our git commits.  Or they can be set at the command line.
@@ -59,9 +60,18 @@ npm install
 ```
 
 ### Run the application locally
-Note that by default, we are running on localhost:3000.  By default, a local instance of the [email microservice](https://github.com/bcgov/nr-email-microservice) will run on localhost:8080.  In our package.json, we set a proxy to localhost:8080.  This means that we can run frontend and backend locally in development mode to debug both sides. All http calls that would go to our application root will proxy to the backend running on localhost:8080.
+Note that by default, we are running on localhost:3000.    
+By default, a local instance of the [email microservice](https://github.com/bcgov/nr-email-microservice) will run on localhost:8080.  
+The following environment variables depend on how you set up your OIDC provider and realm; it also depends on running the email-microservice (CMSG v1) and the ches-backend (Common Hosted Email Service).  
 
 ``` sh
+export REACT_APP_API_ROOT=http://localhost:8080
+export REACT_APP_CHES_ROOT=http://localhost:8888
+export REACT_APP_UI_ROOT=
+export REACT_APP_PUBLIC_URL=http://localhost:3000
+export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+export REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
+
 npm run start
 ```
 
@@ -70,6 +80,7 @@ For production releases, we need to build the application.  Build will use react
 
 ``` sh
 export REACT_APP_API_ROOT=/pr-5
+export REACT_APP_CHES_ROOT=/pr-5
 export REACT_APP_UI_ROOT=/pr-5
 export REACT_APP_PUBLIC_URL=https://mssc-dev.pathfinder.gov.bc.ca/pr-5
 export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
@@ -80,12 +91,13 @@ npm run build
 
 ### Build and run in Caddy locally
 The following will show how one can build the production code and run it locally in Caddy.
-Generally, REACT\_APP\_API\_ROOT and REACT\_APP\_UI\_ROOT are the same as PATH\_ROOT, but for serving locally, the api maybe hosted elsewhere.  See [reverse-proxy](../reverse-proxy) for a better example.
+Generally, REACT\_APP\_API\_ROOT, REACT\_APP\_CHES\_ROOT  and REACT\_APP\_UI\_ROOT are the same as PATH\_ROOT, but for serving locally, the api maybe hosted elsewhere.  See [reverse-proxy](../reverse-proxy) for a better example.
 
 ``` sh
 cd frontend
 
 export REACT_APP_API_ROOT=http://localhost:8080
+export REACT_APP_CHES_ROOT=http://localhost:8888
 export REACT_APP_UI_ROOT=
 export REACT_APP_PUBLIC_URL=http://localhost:2016
 export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz

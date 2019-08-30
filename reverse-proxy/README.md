@@ -15,20 +15,24 @@ Configuration of Caddy is done at deploy time through our build pipeline.  Revie
 * PATH_ROOT          - /pr-NUM, or /mssc - the path immediate to the domain where we will be served up.
 * API_SERVICE_NAME   - mssc-pr-NUM-backend or mssc-master-backend
 * API_SERVICE_PORT   - 8080
+* CHES_SERVICE_NAME  - mssc-pr-NUM-ches-backend or mssc-master-ches-backend
+* CHES_SERVICE_PORT  - 8888
 * UI_SERVICE_NAME    - mssc-pr-NUM-frontend or mssc-master-frontend
 * UI_SERVICE_PORT    - 2015
 
 ### Running locally
 
-To run and test this locally, you will need to configure and stand up [backend](../backend/README.md) and [frontend](../frontend/README.md).  Set the environment variables the same in 3 different sessions/terminals and stand each component up.
+To run and test this locally, you will need to configure and stand up [ches-backend](../ches-backend/README.md), [frontend](../frontend/README.md) and [email-microservice](https://github.com/bcgov/nr-email-microservice).  Set the environment variables the same in 4 different sessions/terminals and stand each component up.
 
 
 ``` sh
-# do this in all 3 sessions/terminals
+# do this in all 4 sessions/terminals
 export PROXY_SERVICE_PORT=2020
 export PATH_ROOT=/pr-5
 export API_SERVICE_NAME=localhost
 export API_SERVICE_PORT=8080
+export CHES_SERVICE_NAME=localhost
+export CHES_SERVICE_PORT=8888
 export UI_SERVICE_NAME=localhost
 export UI_SERVICE_PORT=2021
 
@@ -47,6 +51,7 @@ npm run start
 cd frontend
 # set env vars
 export REACT_APP_API_ROOT=$PATH_ROOT
+export REACT_APP_CHES_ROOT=$PATH_ROOT
 export REACT_APP_UI_ROOT=$PATH_ROOT
 export REACT_APP_PUBLIC_URL=http://localhost:$PROXY_SERVICE_PORT$PATH_ROOT
 export STATIC_FILES_PATH=./build
@@ -57,6 +62,13 @@ export REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
 npm run build
 
 caddy -quic
+```
+
+``` sh
+# set env vars
+cd ches-backend
+
+npm run start
 ```
 
 ``` sh

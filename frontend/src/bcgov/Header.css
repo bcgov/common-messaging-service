@@ -6,8 +6,9 @@ header {
   display: flex;
   height: 65px;
   top: 0px;
-  /*position: fixed;*/
+  position: fixed;
   width: 100%;
+  z-index: 999;
 }
 
 header h1 {

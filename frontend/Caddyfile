@@ -7,6 +7,16 @@
     errors stdout
 }
 
+*:{$UI_SERVICE_PORT}{$PATH_ROOT}/app/auth/logout {
+    # when we hit Logout from one of our internal routes, the path is wack.
+    # we need to redirect this internal route to the actual auth route
+    redir / {$PATH_ROOT}/auth/logout 307
+
+    log stdout
+
+    errors stdout
+}
+
 *:{$UI_SERVICE_PORT}{$PATH_ROOT}/ {
 
     root {$STATIC_FILES_PATH}
@@ -14,7 +24,6 @@
     log stdout
 
     errors stdout
-
 
     # we have some internal routing for authentication and callbacks
     # under /auth... so let's pass those through.
@@ -27,5 +36,18 @@
         r ^\/(.*)
         to {1} {1}/ {path} {path}/ /
     }
+
+    # more internal routing here
+    # non-auth routing is /app...
+    rewrite /app {
+        # everything after /app/ becomes {1}
+        # see if {1} matches a static file or directory
+        # see if /app/{1} ({path}) is a static file or directory
+        # finally, just pass it (/app/{1}) into the app and let it handle it (which is what we want)
+
+        r ^\/(.*)
+        to {1} {1}/ {path} {path}/ /
+    }
+
 }
 

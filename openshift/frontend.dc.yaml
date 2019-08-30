@@ -60,6 +60,8 @@ objects:
             value: "${STATIC_FILES_PATH}"
           - name: REACT_APP_API_ROOT
             value: "${PATH_ROOT}"
+          - name: REACT_APP_CHES_ROOT
+            value: "${PATH_ROOT}"
           - name: REACT_APP_UI_ROOT
             value: "${PATH_ROOT}"
           - name: REACT_APP_PUBLIC_URL

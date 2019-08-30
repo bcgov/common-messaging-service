@@ -1,5 +1,6 @@
 # The Messaging Service ShowCase (MSSC) Application
-The Messaging Service Showcase application is quite simple.  It is a [node.js](https://nodejs.org/) API (see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both the backend and frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
+The Messaging Service Showcase application is quite simple.  
+It is 2 [node.js](https://nodejs.org/) APIs (CMSG - see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice) and CHES - see [ches-backend](../ches-backend/README.md)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both backends and the frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
 
 
 For the frontend, we provide a set of npm scripts in [package.json](../frontend/package.json) file; the most important of which is: `npm run build`.  The reverse proxy has no installation scripts (but does have runtime configuration requirements, see [../reverse-proxy](../reverse-proxy/README.md)).
@@ -15,18 +16,27 @@ Our builds and deployments are performed via Jenkins (see [tools](https://github
 
 There are some requirements for each namespace/environment, that are **NOT** built and deployed by the CI/CD process.  For this project, we need to ensure each namespace has a secret (credentials to connect to the Common Messaging Service - CMSG), and we need a configmap that we can use to set environment variables.
 
-At a minimum, you will need to have your a Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).  The service client id and password will be created through [Get Token](https://github.com/bcgov/nr-get-token).  You will need to get the Common Messaging Service (CMSG) api url and the OAuth url for whichever Common Services environment you are targetting.
+At a minimum, you will need to have your a Service Client ID and secret, and the OAuth Url for that client/environment (basically who, where, how we authenticate).  The service client id and password will be created through [Get Token](https://github.com/bcgov/nr-get-token).  You will need to get the Common Messaging Service (CMSG) api url and the OAuth url for whichever Common Services environment you are targeting.  You will also use Get Token to get your service client and url configurations for CHES (Common Hosted Email Service).
 
 Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-email-microservice/blob/master/openshift/README.md) for more details on secrets, configmap and other configuration details.  We use the default names for secrets and config maps.
 
 #### Secrets/Environment variables
 The following oc command creates a new secret, cmsg-client, that will be used to set environment variables in the application.
 
-cmsg-client.username sets enviornment variable CMSG_CLIENT_ID
-cmsg-client.password sets enviornment variable CMSG_CLIENT_SECRET
+cmsg-client.username sets environment variable CMSG_CLIENT_ID
+cmsg-client.password sets environment variable CMSG_CLIENT_SECRET
 
 ```sh
 oc create secret -n <namespace> generic cmsg-client --from-literal=username=<client id> --from-literal=password=<client secret> --type=kubernetes.io/basic-auth
+```  
+
+The following oc command creates a new secret, ches-client, that will be used to set environment variables in the application.  
+
+ches-client.username sets environment variable CHES_CLIENT_ID
+ches-client.password sets environment variable CHES_CLIENT_SECRET
+
+```sh
+oc create secret -n <namespace> generic ches-client --from-literal=username=<ches client id> --from-literal=password=<ches client secret> --type=kubernetes.io/basic-auth
 ```
 
 #### ConfigMap/Environment variables
@@ -34,6 +44,12 @@ The following oc command creates a new configmap, cmsg-config, that will be used
 
 ```sh
 oc create configmap -n <namespace> cmsg-config --from-literal=OAUTH_TOKEN_URL=<oauth token url> --from-literal=CMSG_TOP_LEVEL_URL=<common messaging api top level url>
+```  
+
+The following oc command creates a new configmap, ches-config, that will be used to set environment variables in the application for the CHES backend.
+
+```sh
+oc create configmap -n <namespace> ches-config --from-literal=CHES_API_URL=<ches token url> --from-literal=CHES_TOKEN_URL=<ches authorization token url> --from-literal=SERVER_BODYLIMIT=30mb
 ```
 
 #### Backend - NR Email Microservice Config
@@ -93,6 +109,18 @@ The template expects 7 parameters:
 | NAMESPACE | the Openshift namespace where we can source our Frontend NPM image (ex. z208i4-tools) |
 | PATH_ROOT | compiled into our React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc) |
 
+### Build Template - ches-backend.bc.yaml
+This template is used to create our CHES backend Runtime image.
+
+The template expects 4 parameters:
+
+| Name | Description |
+| --- | --- |
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| SOURCE_REPO_URL | complete url to the repo (including .git) |
+| SOURCE_REPO_REF | master or pull request ref (ex. pull/3/head) |
+| APP_NAME | name of the application: mssc |  
+
 ### Build Template - frontend.bc.yaml
 This template is used to create our Frontend Runtime image, it is 3rd in the Frontend chained build and uses frontend-builder.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  The minified React production bundle is copied into a new image that is a Caddy server, which serves that static file.
 
@@ -135,7 +163,6 @@ We provide the following parameters to the deployment config:
 | CMSG_SENDER | the email address we use as our default sender. NR.CommonServiceShowcase@gov.bc.ca |
 | HOST_URL | this is the full url that will be exposed by our reverse proxy.  (ex. https://${HOST\_ROUTE}${PATH\_ROOT}) |
 
-
 ### Deploy Template - frontend.dc.yaml
 This template deploys our Frontend Runtime image (Caddy static files server) and creates a service for it.  This service is internal and used by the Reverse Proxy to handle frontend requests.
 
@@ -148,6 +175,18 @@ The template expects 5 parameters:
 | APP_NAME | name of the application: mssc |
 | NAMESPACE | the Openshift namespace to which these objects are deployed (ex. z208i4-dev) |
 | PATH_ROOT | Same as we used to build the React code, the path were we will be hosting the backend and frontend (ex. /pr-3 or /mssc) |
+
+### Deploy Template - ches-backend.dc.yaml
+This template deploys our CHES Backend Runtime image creates a service for it.  This service is internal and used by the Reverse Proxy to handle ches api requests.
+
+The template expects 4 parameters:
+
+| Name | Description |
+| --- | --- |
+| JOB_NAME | this will be master or a pull request (ex. pr-3) |
+| APP_NAME | name of the application: mssc |
+| NAMESPACE | the Openshift namespace to which these objects are deployed (ex. z208i4-dev) |
+| SERVER_HOST_URL | this is the full url that will be exposed by our reverse proxy.  (ex. https://${HOST\_ROUTE}${PATH\_ROOT}) |
 
 ### Deploy Template - reverse-proxy.dc.yaml
 This template deploys our Reverse Proxy Runtime image (Caddy reverse proxy server), creates a service for it and exposes a route (publicly accessible Url).
@@ -219,6 +258,13 @@ oc -n $proj start-build mssc-pr-x-frontend
   build.build.openshift.io/mssc-pr-x-frontend-1 started
 
 oc logs build/mssc-pr-x-frontend-1 --follow
+
+oc -n $proj process -f ches-backend.bc.yaml -p JOB_NAME=$JOB_NAME -p SOURCE_REPO_URL=$SOURCE_REPO_URL -p SOURCE_REPO_REF=$SOURCE_REPO_REF -p APP_NAME=$APP_NAME -o yaml | oc -n $proj create -f -
+oc -n $proj start-build mssc-pr-x-ches-backend
+oc logs build/mssc-pr-x-ches-backend-1 --follow
+
+oc -n $proj process -f ches-backend.dc.yaml -p JOB_NAME=$JOB_NAME -p APP_NAME=$APP_NAME -p NAMESPACE=$NAMESPACE -p HOST_URL=$HOST_URL  -o yaml | oc -n $proj create -f -
+oc -n $proj rollout latest dc/mssc-pr-x-ches-backend
 
 oc -n $proj process -f frontend.dc.yaml -p REPO_NAME=$REPO_NAME -p JOB_NAME=$JOB_NAME -p APP_NAME=$APP_NAME -p NAMESPACE=$NAMESPACE -p PATH_ROOT=$PATH_ROOT -p HOST_URL=$HOST_URL -o yaml | oc -n $proj create -f -
 
