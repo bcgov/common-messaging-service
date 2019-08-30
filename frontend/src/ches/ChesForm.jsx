@@ -14,7 +14,8 @@ const PRIORITIES = ['normal', 'low', 'high'];
 const BODY_ENCODING = ['utf-8', 'base64', 'binary', 'hex'];
 const ATTACHMENT_ENCODING = ['base64', 'binary', 'hex'];
 
-const SERVER_BODYLIMIT = '30mb';
+// setting the front end to less than the backend payload, just to ensure delivery.
+const SERVER_BODYLIMIT = '20mb';
 
 class ChesForm extends Component {
 
