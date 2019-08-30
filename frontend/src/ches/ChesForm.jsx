@@ -14,6 +14,7 @@ const PRIORITIES = ['normal', 'low', 'high'];
 const BODY_ENCODING = ['utf-8', 'base64', 'binary', 'hex'];
 const ATTACHMENT_ENCODING = ['base64', 'binary', 'hex'];
 
+const SERVER_BODYLIMIT = '30mb';
 
 class ChesForm extends Component {
 
@@ -40,7 +41,7 @@ class ChesForm extends Component {
         bodyType: BODY_TYPES[0]
       },
       config: {
-        attachmentsMaxSize: bytes.parse('100mb'),
+        attachmentsMaxSize: bytes.parse(SERVER_BODYLIMIT),
         sender: 'NR.CommonServiceShowcase@gov.bc.ca'
       }
     };
