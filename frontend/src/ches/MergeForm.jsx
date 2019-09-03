@@ -15,6 +15,8 @@ const PRIORITIES = ['normal', 'low', 'high'];
 const BODY_ENCODING = ['utf-8', 'base64', 'binary', 'hex'];
 const ATTACHMENT_ENCODING = ['base64', 'binary', 'hex'];
 
+const CONTEXTS_TYPES = ['xlsx', 'json'];
+
 // setting the front end to less than the backend payload, just to ensure delivery.
 const SERVER_BODYLIMIT = '20mb';
 
@@ -37,6 +39,7 @@ class MergeForm extends Component {
       form: {
         wasValidated: false,
         contexts: '',
+        contextsType: CONTEXTS_TYPES[0],
         subject: '',
         plainText: '',
         priority: PRIORITIES[0],
@@ -55,7 +58,9 @@ class MergeForm extends Component {
     this.onChangeSubject = this.onChangeSubject.bind(this);
     this.onChangePlainText = this.onChangePlainText.bind(this);
     this.onChangeBodyType = this.onChangeBodyType.bind(this);
+    this.onChangeContextsType = this.onChangeContextsType.bind(this);
     this.onChangePriority = this.onChangePriority.bind(this);
+    this.onChangeContexts = this.onChangeContexts.bind(this);
 
     this.onEditorChange = this.onEditorChange.bind(this);
 
@@ -90,10 +95,24 @@ class MergeForm extends Component {
     this.setState({form: form, info: ''});
   }
 
+  onChangeContextsType(event) {
+    let form = this.state.form;
+    form.contextsType = event.target.value;
+    this.setState({form: form, info: ''});
+  }
+
   onChangePriority(event) {
     let form = this.state.form;
     form.priority = event.target.value;
     this.setState({form: form, info: ''});
+  }
+
+  onChangeContexts(event) {
+    let form = this.state.form;
+    form.contexts =  event.target.value;
+    let excel = this.state.excel;
+    excel = {cols: [], data: [], headers: []};
+    this.setState({form: form, info: '', excel: excel});
   }
 
   onEditorChange(content) {
@@ -122,6 +141,39 @@ class MergeForm extends Component {
     }
   }
 
+  getContextsObject() {
+    try {
+      if (this.state.form.contexts && this.state.form.contexts.trim().length > 0) {
+        return JSON.parse(this.state.form.contexts.trim());
+      } else {
+        return {};
+      }
+    } catch (e) {
+      return {};
+    }
+  }
+
+  validateContext(obj) {
+    try {
+      return obj && obj.to && Array.isArray(obj.to) && obj.to.length > 0;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  validateContexts() {
+    const contexts = this.getContextsObject();
+    let result = Array.isArray(contexts) && contexts.length > 0;
+    if (result) {
+      contexts.forEach(c => {
+        if (!this.validateContext(c)) {
+          result = false;
+        }
+      });
+    }
+    return result;
+  }
+
   async componentDidMount() {
   }
 
@@ -132,10 +184,11 @@ class MergeForm extends Component {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!(event.target.checkValidity() && this.hasMessageBody())) {
+    if (!(event.target.checkValidity() && this.hasMessageBody() && this.validateContexts())) {
       let form = this.state.form;
       form.wasValidated = true;
-      this.setState({form: form, info: ''});
+      let error = this.validateContexts() ? '' : 'The Contexts for the mail merge are not defined correctly.  Please check the structure of the Contexts JSON.';
+      this.setState({form: form, info: '', error: error});
       return;
     }
 
@@ -215,7 +268,7 @@ class MergeForm extends Component {
     let attachments = await Promise.all(this.state.form.files.map(file => this.convertFileToAttachment(file)));
 
     const email = {
-      contexts: JSON.parse(this.state.form.contexts),
+      contexts: this.getContextsObject(),
       attachments: attachments,
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),
@@ -274,41 +327,47 @@ class MergeForm extends Component {
     };
 
     if (acceptedFiles.length === 1) {
-      const file = acceptedFiles[0];
-      const reader = new FileReader();
-      const rABS = !!reader.readAsBinaryString;
-      reader.onload = (e) => {
-        /* Parse data */
-        const bstr = e.target.result;
-        const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array'});
-        /* Get first worksheet */
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        /* Convert array of arrays */
-        const data = XLSX.utils.sheet_to_json(ws, {header:1});
+      try {
+        const file = acceptedFiles[0];
+        const reader = new FileReader();
+        const rABS = !!reader.readAsBinaryString;
+        reader.onload = (e) => {
+          /* Parse data */
+          const bstr = e.target.result;
+          const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array'});
+          /* Get first worksheet */
+          const wsname = wb.SheetNames[0];
+          const ws = wb.Sheets[wsname];
+          /* Convert array of arrays */
+          const data = XLSX.utils.sheet_to_json(ws, {header:1});
 
-        /* Update state */
-        let excel = this.state.excel;
-        excel.cols = make_cols(ws['!ref']);
-        excel.headers = [data[0]];
-        excel.data = data.slice(1);
+          /* Update state */
+          let excel = this.state.excel;
+          excel.cols = make_cols(ws['!ref']);
+          excel.headers = [data[0]];
+          excel.data = data.slice(1);
 
-        let form = this.state.form;
-        let contexts = [];
-        excel.data.forEach(d => {
-          let r = {to:[], context: {}};
-          r.to = [d[0]];
-          // get the other fields...
-          let fields = excel.cols.slice(1);
-          fields.forEach(f => {
-            r.context[excel.headers[0][f.key]] = d[f.key];
+          let form = this.state.form;
+          let contexts = [];
+          excel.data.forEach(d => {
+            let r = {to:[], context: {}};
+            r.to = [d[0]];
+            // get the other fields...
+            let fields = excel.cols.slice(1);
+            fields.forEach(f => {
+              r.context[excel.headers[0][f.key]] = d[f.key];
+            });
+            contexts.push(r);
           });
-          contexts.push(r);
-        });
-        form.contexts = JSON.stringify(contexts);
-        this.setState({excel: excel, form: form });
-      };
-      if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+          form.contexts = JSON.stringify(contexts, null, 2);
+          this.setState({excel: excel, form: form });
+        };
+        if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+      } catch (e) {
+        let form = this.state.form;
+        form.contexts = '';
+        this.setState({excel: {cols: [], headers: [], data: []}, form: form, error: 'Error parsing the Contexts file, please check the structure and format of the file.' });
+      }
     }
   }
 
@@ -340,6 +399,11 @@ class MergeForm extends Component {
     const emailTabDisplay = this.state.tab === 'email' ? {} : {display: 'none'};
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
 
+    const contextsExcelDisplay = this.state.form.contextsType === CONTEXTS_TYPES[0] ? {} : {display: 'none'};
+    const contextsExcelButton = this.state.form.contextsType === CONTEXTS_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const contextsJsonDisplay = this.state.form.contextsType === CONTEXTS_TYPES[1] ? {} : {display: 'none'};
+    const contextsJsonButton = this.state.form.contextsType === CONTEXTS_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+
     return (
       <div className="container" id="maincontainer" >
 
@@ -369,7 +433,7 @@ class MergeForm extends Component {
 
               <ul className="nav nav-tabs">
                 <li className="nav-item">
-                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>Email</button>
+                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Mail Merge</button>
                 </li>
                 <li className="nav-item">
                   <button className={aboutTabClass} id='about' onClick={this.onSelectTab}>About</button>
@@ -389,33 +453,6 @@ class MergeForm extends Component {
                             readOnly required value={this.state.config.sender}/>
                           <div className="invalid-feedback">
                             Email sender is required.
-                          </div>
-                        </div>
-
-                        <div className="mt-3 mb-3">
-                          <label>Excel / Contexts</label>
-                        </div>
-                        <div className="row">
-                          <div className="col-sm-3">
-                            <Dropzone
-                              onDrop={this.onExcelFileDrop}>
-                              {({getRootProps, getInputProps}) => (
-                                <div {...getRootProps({className: 'dropzone'})}>
-                                  <input type="file" {...getInputProps({className: 'dropzone-fileinput'})} />
-                                  <i className="m-sm-auto fas fa-2x fa-file-excel upload-icon" alt="upload file"></i>
-                                </div>
-                              )}
-                            </Dropzone>
-                          </div>
-                          <div className="col-sm-9">
-                            <div className="table-responsive">
-                              <table className="table table-striped">
-                                {this.state.excel.headers.map((r,i) => <thead key={i}>{this.state.excel.cols.map(c => <th key={c.key}>{ r[c.key] }</th>)}</thead>)}
-                                <tbody>
-                                  {this.state.excel.data.map((r,i) => <tr key={i}>{this.state.excel.cols.map(c => <td key={c.key}>{ r[c.key] }</td>)}</tr>)}
-                                </tbody>
-                              </table>
-                            </div>
                           </div>
                         </div>
 
@@ -441,6 +478,48 @@ class MergeForm extends Component {
 
                         <div className="mb-3 row">
                           <div className="col-sm-4">
+                            <label className="mt-1">Contexts</label>
+                          </div>
+                          <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
+                            <label className={contextsExcelButton}>
+                              <input type="radio" defaultChecked={this.state.form.contextsType === CONTEXTS_TYPES[0]} value={CONTEXTS_TYPES[0]} name="contextsType" onClick={this.onChangeContextsType} /> Excel
+                            </label>
+                            <label className={contextsJsonButton}>
+                              <input type="radio" defaultChecked={this.state.form.contextsType === CONTEXTS_TYPES[1]} value={CONTEXTS_TYPES[1]} name="contextsType" onClick={this.onChangeContextsType} /> JSON
+                            </label>
+                          </div>
+                        </div>
+                        <div className="row" style={contextsExcelDisplay}>
+                          <div className="col-sm-2">
+                            <Dropzone
+                              onDrop={this.onExcelFileDrop}
+                              accept="text/csv,.xls,application/msexcel,application/excel,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                              {({getRootProps, getInputProps}) => (
+                                <div {...getRootProps({className: 'dropzone'})}>
+                                  <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
+                                  <i className="m-sm-auto fas fa-2x fa-file-excel upload-icon" alt="upload xlsx"></i>
+                                </div>
+                              )}
+                            </Dropzone>
+                          </div>
+                          <div className="col-sm-10">
+                            <div className="table-responsive contexts-table">
+                              <table className="table table-striped">
+                                {this.state.excel.headers.map((r,i) => <thead key={i}>{this.state.excel.cols.map(c => <th key={c.key}>{ r[c.key] }</th>)}</thead>)}
+                                <tbody>
+                                  {this.state.excel.data.map((r,i) => <tr key={i}>{this.state.excel.cols.map(c => <td key={c.key}>{ r[c.key] }</td>)}</tr>)}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={contextsJsonDisplay} >
+                          <textarea id="contextsText" name="contextsText" className="form-control"
+                            value={this.state.form.contexts} onChange={this.onChangeContexts}></textarea>
+                        </div>
+
+                        <div className="mt-3 mb-3 row">
+                          <div className="col-sm-4">
                             <label className="mt-1">Body</label>
                           </div>
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
@@ -453,7 +532,7 @@ class MergeForm extends Component {
                           </div>
                         </div>
                         <div style={plainTextDisplay} >
-                          <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.mediaType === BODY_TYPES[0]}
+                          <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.bodyType === BODY_TYPES[0]}
                             value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
@@ -474,7 +553,7 @@ class MergeForm extends Component {
                           <label htmlFor="attachments">Attachments</label>
                         </div>
                         <div className="row">
-                          <div className="col-sm-3">
+                          <div className="col-sm-2">
                             <Dropzone
                               onDrop={this.onFileDrop}>
                               {({getRootProps, getInputProps}) => (
@@ -485,7 +564,7 @@ class MergeForm extends Component {
                               )}
                             </Dropzone>
                           </div>
-                          <div className="col-sm-9">
+                          <div className="col-sm-10">
                             {this.state.form.files.map(file => {
                               return (
                                 <div key={file.name} className="row">

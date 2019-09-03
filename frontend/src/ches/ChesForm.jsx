@@ -337,7 +337,7 @@ class ChesForm extends Component {
 
               <ul className="nav nav-tabs">
                 <li className="nav-item">
-                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>Email</button>
+                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Email</button>
                 </li>
                 <li className="nav-item">
                   <button className={aboutTabClass} id='about' onClick={this.onSelectTab}>About</button>
@@ -418,7 +418,7 @@ class ChesForm extends Component {
                           </div>
                         </div>
                         <div style={plainTextDisplay} >
-                          <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.mediaType === BODY_TYPES[0]}
+                          <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.bodyType === BODY_TYPES[0]}
                             value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
