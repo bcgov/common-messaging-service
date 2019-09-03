@@ -5,6 +5,7 @@ import React, {Component} from 'react';
 import Dropzone from 'react-dropzone';
 import TinyMceEditor from '../htmlText/TinyMceEditor';
 import {AuthConsumer} from '../auth/AuthProvider';
+import XLSX from 'xlsx';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -28,6 +29,11 @@ class MergeForm extends Component {
       info: '',
       error: '',
       dropWarning: '',
+      excel: {
+        cols: [],
+        data: [],
+        headers: []
+      },
       form: {
         wasValidated: false,
         contexts: '',
@@ -47,7 +53,6 @@ class MergeForm extends Component {
 
     this.formSubmit = this.formSubmit.bind(this);
     this.onChangeSubject = this.onChangeSubject.bind(this);
-    this.onChangeContexts = this.onChangeContexts.bind(this);
     this.onChangePlainText = this.onChangePlainText.bind(this);
     this.onChangeBodyType = this.onChangeBodyType.bind(this);
     this.onChangePriority = this.onChangePriority.bind(this);
@@ -57,6 +62,7 @@ class MergeForm extends Component {
     this.onFileDrop = this.onFileDrop.bind(this);
     this.removeFile = this.removeFile.bind(this);
     this.onSelectTab = this.onSelectTab.bind(this);
+    this.onExcelFileDrop = this.onExcelFileDrop.bind(this);
   }
 
   onSelectTab(event) {
@@ -69,12 +75,6 @@ class MergeForm extends Component {
   onChangeSubject(event) {
     let form = this.state.form;
     form.subject = event.target.value;
-    this.setState({form: form, info: ''});
-  }
-
-  onChangeContexts(event) {
-    let form = this.state.form;
-    form.contexts = event.target.value;
     this.setState({form: form, info: ''});
   }
 
@@ -159,7 +159,12 @@ class MergeForm extends Component {
       form.reset = true;
       this.setState({
         busy:false,
-        form: form
+        form: form,
+        excel: {
+          cols: [],
+          data: [],
+          headers: []
+        }
       });
 
       // this will show the info message, and prep the tinymce editor for next submit...
@@ -260,6 +265,53 @@ class MergeForm extends Component {
     this.setState({form: form, dropWarning: dropWarning});
   }
 
+  onExcelFileDrop(acceptedFiles) {
+
+    const make_cols = refstr => {
+      let o = [], C = XLSX.utils.decode_range(refstr).e.c + 1;
+      for(var i = 0; i < C; ++i) o[i] = {name:XLSX.utils.encode_col(i), key:i};
+      return o;
+    };
+
+    if (acceptedFiles.length === 1) {
+      const file = acceptedFiles[0];
+      const reader = new FileReader();
+      const rABS = !!reader.readAsBinaryString;
+      reader.onload = (e) => {
+        /* Parse data */
+        const bstr = e.target.result;
+        const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array'});
+        /* Get first worksheet */
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        /* Convert array of arrays */
+        const data = XLSX.utils.sheet_to_json(ws, {header:1});
+
+        /* Update state */
+        let excel = this.state.excel;
+        excel.cols = make_cols(ws['!ref']);
+        excel.headers = [data[0]];
+        excel.data = data.slice(1);
+
+        let form = this.state.form;
+        let contexts = [];
+        excel.data.forEach(d => {
+          let r = {to:[], context: {}};
+          r.to = [d[0]];
+          // get the other fields...
+          let fields = excel.cols.slice(1);
+          fields.forEach(f => {
+            r.context[excel.headers[0][f.key]] = d[f.key];
+          });
+          contexts.push(r);
+        });
+        form.contexts = JSON.stringify(contexts);
+        this.setState({excel: excel, form: form });
+      };
+      if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+    }
+  }
+
   removeFile(filename) {
     let form = this.state.form;
     let files = form.files.filter((f) => { return f.name !== filename; });
@@ -340,13 +392,34 @@ class MergeForm extends Component {
                           </div>
                         </div>
 
-                        <div className="mb-3">
-                          <label htmlFor="contexts">Contexts</label>
-                          <textarea id="contextsText" name="contexts" className="form-control"
-                            value={this.state.form.contexts} onChange={this.onChangeContexts}></textarea>
+                        <div className="mt-3 mb-3">
+                          <label>Excel / Contexts</label>
+                        </div>
+                        <div className="row">
+                          <div className="col-sm-3">
+                            <Dropzone
+                              onDrop={this.onExcelFileDrop}>
+                              {({getRootProps, getInputProps}) => (
+                                <div {...getRootProps({className: 'dropzone'})}>
+                                  <input type="file" {...getInputProps({className: 'dropzone-fileinput'})} />
+                                  <i className="m-sm-auto fas fa-2x fa-file-excel upload-icon" alt="upload file"></i>
+                                </div>
+                              )}
+                            </Dropzone>
+                          </div>
+                          <div className="col-sm-9">
+                            <div className="table-responsive">
+                              <table className="table table-striped">
+                                {this.state.excel.headers.map((r,i) => <thead key={i}>{this.state.excel.cols.map(c => <th key={c.key}>{ r[c.key] }</th>)}</thead>)}
+                                <tbody>
+                                  {this.state.excel.data.map((r,i) => <tr key={i}>{this.state.excel.cols.map(c => <td key={c.key}>{ r[c.key] }</td>)}</tr>)}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="mb-3">
+                        <div className="mt-3 mb-3">
                           <label htmlFor="subject">Subject</label>
                           <input type="text" className="form-control" name="subject" required value={this.state.form.subject}
                             onChange={this.onChangeSubject}/>
