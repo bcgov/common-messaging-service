@@ -574,7 +574,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             "JOB_NAME=${JOB_NAME}",
             "NAMESPACE=${projectEnv}",
             "APP_NAME=${APP_NAME}",
-            "HOST_URL=https://${hostEnv}${pathEnv}",
+            "SERVER_HOST_URL=https://${hostEnv}${pathEnv}",
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-ches-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
