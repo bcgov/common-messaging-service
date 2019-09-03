@@ -57,6 +57,14 @@
   font-size: smaller;
 }
 
+#contextsText {
+  height: 240px;
+}
+
+.contexts-table {
+  min-height: 240px;
+}
+
 #messageText {
   height: 480px;
 }

@@ -1,23 +1,26 @@
-import './ChesForm.css';
+import './MergeForm.css';
 import axios from 'axios';
 import bytes from 'bytes';
 import React, {Component} from 'react';
 import Dropzone from 'react-dropzone';
 import TinyMceEditor from '../htmlText/TinyMceEditor';
 import {AuthConsumer} from '../auth/AuthProvider';
+import XLSX from 'xlsx';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
-const EMAIL_URL = `${CHES_PATH}/email`;
+const EMAIL_MERGE_URL = `${CHES_PATH}/email/merge`;
 const BODY_TYPES = ['text', 'html'];
 const PRIORITIES = ['normal', 'low', 'high'];
 const BODY_ENCODING = ['utf-8', 'base64', 'binary', 'hex'];
 const ATTACHMENT_ENCODING = ['base64', 'binary', 'hex'];
 
+const CONTEXTS_TYPES = ['xlsx', 'json'];
+
 // setting the front end to less than the backend payload, just to ensure delivery.
 const SERVER_BODYLIMIT = '20mb';
 
-class ChesForm extends Component {
+class MergeForm extends Component {
 
   constructor(props) {
     super(props);
@@ -28,11 +31,15 @@ class ChesForm extends Component {
       info: '',
       error: '',
       dropWarning: '',
+      excel: {
+        cols: [],
+        data: [],
+        headers: []
+      },
       form: {
         wasValidated: false,
-        recipients: '',
-        cc: '',
-        bcc: '',
+        contexts: '',
+        contextsType: CONTEXTS_TYPES[0],
         subject: '',
         plainText: '',
         priority: PRIORITIES[0],
@@ -49,18 +56,18 @@ class ChesForm extends Component {
 
     this.formSubmit = this.formSubmit.bind(this);
     this.onChangeSubject = this.onChangeSubject.bind(this);
-    this.onChangeRecipients = this.onChangeRecipients.bind(this);
-    this.onChangeCC = this.onChangeCC.bind(this);
-    this.onChangeBCC = this.onChangeBCC.bind(this);
     this.onChangePlainText = this.onChangePlainText.bind(this);
     this.onChangeBodyType = this.onChangeBodyType.bind(this);
+    this.onChangeContextsType = this.onChangeContextsType.bind(this);
     this.onChangePriority = this.onChangePriority.bind(this);
+    this.onChangeContexts = this.onChangeContexts.bind(this);
 
     this.onEditorChange = this.onEditorChange.bind(this);
 
     this.onFileDrop = this.onFileDrop.bind(this);
     this.removeFile = this.removeFile.bind(this);
     this.onSelectTab = this.onSelectTab.bind(this);
+    this.onExcelFileDrop = this.onExcelFileDrop.bind(this);
   }
 
   onSelectTab(event) {
@@ -76,24 +83,6 @@ class ChesForm extends Component {
     this.setState({form: form, info: ''});
   }
 
-  onChangeRecipients(event) {
-    let form = this.state.form;
-    form.recipients = event.target.value;
-    this.setState({form: form, info: ''});
-  }
-
-  onChangeCC(event) {
-    let form = this.state.form;
-    form.cc = event.target.value;
-    this.setState({form: form, info: ''});
-  }
-
-  onChangeBCC(event) {
-    let form = this.state.form;
-    form.bcc = event.target.value;
-    this.setState({form: form, info: ''});
-  }
-
   onChangePlainText(event) {
     let form = this.state.form;
     form.plainText = event.target.value;
@@ -106,10 +95,24 @@ class ChesForm extends Component {
     this.setState({form: form, info: ''});
   }
 
+  onChangeContextsType(event) {
+    let form = this.state.form;
+    form.contextsType = event.target.value;
+    this.setState({form: form, info: ''});
+  }
+
   onChangePriority(event) {
     let form = this.state.form;
     form.priority = event.target.value;
     this.setState({form: form, info: ''});
+  }
+
+  onChangeContexts(event) {
+    let form = this.state.form;
+    form.contexts =  event.target.value;
+    let excel = this.state.excel;
+    excel = {cols: [], data: [], headers: []};
+    this.setState({form: form, info: '', excel: excel});
   }
 
   onEditorChange(content) {
@@ -138,6 +141,39 @@ class ChesForm extends Component {
     }
   }
 
+  getContextsObject() {
+    try {
+      if (this.state.form.contexts && this.state.form.contexts.trim().length > 0) {
+        return JSON.parse(this.state.form.contexts.trim());
+      } else {
+        return {};
+      }
+    } catch (e) {
+      return {};
+    }
+  }
+
+  validateContext(obj) {
+    try {
+      return obj && obj.to && Array.isArray(obj.to) && obj.to.length > 0;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  validateContexts() {
+    const contexts = this.getContextsObject();
+    let result = Array.isArray(contexts) && contexts.length > 0;
+    if (result) {
+      contexts.forEach(c => {
+        if (!this.validateContext(c)) {
+          result = false;
+        }
+      });
+    }
+    return result;
+  }
+
   async componentDidMount() {
   }
 
@@ -148,36 +184,40 @@ class ChesForm extends Component {
     event.preventDefault();
     event.stopPropagation();
 
-    if (!(event.target.checkValidity() && this.hasMessageBody())) {
+    if (!(event.target.checkValidity() && this.hasMessageBody() && this.validateContexts())) {
       let form = this.state.form;
       form.wasValidated = true;
-      this.setState({form: form, info: ''});
+      let error = this.validateContexts() ? '' : 'The Contexts for the mail merge are not defined correctly.  Please check the structure of the Contexts JSON.';
+      this.setState({form: form, info: '', error: error});
       return;
     }
 
-    let messageId = undefined;
+    let messageIds = [];
     try {
 
       this.setState({busy: true});
 
-      let postEmailData = await this.postEmail();
-      messageId = postEmailData.messageId;
+      let postMergeData = await this.postEmailMerge();
+      messageIds = postMergeData.map(d => d.messageId);
 
       let form = this.state.form;
       form.wasValidated = false;
-      form.recipients = '';
-      form.cc = '';
-      form.bcc = '';
       form.subject = '';
       form.plainText = '';
       form.htmlText = '';
       form.files = [];
+      form.contexts = '';
       form.bodyType = BODY_TYPES[0];
       form.priority = PRIORITIES[0];
       form.reset = true;
       this.setState({
         busy:false,
-        form: form
+        form: form,
+        excel: {
+          cols: [],
+          data: [],
+          headers: []
+        }
       });
 
       // this will show the info message, and prep the tinymce editor for next submit...
@@ -187,7 +227,7 @@ class ChesForm extends Component {
       this.setState({
         busy: false,
         form: form,
-        info: `Message submitted to Showcase CHES API: id = ${messageId}`,
+        info: `Message submitted to Showcase CHES API: ${messageIds}`,
         error: ''
       });
 
@@ -224,24 +264,22 @@ class ChesForm extends Component {
     };
   }
 
-  async postEmail() {
+  async postEmailMerge() {
     let attachments = await Promise.all(this.state.form.files.map(file => this.convertFileToAttachment(file)));
 
     const email = {
+      contexts: this.getContextsObject(),
       attachments: attachments,
-      bcc: this.getAddresses(this.state.form.bcc),
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),
-      cc: this.getAddresses(this.state.form.cc),
       encoding: BODY_ENCODING[0],
       from: this.state.config.sender,
       priority: this.state.form.priority,
-      to: this.getAddresses(this.state.form.recipients),
       subject: this.state.form.subject
     };
 
     const response = await axios.post(
-      EMAIL_URL,
+      EMAIL_MERGE_URL,
       JSON.stringify(email),
       {
         headers: {
@@ -280,6 +318,59 @@ class ChesForm extends Component {
     this.setState({form: form, dropWarning: dropWarning});
   }
 
+  onExcelFileDrop(acceptedFiles) {
+
+    const make_cols = refstr => {
+      let o = [], C = XLSX.utils.decode_range(refstr).e.c + 1;
+      for(var i = 0; i < C; ++i) o[i] = {name:XLSX.utils.encode_col(i), key:i};
+      return o;
+    };
+
+    if (acceptedFiles.length === 1) {
+      try {
+        const file = acceptedFiles[0];
+        const reader = new FileReader();
+        const rABS = !!reader.readAsBinaryString;
+        reader.onload = (e) => {
+          /* Parse data */
+          const bstr = e.target.result;
+          const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array'});
+          /* Get first worksheet */
+          const wsname = wb.SheetNames[0];
+          const ws = wb.Sheets[wsname];
+          /* Convert array of arrays */
+          const data = XLSX.utils.sheet_to_json(ws, {header:1});
+
+          /* Update state */
+          let excel = this.state.excel;
+          excel.cols = make_cols(ws['!ref']);
+          excel.headers = [data[0]];
+          excel.data = data.slice(1);
+
+          let form = this.state.form;
+          let contexts = [];
+          excel.data.forEach(d => {
+            let r = {to:[], context: {}};
+            r.to = [d[0]];
+            // get the other fields...
+            let fields = excel.cols.slice(1);
+            fields.forEach(f => {
+              r.context[excel.headers[0][f.key]] = d[f.key];
+            });
+            contexts.push(r);
+          });
+          form.contexts = JSON.stringify(contexts, null, 2);
+          this.setState({excel: excel, form: form });
+        };
+        if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+      } catch (e) {
+        let form = this.state.form;
+        form.contexts = '';
+        this.setState({excel: {cols: [], headers: [], data: []}, form: form, error: 'Error parsing the Contexts file, please check the structure and format of the file.' });
+      }
+    }
+  }
+
   removeFile(filename) {
     let form = this.state.form;
     let files = form.files.filter((f) => { return f.name !== filename; });
@@ -307,6 +398,11 @@ class ChesForm extends Component {
     const aboutTabClass = this.state.tab === 'about' ? 'nav-link active' : 'nav-link';
     const emailTabDisplay = this.state.tab === 'email' ? {} : {display: 'none'};
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
+
+    const contextsExcelDisplay = this.state.form.contextsType === CONTEXTS_TYPES[0] ? {} : {display: 'none'};
+    const contextsExcelButton = this.state.form.contextsType === CONTEXTS_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const contextsJsonDisplay = this.state.form.contextsType === CONTEXTS_TYPES[1] ? {} : {display: 'none'};
+    const contextsJsonButton = this.state.form.contextsType === CONTEXTS_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
 
     return (
       <div className="container" id="maincontainer" >
@@ -337,7 +433,7 @@ class ChesForm extends Component {
 
               <ul className="nav nav-tabs">
                 <li className="nav-item">
-                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Email</button>
+                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Mail Merge</button>
                 </li>
                 <li className="nav-item">
                   <button className={aboutTabClass} id='about' onClick={this.onSelectTab}>About</button>
@@ -360,31 +456,7 @@ class ChesForm extends Component {
                           </div>
                         </div>
 
-                        <div className="mb-3">
-                          <label htmlFor="recipients">Recipients</label>
-                          <input type="text" className="form-control" name="recipients"
-                            placeholder="you@example.com (separate multiple by comma)" required
-                            value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
-                          <div className="invalid-feedback">
-                            One or more email recipients required.
-                          </div>
-                        </div>
-
-                        <div className="mb-3">
-                          <label htmlFor="cc">CC</label>
-                          <input type="text" className="form-control" name="cc"
-                            placeholder="you@example.com (separate multiple by comma)"
-                            value={this.state.form.cc} onChange={this.onChangeCC}/>
-                        </div>
-
-                        <div className="mb-3">
-                          <label htmlFor="bcc">BCC</label>
-                          <input type="text" className="form-control" name="bcc"
-                            placeholder="you@example.com (separate multiple by comma)"
-                            value={this.state.form.bcc} onChange={this.onChangeBCC}/>
-                        </div>
-
-                        <div className="mb-3">
+                        <div className="mt-3 mb-3">
                           <label htmlFor="subject">Subject</label>
                           <input type="text" className="form-control" name="subject" required value={this.state.form.subject}
                             onChange={this.onChangeSubject}/>
@@ -405,6 +477,48 @@ class ChesForm extends Component {
                         </div>
 
                         <div className="mb-3 row">
+                          <div className="col-sm-4">
+                            <label className="mt-1">Contexts</label>
+                          </div>
+                          <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
+                            <label className={contextsExcelButton}>
+                              <input type="radio" defaultChecked={this.state.form.contextsType === CONTEXTS_TYPES[0]} value={CONTEXTS_TYPES[0]} name="contextsType" onClick={this.onChangeContextsType} /> Excel
+                            </label>
+                            <label className={contextsJsonButton}>
+                              <input type="radio" defaultChecked={this.state.form.contextsType === CONTEXTS_TYPES[1]} value={CONTEXTS_TYPES[1]} name="contextsType" onClick={this.onChangeContextsType} /> JSON
+                            </label>
+                          </div>
+                        </div>
+                        <div className="row" style={contextsExcelDisplay}>
+                          <div className="col-sm-2">
+                            <Dropzone
+                              onDrop={this.onExcelFileDrop}
+                              accept="text/csv,.xls,application/msexcel,application/excel,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                              {({getRootProps, getInputProps}) => (
+                                <div {...getRootProps({className: 'dropzone'})}>
+                                  <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
+                                  <i className="m-sm-auto fas fa-2x fa-file-excel upload-icon" alt="upload xlsx"></i>
+                                </div>
+                              )}
+                            </Dropzone>
+                          </div>
+                          <div className="col-sm-10">
+                            <div className="table-responsive contexts-table">
+                              <table className="table table-striped">
+                                {this.state.excel.headers.map((r,i) => <thead key={i}>{this.state.excel.cols.map(c => <th key={c.key}>{ r[c.key] }</th>)}</thead>)}
+                                <tbody>
+                                  {this.state.excel.data.map((r,i) => <tr key={i}>{this.state.excel.cols.map(c => <td key={c.key}>{ r[c.key] }</td>)}</tr>)}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={contextsJsonDisplay} >
+                          <textarea id="contextsText" name="contextsText" className="form-control"
+                            value={this.state.form.contexts} onChange={this.onChangeContexts}></textarea>
+                        </div>
+
+                        <div className="mt-3 mb-3 row">
                           <div className="col-sm-4">
                             <label className="mt-1">Body</label>
                           </div>
@@ -439,7 +553,7 @@ class ChesForm extends Component {
                           <label htmlFor="attachments">Attachments</label>
                         </div>
                         <div className="row">
-                          <div className="col-sm-3">
+                          <div className="col-sm-2">
                             <Dropzone
                               onDrop={this.onFileDrop}>
                               {({getRootProps, getInputProps}) => (
@@ -450,7 +564,7 @@ class ChesForm extends Component {
                               )}
                             </Dropzone>
                           </div>
-                          <div className="col-sm-9">
+                          <div className="col-sm-10">
                             {this.state.form.files.map(file => {
                               return (
                                 <div key={file.name} className="row">
@@ -494,5 +608,4 @@ class ChesForm extends Component {
     );
   }
 }
-
-export default ChesForm;
+export default MergeForm;

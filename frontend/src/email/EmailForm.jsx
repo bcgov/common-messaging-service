@@ -492,7 +492,7 @@ class EmailForm extends Component {
 
               <ul className="nav nav-tabs">
                 <li className="nav-item">
-                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>Email</button>
+                  <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CMSG Email</button>
                 </li>
                 <li className="nav-item">
                   <button className={statusTabClass} id='status' onClick={this.onSelectTab}>Statuses</button>

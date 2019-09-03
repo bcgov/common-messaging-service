@@ -12,6 +12,7 @@ class NavigationBar extends Component {
             <li><Link to='/'>Home</Link></li>
             <li><Link to='/app/cmsg'>CMSG (email v1)</Link></li>
             <li><Link to="/app/ches">CHES (email v2)</Link></li>
+            <li><Link to="/app/merge">CHES Mail Merge</Link></li>
           </ul>
         </div>
       </nav>

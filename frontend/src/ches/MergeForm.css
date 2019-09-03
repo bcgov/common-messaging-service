@@ -1,0 +1,7 @@
+#contextsText.form-control:valid {
+  border: 1px solid #ced4da;
+  background-image: none;
+}
+#contextsText.form-control:valid:focus {
+  box-shadow: none;
+}
