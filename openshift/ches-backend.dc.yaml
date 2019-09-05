@@ -88,27 +88,39 @@ objects:
                   cpu: "${CPU_LIMIT}"
                   memory: "${MEMORY_LIMIT}"
               env:
-                - name: SERVER_HOST_URL
-                  value: ${SERVER_HOST_URL}
-                - name: SERVER_PORT
-                  value: ${SERVER_PORT}
-                - name: SERVER_LOGLEVEL
-                  value: ${SERVER_LOGLEVEL}
-                - name: SERVER_MORGANFORMAT
-                  value: ${SERVER_MORGANFORMAT}
-                - name: CHES_CLIENT_ID
-                  valueFrom:
-                    secretKeyRef:
-                      key: username
-                      name: "ches-client"
-                - name: CHES_CLIENT_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      key: password
-                      name: "ches-client"
+              - name: SERVER_HOST_URL
+                value: ${SERVER_HOST_URL}
+              - name: SERVER_PORT
+                value: ${SERVER_PORT}
+              - name: SERVER_LOGLEVEL
+                value: ${SERVER_LOGLEVEL}
+              - name: SERVER_MORGANFORMAT
+                value: ${SERVER_MORGANFORMAT}
+              - name: CHES_CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    key: username
+                    name: "ches-client"
+              - name: CHES_CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    key: password
+                    name: "ches-client"
+              - name: KC_CLIENTID
+                valueFrom:
+                  secretKeyRef:
+                    key: username
+                    name: "mssc-keycloak-secret"
+              - name: KC_CLIENTSECRET
+                valueFrom:
+                  secretKeyRef:
+                    key: password
+                    name: "mssc-keycloak-secret"
               envFrom:
                 - configMapRef:
                     name: "ches-config"
+                - configMapRef:
+                    name: "mssc-keycloak-config"
           dnsPolicy: ClusterFirst
           restartPolicy: Always
           schedulerName: default-scheduler

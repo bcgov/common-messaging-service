@@ -1,10 +1,17 @@
 {
+  "keycloak": {
+    "clientId": "KC_CLIENTID",
+    "clientSecret": "KC_CLIENTSECRET",
+    "realm": "KC_REALM",
+    "serverUrl": "KC_SERVERURL"
+  },
   "server": {
     "logLevel": "SERVER_LOGLEVEL",
     "morganFormat": "SERVER_MORGANFORMAT",
     "port": "SERVER_PORT",
     "hostUrl": "SERVER_HOST_URL",
-    "bodyLimit": "SERVER_BODYLIMIT"
+    "bodyLimit": "SERVER_BODYLIMIT",
+    "defaultSender": "SERVER_DEFAULT_SENDER"
   },
   "services": {
     "ches": {

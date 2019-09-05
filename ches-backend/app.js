@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const Problem = require('api-problem');
 
 const chesService = require('./chesService/routes');
+const keycloak = require('./components/keycloak');
 const utils = require('./components/utils');
 
 const state = {
@@ -27,6 +28,9 @@ log.addLevel('debug', 1500, { fg: 'green' });
 
 // Print out configuration settings in verbose startup
 log.verbose(utils.prettyStringify(config));
+
+// Use Keycloak OIDC Middleware
+app.use(keycloak.middleware());
 
 app.use('/ches/v1', chesService);
 

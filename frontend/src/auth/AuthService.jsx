@@ -130,4 +130,44 @@ export default class AuthService {
     });
     this.UserManager.clearStaleState();
   };
+
+  hasRole = (user, role) => {
+    if (user) {
+      const content = this.parseJwt(user.access_token);
+      const defaultClientId = `${window._env_.REACT_APP_OIDC_CLIENT_ID}`
+
+      const parts = role.split(':');
+
+      if (parts.length === 1) {
+        return this.hasApplicationRole(content, defaultClientId, parts[0]);
+      }
+
+      if (parts[0] === 'realm') {
+        return this.hasRealmRole(content, parts[1]);
+      }
+
+      return this.hasApplicationRole(content, parts[0], parts[1]);
+    }
+    return false;
+  };
+
+  hasRealmRole = (content, roleName) => {
+    // Make sure we have these properties before we check for a certain realm level role!
+    // Without this we attempt to access an undefined property on token
+    // for a user with no realm level roles.
+    if (!content.realm_access || !content.realm_access.roles) {
+      return false;
+    }
+
+    return (content.realm_access.roles.indexOf(roleName) >= 0);
+  };
+
+  hasApplicationRole = (content, appName, roleName) => {
+    let appRoles = content.resource_access[appName];
+    if (!appRoles) {
+      return false;
+    }
+    return (appRoles.roles.indexOf(roleName) >= 0);
+  };
+
 }
