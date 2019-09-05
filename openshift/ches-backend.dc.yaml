@@ -110,12 +110,12 @@ objects:
                 valueFrom:
                   secretKeyRef:
                     key: username
-                    name: "mssc-keycloak-secret"
+                    name: "mssc-keycloak-client"
               - name: KC_CLIENTSECRET
                 valueFrom:
                   secretKeyRef:
                     key: password
-                    name: "mssc-keycloak-secret"
+                    name: "mssc-keycloak-client"
               envFrom:
                 - configMapRef:
                     name: "ches-config"
