@@ -11,6 +11,7 @@ const API_ROOT = process.env.REACT_APP_API_ROOT || '';
 const MSG_SERVICE_PATH = `${API_ROOT}/api/v1`;
 // email message media types: we are allowed to send the body of the email as html or plain text
 const MEDIA_TYPES = ['text/plain', 'text/html'];
+const SENDER_EDITOR_ROLE = 'mssc:sender_editor';
 
 class EmailForm extends Component {
 
@@ -35,8 +36,10 @@ class EmailForm extends Component {
       info: '',
       error: '',
       dropWarning: '',
+      hasSenderEditor: false,
       form: {
         wasValidated: false,
+        sender: '',
         recipients: '',
         subject: '',
         plainText: '',
@@ -54,6 +57,7 @@ class EmailForm extends Component {
     };
 
     this.formSubmit = this.formSubmit.bind(this);
+    this.onChangeSender = this.onChangeSender.bind(this);
     this.onChangeSubject = this.onChangeSubject.bind(this);
     this.onChangeRecipients = this.onChangeRecipients.bind(this);
     this.onChangePlainText = this.onChangePlainText.bind(this);
@@ -72,6 +76,12 @@ class EmailForm extends Component {
     if (this.state.tab !== event.target.id) {
       this.setState({tab: event.target.id, info: '', error: ''});
     }
+  }
+
+  onChangeSender(event) {
+    let form = this.state.form;
+    form.sender = event.target.value;
+    this.setState({form: form, info: ''});
   }
 
   onChangeSubject(event) {
@@ -116,10 +126,20 @@ class EmailForm extends Component {
     return this.getMessageBody().length > 0;
   }
 
+  async hasSenderEditor() {
+    let user = await this.authService.getUser();
+    return this.authService.hasRole(user, SENDER_EDITOR_ROLE);
+  }
+
+  getDefaultSender(hasSenderEditor) {
+    return hasSenderEditor ? '' : this.state.config.sender;
+  }
+
   async componentDidMount() {
     let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = false;
     try {
       this.setState({busy: true});
+
 
       let health = await this.healthCheck();
       let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = health.data.cmsg;
@@ -130,9 +150,16 @@ class EmailForm extends Component {
 
       let tab = (credentialsGood && credentialsAuthenticated  && hasTopLevel  && hasCreateMessage  && cmsgApiHealthy) ? 'about' : 'sc';
 
+      let user = await this.authService.getUser();
+      let hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
+
+      let form = this.state.form;
+      form.sender = this.getDefaultSender(hasSenderEditor);
+
       this.setState({
         busy: false,
         tab: tab,
+        form: form,
         healthCheck: {
           credentialsGood: credentialsGood,
           credentialsAuthenticated: credentialsAuthenticated,
@@ -277,6 +304,7 @@ class EmailForm extends Component {
 
         let form = this.state.form;
         form.wasValidated = false;
+        form.sender = this.getDefaultSender(this.state.hasSenderEditor);
         form.recipients = '';
         form.subject = '';
         form.plainText = '';
@@ -351,7 +379,7 @@ class EmailForm extends Component {
 
     const email  = {
       mediaType: this.state.form.mediaType,
-      sender: this.state.config.sender,
+      sender: this.state.form.sender,
       subject: this.state.form.subject,
       message: this.getMessageBody(),
       recipients: this.state.form.recipients,
@@ -514,8 +542,8 @@ class EmailForm extends Component {
                         className={wasValidated ? 'was-validated' : ''}>
                         <div className="mb-3">
                           <label htmlFor="sender">Sender</label>
-                          <input type="text" className="form-control" name="sender"
-                            readOnly required value={this.state.config.sender}/>
+                          <input type="text" className="form-control" name="sender" placeholder={this.state.config.sender}
+                            readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender} onChange={this.onChangeSender}/>
                           <div className="invalid-feedback">
                 Email sender is required.
                           </div>
