@@ -160,6 +160,7 @@ class EmailForm extends Component {
         busy: false,
         tab: tab,
         form: form,
+        hasSenderEditor: hasSenderEditor,
         healthCheck: {
           credentialsGood: credentialsGood,
           credentialsAuthenticated: credentialsAuthenticated,
