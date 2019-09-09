@@ -7,7 +7,7 @@ export const IDENTITY_CONFIG = {
   response_type: 'id_token token',
   automaticSilentRenew: true,
   loadUserInfo: true,
-  scope: 'openid'
+  scope: 'openid mssc'
 };
 
 export const METADATA_OIDC = {

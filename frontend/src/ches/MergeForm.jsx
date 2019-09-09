@@ -6,6 +6,7 @@ import Dropzone from 'react-dropzone';
 import TinyMceEditor from '../htmlText/TinyMceEditor';
 import {AuthConsumer} from '../auth/AuthProvider';
 import XLSX from 'xlsx';
+import AuthService from '../auth/AuthService';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -19,11 +20,14 @@ const CONTEXTS_TYPES = ['xlsx', 'json'];
 
 // setting the front end to less than the backend payload, just to ensure delivery.
 const SERVER_BODYLIMIT = '20mb';
+const SENDER_EDITOR_ROLE = 'mssc:sender_editor';
 
 class MergeForm extends Component {
 
   constructor(props) {
     super(props);
+
+    this.authService = new AuthService();
 
     this.state = {
       busy: false,
@@ -40,6 +44,7 @@ class MergeForm extends Component {
         wasValidated: false,
         contexts: '',
         contextsType: CONTEXTS_TYPES[0],
+        sender: '',
         subject: '',
         plainText: '',
         priority: PRIORITIES[0],
@@ -55,6 +60,7 @@ class MergeForm extends Component {
     };
 
     this.formSubmit = this.formSubmit.bind(this);
+    this.onChangeSender = this.onChangeSender.bind(this);
     this.onChangeSubject = this.onChangeSubject.bind(this);
     this.onChangePlainText = this.onChangePlainText.bind(this);
     this.onChangeBodyType = this.onChangeBodyType.bind(this);
@@ -75,6 +81,12 @@ class MergeForm extends Component {
     if (this.state.tab !== event.target.id) {
       this.setState({tab: event.target.id, info: '', error: ''});
     }
+  }
+
+  onChangeSender(event) {
+    let form = this.state.form;
+    form.sender = event.target.value;
+    this.setState({form: form, info: ''});
   }
 
   onChangeSubject(event) {
@@ -174,7 +186,21 @@ class MergeForm extends Component {
     return result;
   }
 
+  async hasSenderEditor() {
+    let user = await this.authService.getUser();
+    return this.authService.hasRole(user, SENDER_EDITOR_ROLE);
+  }
+
+  getDefaultSender(hasSenderEditor) {
+    return hasSenderEditor ? '' : this.state.config.sender;
+  }
+
   async componentDidMount() {
+    let user = await this.authService.getUser();
+    const hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
+    let form = this.state.form;
+    form.sender = this.getDefaultSender(hasSenderEditor);
+    this.setState({hasSenderEditor: hasSenderEditor, form: form});
   }
 
   componentWillUnmount() {
@@ -202,6 +228,7 @@ class MergeForm extends Component {
 
       let form = this.state.form;
       form.wasValidated = false;
+      form.sender = this.getDefaultSender(this.state.hasSenderEditor);
       form.subject = '';
       form.plainText = '';
       form.htmlText = '';
@@ -265,6 +292,7 @@ class MergeForm extends Component {
   }
 
   async postEmailMerge() {
+    let user = await this.authService.getUser();
     let attachments = await Promise.all(this.state.form.files.map(file => this.convertFileToAttachment(file)));
 
     const email = {
@@ -273,7 +301,7 @@ class MergeForm extends Component {
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),
       encoding: BODY_ENCODING[0],
-      from: this.state.config.sender,
+      from: this.state.form.sender,
       priority: this.state.form.priority,
       subject: this.state.form.subject
     };
@@ -283,6 +311,7 @@ class MergeForm extends Component {
       JSON.stringify(email),
       {
         headers: {
+          'Authorization':`Bearer ${user.access_token}`,
           'Content-Type':'application/json'
         }
       }
@@ -449,8 +478,8 @@ class MergeForm extends Component {
                         className={wasValidated ? 'was-validated' : ''}>
                         <div className="mb-3">
                           <label htmlFor="sender">Sender</label>
-                          <input type="text" className="form-control" name="sender"
-                            readOnly required value={this.state.config.sender}/>
+                          <input type="text" className="form-control" name="sender" placeholder={this.state.config.sender}
+                            readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender} onChange={this.onChangeSender}/>
                           <div className="invalid-feedback">
                             Email sender is required.
                           </div>

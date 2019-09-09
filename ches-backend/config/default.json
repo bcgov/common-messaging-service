@@ -1,10 +1,16 @@
 {
+  "keycloak": {
+    "realm": "98r0z7rz",
+    "serverUrl": "https://sso-dev.pathfinder.gov.bc.ca/auth",
+    "clientId": "mssc"
+  },
   "server": {
     "logLevel": "info",
     "morganFormat": "dev",
     "port": "8888",
     "hostUrl": "http://localhost:8888",
-    "bodyLimit": "30mb"
+    "bodyLimit": "30mb",
+    "defaultSender": "NR.CommonServiceShowcase@gov.bc.ca"
   },
   "services": {
     "ches": {

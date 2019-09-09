@@ -23,8 +23,8 @@ Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-ema
 #### Secrets/Environment variables
 The following oc command creates a new secret, cmsg-client, that will be used to set environment variables in the application.
 
-cmsg-client.username sets environment variable CMSG_CLIENT_ID
-cmsg-client.password sets environment variable CMSG_CLIENT_SECRET
+cmsg-client.username sets environment variable CMSG_CLIENT_ID  
+cmsg-client.password sets environment variable CMSG_CLIENT_SECRET  
 
 ```sh
 oc create secret -n <namespace> generic cmsg-client --from-literal=username=<client id> --from-literal=password=<client secret> --type=kubernetes.io/basic-auth
@@ -32,11 +32,20 @@ oc create secret -n <namespace> generic cmsg-client --from-literal=username=<cli
 
 The following oc command creates a new secret, ches-client, that will be used to set environment variables in the application.  
 
-ches-client.username sets environment variable CHES_CLIENT_ID
-ches-client.password sets environment variable CHES_CLIENT_SECRET
+ches-client.username sets environment variable CHES_CLIENT_ID  
+ches-client.password sets environment variable CHES_CLIENT_SECRET  
 
 ```sh
 oc create secret -n <namespace> generic ches-client --from-literal=username=<ches client id> --from-literal=password=<ches client secret> --type=kubernetes.io/basic-auth
+```
+
+The following oc command creates a new secret, mssc-keycloak-client, that will be used to set environment variables in the application.  Note that the username/password (client id/secret) should be the same values and for the same client as we use when setting up the NR Email Microservice Config (see below).  
+
+mssc-keycloak-client.username sets environment variable KC_CLIENTID  
+mssc-keycloak-client.password sets environment variable KC_CLIENTSECRET  
+
+```sh
+oc create secret -n <namespace> generic mssc-keycloak-client --from-literal=username=<ches client id> --from-literal=password=<ches client secret> --type=kubernetes.io/basic-auth
 ```
 
 #### ConfigMap/Environment variables
@@ -52,8 +61,14 @@ The following oc command creates a new configmap, ches-config, that will be used
 oc create configmap -n <namespace> ches-config --from-literal=CHES_API_URL=<ches token url> --from-literal=CHES_TOKEN_URL=<ches authorization token url> --from-literal=SERVER_BODYLIMIT=30mb
 ```
 
+The following oc command creates a new configmap, mssc-keycloak-config, that will be used to set environment variables in the application for the CHES backend.
+
+```sh
+oc create configmap -n <namespace> mssc-keycloak-config --from-literal=KC_REALM=<KeyCloak Realm ID> --from-literal=KC_SERVERURL=<KeyCloak Auth. URL ex. https://sso-dev.pathfinder.gov.bc.ca/auth>
+```
+
 #### Backend - NR Email Microservice Config
-We also need to set up secrets and config map for our backend deployment.  See [User Authentication Secrets and ConfigMap](https://github.com/bcgov/nr-email-microservice/blob/master/README.md) in the microservice project for more.
+We also need to set up secrets and config map for our backend deployment.  See [User Authentication Secrets and ConfigMap](https://github.com/bcgov/nr-email-microservice/blob/master/README.md) in the microservice project for more.  Note that the username/password (client id/secret) should be the same values and for the same client as we use when setting up the MSSC - CHES Backend (mssc-keycloak-client secret) (see above).  
 
 ## Overview
 To deploy the 3 components (backend, frontend, reverse-proxy), into multiple enviroments (one per pull-request, one each for master in dev, test, and prod); we use a series of templates that allows us to configure these deployments.  We do our builds and deploys through Jenkins, and the coordination and configuration of the templates is done in Jenkinsfiles.  See [Jenkinsfile](../Jenkinsfile) and [Jenkinsfile.cicd](../Jenkinsfile.cicd) to see how the templates are used for building and deploying in our CI/CD pipeline.

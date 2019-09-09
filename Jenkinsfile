@@ -512,6 +512,8 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           openshift.selector('secret', 'ches-client').exists() &&
           openshift.selector('cm', 'cmsg-config').exists() &&
           openshift.selector('secret', 'cmsg-client').exists() &&
+          openshift.selector('cm', 'mssc-keycloak-config').exists() &&
+          openshift.selector('secret', 'mssc-keycloak-client').exists() &&
           openshift.selector('cm', 'email-microsrv-oidc').exists() &&
           openshift.selector('secret', 'email-microsrv-oidc-client').exists())) {
         echo 'Some ConfigMaps and/or Secrets are missing. Please consult the openshift readme for details.'
