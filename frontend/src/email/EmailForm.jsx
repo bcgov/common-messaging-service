@@ -493,11 +493,11 @@ class EmailForm extends Component {
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
 
     return (
-      <div className="container" id="maincontainer" >
+      <div className="container-fluid" id="maincontainer" >
 
         <div id="mainrow" className="row">
 
-          <div className="col-md-8 offset-md-2 order-md-1">
+          <div className="col-md-10 offset-md-1 order-md-1">
 
             <div className="text-center mt-4 mb-4" style={displayBusy}>
               <div className="spinner-grow text-primary" role="status">

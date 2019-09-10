@@ -11,6 +11,7 @@ import AuthService from '../auth/AuthService';
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
 const EMAIL_MERGE_URL = `${CHES_PATH}/email/merge`;
+const EMAIL_MERGE_PREVIEW_URL = `${CHES_PATH}/email/merge/preview`;
 const BODY_TYPES = ['text', 'html'];
 const PRIORITIES = ['normal', 'low', 'high'];
 const BODY_ENCODING = ['utf-8', 'base64', 'binary', 'hex'];
@@ -38,7 +39,8 @@ class MergeForm extends Component {
       excel: {
         cols: [],
         data: [],
-        headers: []
+        headers: [],
+        variables: []
       },
       form: {
         wasValidated: false,
@@ -52,6 +54,21 @@ class MergeForm extends Component {
         files: [],
         reset: false,
         bodyType: BODY_TYPES[0]
+      },
+      preview: {
+        allowed: false,
+        data: [],
+        index: -1,
+        length: -1,
+        email: {
+          bodyType: '',
+          body: '',
+          from: '',
+          subject: '',
+          bcc: [],
+          cc: [],
+          to: []
+        }
       },
       config: {
         attachmentsMaxSize: bytes.parse(SERVER_BODYLIMIT),
@@ -74,6 +91,10 @@ class MergeForm extends Component {
     this.removeFile = this.removeFile.bind(this);
     this.onSelectTab = this.onSelectTab.bind(this);
     this.onExcelFileDrop = this.onExcelFileDrop.bind(this);
+
+    this.loadPreview = this.loadPreview.bind(this);
+    this.onPreviewNext = this.onPreviewNext.bind(this);
+    this.onPreviewPrevious = this.onPreviewPrevious.bind(this);
   }
 
   onSelectTab(event) {
@@ -87,18 +108,27 @@ class MergeForm extends Component {
     let form = this.state.form;
     form.sender = event.target.value;
     this.setState({form: form, info: ''});
+    let preview = this.state.preview;
+    preview.allowed = this.canPreview();
+    this.setState({preview: preview});
   }
 
   onChangeSubject(event) {
     let form = this.state.form;
     form.subject = event.target.value;
     this.setState({form: form, info: ''});
+    let preview = this.state.preview;
+    preview.allowed = this.canPreview();
+    this.setState({preview: preview});
   }
 
   onChangePlainText(event) {
     let form = this.state.form;
     form.plainText = event.target.value;
     this.setState({form: form, info: ''});
+    let preview = this.state.preview;
+    preview.allowed = this.canPreview();
+    this.setState({preview: preview});
   }
 
   onChangeBodyType(event) {
@@ -125,12 +155,47 @@ class MergeForm extends Component {
     let excel = this.state.excel;
     excel = {cols: [], data: [], headers: []};
     this.setState({form: form, info: '', excel: excel});
+    let preview = this.state.preview;
+    preview.allowed = this.canPreview();
+    this.setState({preview: preview});
   }
 
   onEditorChange(content) {
     let form = this.state.form;
     form.htmlText = content;
     this.setState({form: form, info: ''});
+    let preview = this.state.preview;
+    preview.allowed = this.canPreview();
+    this.setState({preview: preview});
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  onPreviewNext(event) {
+    let preview = this.state.preview;
+    let index = preview.index;
+    let email = preview.email;
+    try {
+      preview.email = preview.data[preview.index+1];
+      preview.index += 1;
+    } catch(e) {
+      preview.index = index;
+      preview.email = email;
+    }
+    this.setState({preview: preview});
+  }
+  // eslint-disable-next-line no-unused-vars
+  onPreviewPrevious(event) {
+    let preview = this.state.preview;
+    let index = preview.index;
+    let email = preview.email;
+    try {
+      preview.email = preview.data[preview.index-1];
+      preview.index -= 1;
+    } catch(e) {
+      preview.index = index;
+      preview.email = email;
+    }
+    this.setState({preview: preview});
   }
 
   getMessageBody() {
@@ -184,6 +249,19 @@ class MergeForm extends Component {
       });
     }
     return result;
+  }
+
+  isEmpty(str) {
+    return (!str || /^\s*$/.test(str));
+  }
+
+  notEmpty(str) {
+    return !this.isEmpty(str);
+  }
+
+  canPreview() {
+    let form = this.state.form;
+    return this.hasMessageBody() && this.validateContexts() && this.notEmpty(form.sender) && this.notEmpty(form.subject);
   }
 
   async hasSenderEditor() {
@@ -243,7 +321,23 @@ class MergeForm extends Component {
         excel: {
           cols: [],
           data: [],
-          headers: []
+          headers: [],
+          variables: []
+        },
+        preview: {
+          allowed: false,
+          data: [],
+          index: -1,
+          length: -1,
+          email: {
+            bodyType: '',
+            body: '',
+            from: '',
+            subject: '',
+            bcc: [],
+            cc: [],
+            to: []
+          }
         }
       });
 
@@ -321,6 +415,52 @@ class MergeForm extends Component {
     return response.data;
   }
 
+  async loadPreview(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    let preview = this.state.preview;
+    if (preview.allowed) {
+      let postMergePreviewData = await this.postEmailMergePreview();
+      if (postMergePreviewData && postMergePreviewData.length > 0) {
+        preview.data = postMergePreviewData;
+        preview.length = preview.data.length;
+        preview.index = 0;
+        preview.email = preview.data[0];
+      }
+    }
+    this.setState({preview: preview});
+  }
+
+  async postEmailMergePreview() {
+    let user = await this.authService.getUser();
+
+    const email = {
+      contexts: this.getContextsObject(),
+      attachments: [],
+      bodyType: this.state.form.bodyType,
+      body: this.getMessageBody(),
+      encoding: BODY_ENCODING[0],
+      from: this.state.form.sender,
+      priority: this.state.form.priority,
+      subject: this.state.form.subject
+    };
+
+    const response = await axios.post(
+      EMAIL_MERGE_PREVIEW_URL,
+      JSON.stringify(email),
+      {
+        headers: {
+          'Authorization':`Bearer ${user.access_token}`,
+          'Content-Type':'application/json'
+        }
+      }
+    ).catch(e => {
+      throw Error('Could not deliver email to Showcase CHES API: ' + e.message);
+    });
+    return response.data;
+  }
+
   onFileDrop(acceptedFiles) {
     let dropWarning = '';
 
@@ -351,7 +491,7 @@ class MergeForm extends Component {
 
     const make_cols = refstr => {
       let o = [], C = XLSX.utils.decode_range(refstr).e.c + 1;
-      for(var i = 0; i < C; ++i) o[i] = {name:XLSX.utils.encode_col(i), key:i};
+      for(var i = 0; i < C; ++i) o[i] = {name: XLSX.utils.encode_col(i), key:i};
       return o;
     };
 
@@ -373,20 +513,39 @@ class MergeForm extends Component {
           /* Update state */
           let excel = this.state.excel;
           excel.cols = make_cols(ws['!ref']);
-          excel.headers = [data[0]];
+
+          // use the first row as headers, but do a little cleanup...
+          // replace whitespace with _
+          // remove all non-alphanumeric (except _)
+          // remove all repeated _ with single _
+          const headers = data[0].map(x => x.replace(/ /g, '_').replace(/\W/g, '').replace(/_+/g, '_').toUpperCase());
+          excel.variables = headers;
+          excel.headers = [headers];
+          // actual data is rows 2 onward
           excel.data = data.slice(1);
 
           let form = this.state.form;
           let contexts = [];
           excel.data.forEach(d => {
-            let r = {to:[], context: {}};
-            r.to = [d[0]];
-            // get the other fields...
-            let fields = excel.cols.slice(1);
+            let r = {to:[], cc:[], bcc:[], context: {}};
+            let fields = excel.cols;
             fields.forEach(f => {
-              r.context[excel.headers[0][f.key]] = d[f.key];
+              let fieldName = excel.headers[0][f.key];
+              switch(fieldName) {
+              case 'TO':
+                r.to = this.getAddresses(d[f.key]);
+                break;
+              case 'CC':
+                r.cc = this.getAddresses(d[f.key]);
+                break;
+              case 'BCC':
+                r.bcc = this.getAddresses(d[f.key]);
+                break;
+              default:
+                r.context[fieldName] = d[f.key];
+              }
             });
-            contexts.push(r);
+            if (this.validateContext(r)) contexts.push(r);
           });
           form.contexts = JSON.stringify(contexts, null, 2);
           this.setState({excel: excel, form: form });
@@ -395,7 +554,7 @@ class MergeForm extends Component {
       } catch (e) {
         let form = this.state.form;
         form.contexts = '';
-        this.setState({excel: {cols: [], headers: [], data: []}, form: form, error: 'Error parsing the Contexts file, please check the structure and format of the file.' });
+        this.setState({excel: {cols: [], headers: [], data: [], variables: []}, form: form, error: 'Error parsing the Contexts file, please check the structure and format of the file.' });
       }
     }
   }
@@ -434,11 +593,11 @@ class MergeForm extends Component {
     const contextsJsonButton = this.state.form.contextsType === CONTEXTS_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
 
     return (
-      <div className="container" id="maincontainer" >
+      <div className="container-fluid" id="maincontainer" >
 
         <div id="mainrow" className="row">
 
-          <div className="col-md-8 offset-md-2 order-md-1">
+          <div className="col-md-10 offset-md-1 order-md-1">
 
             <div className="text-center mt-4 mb-4" style={displayBusy}>
               <div className="spinner-grow text-primary" role="status">
@@ -524,16 +683,16 @@ class MergeForm extends Component {
                               onDrop={this.onExcelFileDrop}
                               accept="text/csv,.xls,application/msexcel,application/excel,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
                               {({getRootProps, getInputProps}) => (
-                                <div {...getRootProps({className: 'dropzone'})}>
+                                <div {...getRootProps({className: 'dropzone-excel'})}>
                                   <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
-                                  <i className="m-sm-auto fas fa-2x fa-file-excel upload-icon" alt="upload xlsx"></i>
+                                  <i className="m-sm-auto fas fa-2x  fa-file-excel upload-icon" alt="upload xlsx"></i>
                                 </div>
                               )}
                             </Dropzone>
                           </div>
                           <div className="col-sm-10">
                             <div className="table-responsive contexts-table">
-                              <table className="table table-striped">
+                              <table className="table table-striped table-ellipsis">
                                 {this.state.excel.headers.map((r,i) => <thead key={i}>{this.state.excel.cols.map(c => <th key={c.key}>{ r[c.key] }</th>)}</thead>)}
                                 <tbody>
                                   {this.state.excel.data.map((r,i) => <tr key={i}>{this.state.excel.cols.map(c => <td key={c.key}>{ r[c.key] }</td>)}</tr>)}
@@ -560,19 +719,43 @@ class MergeForm extends Component {
                             </label>
                           </div>
                         </div>
-                        <div style={plainTextDisplay} >
-                          <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.bodyType === BODY_TYPES[0]}
-                            value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+                        <div className="row" style={plainTextDisplay}>
+                          <div className="col-sm-2 variables-sidebar">
+                            <div className="table-responsive">
+                              <table className="table table-striped">
+                                <thead><th>Variables</th></thead>
+                                <tbody>
+                                  {this.state.excel.variables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div className="col-sm-10">
+                            <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.bodyType === BODY_TYPES[0]}
+                              value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+                          </div>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
                         </div>
-                        <div style={htmlTextDisplay} >
-                          <TinyMceEditor
-                            id="htmlText"
-                            reset={this.state.form.reset}
-                            onEditorChange={this.onEditorChange}
-                          />
+                        <div className="row" style={htmlTextDisplay} >
+                          <div className="col-sm-2 variables-sidebar">
+                            <div className="table-responsive">
+                              <table className="table table-striped">
+                                <thead><th>Variables</th></thead>
+                                <tbody>
+                                  {this.state.excel.variables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div className="col-sm-10">
+                            <TinyMceEditor
+                              id="htmlText"
+                              reset={this.state.form.reset}
+                              onEditorChange={this.onEditorChange}
+                            />
+                          </div>
                           <div className="invalid-tinymce" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
@@ -610,6 +793,58 @@ class MergeForm extends Component {
                         </div>
                         <hr className="mb-4"/>
                         <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
+
+                        <button type="button" className="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#previewModal" disabled={!this.state.preview.allowed} onClick={this.loadPreview} >
+                          Preview
+                        </button>
+
+                        <div className="modal fade" id="previewModal" tabIndex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true">
+                          <div className="modal-dialog" role="document">
+                            <div className="modal-content">
+                              <div className="modal-header">
+                                <h5 className="modal-title" id="previewModalLabel">Email Merge Preview</h5>
+                                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
+                                </button>
+                              </div>
+                              <div className="modal-body">
+                                <div>
+
+                                  <div className="mb-3">
+                                    <label htmlFor="sender">Sender</label>
+                                    <input type="text" className="form-control" value={this.state.preview.email.from} readOnly={true}/>
+                                  </div>
+
+                                  <div className="mb-3">
+                                    <label htmlFor="recipients">Recipients</label>
+                                    <input type="text" className="form-control" value={this.state.preview.email.to.join(',')} readOnly={true}/>
+                                  </div>
+
+                                  <div className="mb-3">
+                                    <label htmlFor="subject">Subject</label>
+                                    <input type="text" className="form-control" required value={this.state.preview.email.subject} readOnly={true}/>
+                                  </div>
+
+                                  <div className="mb-3" style={plainTextDisplay}>
+                                    <label className="mt-1">Body</label>
+                                    <textarea id="previewBodyText" className="form-control" value={this.state.preview.email.body} readOnly={true}></textarea>
+                                  </div>
+
+                                  <div className="mb-3" style={htmlTextDisplay}>
+                                    <label className="mt-1">Body</label>
+                                    <div id="previewBodyHtml" dangerouslySetInnerHTML={{ __html: `${this.state.preview.email.body}` }}></div>
+                                  </div>
+
+                                </div>
+                              </div>
+                              <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary btn-lg" disabled={this.state.preview.index === -1 || (this.state.preview.index <=  0)} onClick={this.onPreviewPrevious}>Previous</button>
+                                <button type="button" className="btn btn-secondary btn-lg" disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length-1)} onClick={this.onPreviewNext}>Next</button>
+                                <button type="button" className="btn btn-primary btn-lg" data-dismiss="modal">Close</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </form>);
                     } else {
                       return <div><p>You must be logged in to send emails.</p></div>;
@@ -624,6 +859,7 @@ class MergeForm extends Component {
                 <br/>
                 <p>MSSC demonstrates how an application can leverage the Common Hosted Email Service&#39;s (CHES) ability to deliver emails by calling <a href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
                 <p>The common-hosted-email-service requires a Service Client that has previously been created in the environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get OK</a> for more on how to get access to CHES.</p>
+
               </div>
 
             </div>
