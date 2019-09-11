@@ -1,6 +1,6 @@
 # Natural Resources Messaging Service Showcase
 
-This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG).  We use [React.js](https://reactjs.org) for the frontend UI.
+This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG) and the Common Hosted Email Service (CHES).  We use [React.js](https://reactjs.org) for the frontend UI.
 
 ## Directory Structure
 
