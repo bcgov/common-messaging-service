@@ -487,6 +487,34 @@ class MergeForm extends Component {
     this.setState({form: form, dropWarning: dropWarning});
   }
 
+  toCamelCase(str) {
+    // lowercase the str
+    // replace whitespace with _
+    // remove all non-alphanumeric (except _)
+    // remove all repeated _ with single _
+    // remove all _ and change next character to Uppercase
+    const result = str.toLowerCase().replace(/ /g, '_').replace(/\W/g, '').replace(/_+/g, '_').replace(/_([a-z])/g,function(m){return m.toUpperCase();}).replace(/_/g,'');
+    return result;
+  }
+
+  makeHeaderUnique(existing, original, val = original, count = 0) {
+    if (existing.includes(val)) {
+      count++;
+      return this.makeHeaderUnique(existing, original, `${original}${count}`, count);
+    } else {
+      return val;
+    }
+  }
+
+  sanitizeHeaders(headers) {
+    let result = [];
+    headers.forEach(c => {
+      let h = this.makeHeaderUnique(result, this.toCamelCase(c));
+      result.push(h);
+    });
+    return result;
+  }
+
   onExcelFileDrop(acceptedFiles) {
 
     const make_cols = refstr => {
@@ -514,12 +542,8 @@ class MergeForm extends Component {
           let excel = this.state.excel;
           excel.cols = make_cols(ws['!ref']);
 
-          // use the first row as headers, but do a little cleanup...
-          // replace whitespace with _
-          // remove all non-alphanumeric (except _)
-          // remove all repeated _ with single _
-          const headers = data[0].map(x => x.replace(/ /g, '_').replace(/\W/g, '').replace(/_+/g, '_').toUpperCase());
-          excel.variables = headers;
+          const headers = this.sanitizeHeaders(data[0]);
+          excel.variables = headers.map(x => `{{${x}}}`); //just show as nunjucks syntax for now...
           excel.headers = [headers];
           // actual data is rows 2 onward
           excel.data = data.slice(1);
@@ -532,14 +556,17 @@ class MergeForm extends Component {
             fields.forEach(f => {
               let fieldName = excel.headers[0][f.key];
               switch(fieldName) {
-              case 'TO':
+              case 'to':
                 r.to = this.getAddresses(d[f.key]);
+                r.context.to = r.to;
                 break;
-              case 'CC':
+              case 'cc':
                 r.cc = this.getAddresses(d[f.key]);
+                r.context.cc = r.cc;
                 break;
-              case 'BCC':
+              case 'bcc':
                 r.bcc = this.getAddresses(d[f.key]);
+                r.context.bcc = r.bcc;
                 break;
               default:
                 r.context[fieldName] = d[f.key];
@@ -722,7 +749,7 @@ class MergeForm extends Component {
                         <div className="row" style={plainTextDisplay}>
                           <div className="col-sm-2 variables-sidebar">
                             <div className="table-responsive">
-                              <table className="table table-striped">
+                              <table className="table">
                                 <thead><th>Variables</th></thead>
                                 <tbody>
                                   {this.state.excel.variables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
@@ -741,7 +768,7 @@ class MergeForm extends Component {
                         <div className="row" style={htmlTextDisplay} >
                           <div className="col-sm-2 variables-sidebar">
                             <div className="table-responsive">
-                              <table className="table table-striped">
+                              <table className="table">
                                 <thead><th>Variables</th></thead>
                                 <tbody>
                                   {this.state.excel.variables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
@@ -792,12 +819,16 @@ class MergeForm extends Component {
                           {this.state.dropWarning}
                         </div>
                         <hr className="mb-4"/>
-                        <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
-
-                        <button type="button" className="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#previewModal" disabled={!this.state.preview.allowed} onClick={this.loadPreview} >
-                          Preview
-                        </button>
-
+                        <div className="row">
+                          <div className="col-sm-6">
+                            <button type="button" className="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#previewModal" disabled={!this.state.preview.allowed} onClick={this.loadPreview} >
+                              Preview
+                            </button>
+                          </div>
+                          <div className="col-sm-6">
+                            <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
+                          </div>
+                        </div>
                         <div className="modal fade" id="previewModal" tabIndex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true">
                           <div className="modal-dialog" role="document">
                             <div className="modal-content">
@@ -834,13 +865,21 @@ class MergeForm extends Component {
                                     <label className="mt-1">Body</label>
                                     <div id="previewBodyHtml" dangerouslySetInnerHTML={{ __html: `${this.state.preview.email.body}` }}></div>
                                   </div>
-
+                                  <hr className="mb-4"/>
+                                  <div className="row">
+                                    <div className="col-sm-3">
+                                      <button type="button" className="btn btn-secondary btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index <=  0)} onClick={this.onPreviewPrevious}>Previous</button>
+                                    </div>
+                                    <div className="col-sm-3">
+                                      <button type="button" className="btn btn-secondary btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length-1)} onClick={this.onPreviewNext}>Next</button>
+                                    </div>
+                                    <div className="offset-sm-3 col-sm-3">
+                                      <button type="button" className="btn btn-primary btn-lg btn-block" data-dismiss="modal">Close</button>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                               <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary btn-lg" disabled={this.state.preview.index === -1 || (this.state.preview.index <=  0)} onClick={this.onPreviewPrevious}>Previous</button>
-                                <button type="button" className="btn btn-secondary btn-lg" disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length-1)} onClick={this.onPreviewNext}>Next</button>
-                                <button type="button" className="btn btn-primary btn-lg" data-dismiss="modal">Close</button>
                               </div>
                             </div>
                           </div>
