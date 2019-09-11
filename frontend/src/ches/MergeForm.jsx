@@ -105,75 +105,75 @@ class MergeForm extends Component {
   }
 
   onChangeSender(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.sender = event.target.value;
     this.setState({form: form, info: ''});
-    let preview = this.state.preview;
+    const preview = this.state.preview;
     preview.allowed = this.canPreview();
     this.setState({preview: preview});
   }
 
   onChangeSubject(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.subject = event.target.value;
     this.setState({form: form, info: ''});
-    let preview = this.state.preview;
+    const preview = this.state.preview;
     preview.allowed = this.canPreview();
     this.setState({preview: preview});
   }
 
   onChangePlainText(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.plainText = event.target.value;
     this.setState({form: form, info: ''});
-    let preview = this.state.preview;
+    const preview = this.state.preview;
     preview.allowed = this.canPreview();
     this.setState({preview: preview});
   }
 
   onChangeBodyType(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.bodyType = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeContextsType(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.contextsType = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangePriority(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.priority = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeContexts(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.contexts =  event.target.value;
     let excel = this.state.excel;
     excel = {cols: [], data: [], headers: []};
     this.setState({form: form, info: '', excel: excel});
-    let preview = this.state.preview;
+    const preview = this.state.preview;
     preview.allowed = this.canPreview();
     this.setState({preview: preview});
   }
 
   onEditorChange(content) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.htmlText = content;
     this.setState({form: form, info: ''});
-    let preview = this.state.preview;
+    const preview = this.state.preview;
     preview.allowed = this.canPreview();
     this.setState({preview: preview});
   }
 
   // eslint-disable-next-line no-unused-vars
   onPreviewNext(event) {
-    let preview = this.state.preview;
-    let index = preview.index;
-    let email = preview.email;
+    const preview = this.state.preview;
+    const index = preview.index;
+    const email = preview.email;
     try {
       preview.email = preview.data[preview.index+1];
       preview.index += 1;
@@ -185,9 +185,9 @@ class MergeForm extends Component {
   }
   // eslint-disable-next-line no-unused-vars
   onPreviewPrevious(event) {
-    let preview = this.state.preview;
-    let index = preview.index;
-    let email = preview.email;
+    const preview = this.state.preview;
+    const index = preview.index;
+    const email = preview.email;
     try {
       preview.email = preview.data[preview.index-1];
       preview.index -= 1;
@@ -265,7 +265,7 @@ class MergeForm extends Component {
   }
 
   async hasSenderEditor() {
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
     return this.authService.hasRole(user, SENDER_EDITOR_ROLE);
   }
 
@@ -274,9 +274,9 @@ class MergeForm extends Component {
   }
 
   async componentDidMount() {
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
     const hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
-    let form = this.state.form;
+    const form = this.state.form;
     form.sender = this.getDefaultSender(hasSenderEditor);
     this.setState({hasSenderEditor: hasSenderEditor, form: form});
   }
@@ -301,7 +301,7 @@ class MergeForm extends Component {
 
       this.setState({busy: true});
 
-      let postMergeData = await this.postEmailMerge();
+      const postMergeData = await this.postEmailMerge();
       messageIds = postMergeData.map(d => d.messageId);
 
       let form = this.state.form;
@@ -386,8 +386,8 @@ class MergeForm extends Component {
   }
 
   async postEmailMerge() {
-    let user = await this.authService.getUser();
-    let attachments = await Promise.all(this.state.form.files.map(file => this.convertFileToAttachment(file)));
+    const user = await this.authService.getUser();
+    const attachments = await Promise.all(this.state.form.files.map(file => this.convertFileToAttachment(file)));
 
     const email = {
       contexts: this.getContextsObject(),
@@ -419,7 +419,7 @@ class MergeForm extends Component {
     event.preventDefault();
     event.stopPropagation();
 
-    let preview = this.state.preview;
+    const preview = this.state.preview;
     if (preview.allowed) {
       let postMergePreviewData = await this.postEmailMergePreview();
       if (postMergePreviewData && postMergePreviewData.length > 0) {
@@ -433,7 +433,7 @@ class MergeForm extends Component {
   }
 
   async postEmailMergePreview() {
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
 
     const email = {
       contexts: this.getContextsObject(),
@@ -464,10 +464,10 @@ class MergeForm extends Component {
   onFileDrop(acceptedFiles) {
     let dropWarning = '';
 
-    let form = this.state.form;
+    const form = this.state.form;
     let files = form.files;
 
-    let attachmentsSize = files.length === 0 ? 0 : files.map(f => f.size).reduce((a,b) => a + b);
+    const attachmentsSize = files.length === 0 ? 0 : files.map(f => f.size).reduce((a,b) => a + b);
     let attachmentsSizeAvailable = this.state.config.attachmentsMaxSize - attachmentsSize;
 
     // accept smaller files first...
@@ -587,8 +587,8 @@ class MergeForm extends Component {
   }
 
   removeFile(filename) {
-    let form = this.state.form;
-    let files = form.files.filter((f) => { return f.name !== filename; });
+    const form = this.state.form;
+    const files = form.files.filter((f) => { return f.name !== filename; });
     form.files = files;
     this.setState({form: form, dropWarning: ''});
   }
@@ -712,7 +712,7 @@ class MergeForm extends Component {
                               {({getRootProps, getInputProps}) => (
                                 <div {...getRootProps({className: 'dropzone-excel'})}>
                                   <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
-                                  <i className="m-sm-auto fas fa-2x  fa-file-excel upload-icon" alt="upload xlsx"></i>
+                                  <i className="m-sm-auto fas fa-2x fa-file-excel upload-icon" alt="upload xlsx"></i>
                                 </div>
                               )}
                             </Dropzone>
@@ -821,7 +821,7 @@ class MergeForm extends Component {
                         <hr className="mb-4"/>
                         <div className="row">
                           <div className="col-sm-6">
-                            <button type="button" className="btn btn-secondary btn-lg btn-block" data-toggle="modal" data-target="#previewModal" disabled={!this.state.preview.allowed} onClick={this.loadPreview} >
+                            <button type="button" className="btn btn-info btn-lg btn-block" data-toggle="modal" data-target="#previewModal" disabled={!this.state.preview.allowed} onClick={this.loadPreview} >
                               Preview
                             </button>
                           </div>
@@ -868,10 +868,10 @@ class MergeForm extends Component {
                                   <hr className="mb-4"/>
                                   <div className="row">
                                     <div className="col-sm-3">
-                                      <button type="button" className="btn btn-secondary btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index <=  0)} onClick={this.onPreviewPrevious}>Previous</button>
+                                      <button type="button" className="btn btn-info btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index <=  0)} onClick={this.onPreviewPrevious}>Previous</button>
                                     </div>
                                     <div className="col-sm-3">
-                                      <button type="button" className="btn btn-secondary btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length-1)} onClick={this.onPreviewNext}>Next</button>
+                                      <button type="button" className="btn btn-info btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length-1)} onClick={this.onPreviewNext}>Next</button>
                                     </div>
                                     <div className="offset-sm-3 col-sm-3">
                                       <button type="button" className="btn btn-primary btn-lg btn-block" data-dismiss="modal">Close</button>

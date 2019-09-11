@@ -78,55 +78,55 @@ class ChesForm extends Component {
   }
 
   onChangeSender(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.sender = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeSubject(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.subject = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeRecipients(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.recipients = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeCC(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.cc = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeBCC(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.bcc = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangePlainText(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.plainText = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeBodyType(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.bodyType = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangePriority(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.priority = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onEditorChange(content) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.htmlText = content;
     this.setState({form: form, info: ''});
   }
@@ -152,7 +152,7 @@ class ChesForm extends Component {
   }
 
   async hasSenderEditor() {
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
     return this.authService.hasRole(user, SENDER_EDITOR_ROLE);
   }
 
@@ -161,9 +161,9 @@ class ChesForm extends Component {
   }
 
   async componentDidMount() {
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
     const hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
-    let form = this.state.form;
+    const form = this.state.form;
     form.sender = this.getDefaultSender(hasSenderEditor);
     this.setState({hasSenderEditor: hasSenderEditor, form: form});
   }
@@ -187,7 +187,7 @@ class ChesForm extends Component {
 
       this.setState({busy: true});
 
-      let postEmailData = await this.postEmail();
+      const postEmailData = await this.postEmail();
       messageId = postEmailData.messageId;
 
       let form = this.state.form;
@@ -253,8 +253,8 @@ class ChesForm extends Component {
   }
 
   async postEmail() {
-    let user = await this.authService.getUser();
-    let attachments = await Promise.all(this.state.form.files.map(file => this.convertFileToAttachment(file)));
+    const user = await this.authService.getUser();
+    const attachments = await Promise.all(this.state.form.files.map(file => this.convertFileToAttachment(file)));
 
     const email = {
       attachments: attachments,
@@ -287,10 +287,10 @@ class ChesForm extends Component {
   onFileDrop(acceptedFiles) {
     let dropWarning = '';
 
-    let form = this.state.form;
+    const form = this.state.form;
     let files = form.files;
 
-    let attachmentsSize = files.length === 0 ? 0 : files.map(f => f.size).reduce((a,b) => a + b);
+    const attachmentsSize = files.length === 0 ? 0 : files.map(f => f.size).reduce((a,b) => a + b);
     let attachmentsSizeAvailable = this.state.config.attachmentsMaxSize - attachmentsSize;
 
     // accept smaller files first...
@@ -311,8 +311,8 @@ class ChesForm extends Component {
   }
 
   removeFile(filename) {
-    let form = this.state.form;
-    let files = form.files.filter((f) => { return f.name !== filename; });
+    const form = this.state.form;
+    const files = form.files.filter((f) => { return f.name !== filename; });
     form.files = files;
     this.setState({form: form, dropWarning: ''});
   }
