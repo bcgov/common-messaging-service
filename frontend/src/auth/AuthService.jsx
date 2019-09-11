@@ -34,6 +34,7 @@ export default class AuthService {
 
     this.UserManager.events.addSilentRenewError(e => {
       console.log('silent renew error', e.message);
+      this.logout();
     });
 
     this.UserManager.events.addAccessTokenExpired(() => {
@@ -49,6 +50,7 @@ export default class AuthService {
       })
       .catch(err => {
         console.log(err);
+        this.logout();
       });
   };
 
@@ -105,6 +107,7 @@ export default class AuthService {
       })
       .catch(err => {
         console.log(err);
+        this.logout();
       });
   };
 
@@ -117,10 +120,12 @@ export default class AuthService {
   };
 
   logout = () => {
+    console.log('> logout');
     this.UserManager.signoutRedirect({
       id_token_hint: localStorage.getItem('id_token')
     });
     this.UserManager.clearStaleState();
+    console.log('< logout');
   };
 
   signoutRedirectCallback = () => {

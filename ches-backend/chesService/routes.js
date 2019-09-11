@@ -4,7 +4,7 @@ const {relatedLinks} = require('../components/relatedLinks');
 const routes = require('express').Router();
 const wrap = require('../middleware/wrap');
 
-const {sendEmail, emailMerge} = require('./controller');
+const {sendEmail, emailMerge, emailPreview} = require('./controller');
 
 // this is our authorization middleware function
 // users always need the email_sender role to send
@@ -38,6 +38,10 @@ routes.post('/email', keycloak.protect(protectEmail), wrap(async function (req, 
 
 routes.post('/email/merge', keycloak.protect(protectEmail), wrap(async function (req, res, next) {
   await emailMerge(req, res, next);
+}));
+
+routes.post('/email/merge/preview', keycloak.protect(protectEmail), wrap(async function (req, res, next) {
+  await emailPreview(req, res, next);
 }));
 
 module.exports = routes;

@@ -79,37 +79,37 @@ class EmailForm extends Component {
   }
 
   onChangeSender(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.sender = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeSubject(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.subject = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeRecipients(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.recipients = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangePlainText(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.plainText = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onChangeMediaType(event) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.mediaType = event.target.value;
     this.setState({form: form, info: ''});
   }
 
   onEditorChange(content) {
-    let form = this.state.form;
+    const form = this.state.form;
     form.htmlText = content;
     this.setState({form: form, info: ''});
   }
@@ -127,7 +127,7 @@ class EmailForm extends Component {
   }
 
   async hasSenderEditor() {
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
     return this.authService.hasRole(user, SENDER_EDITOR_ROLE);
   }
 
@@ -141,19 +141,19 @@ class EmailForm extends Component {
       this.setState({busy: true});
 
 
-      let health = await this.healthCheck();
+      const health = await this.healthCheck();
       let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = health.data.cmsg;
 
-      let config = await this.getConfig();
+      const config = await this.getConfig();
       let {fileSize, fileCount, fileType} = config.data.attachments;
       let {defaultSender} = config.data;
 
-      let tab = (credentialsGood && credentialsAuthenticated  && hasTopLevel  && hasCreateMessage  && cmsgApiHealthy) ? 'about' : 'sc';
+      const tab = (credentialsGood && credentialsAuthenticated  && hasTopLevel  && hasCreateMessage  && cmsgApiHealthy) ? 'about' : 'sc';
 
-      let user = await this.authService.getUser();
-      let hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
+      const user = await this.authService.getUser();
+      const hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
 
-      let form = this.state.form;
+      const form = this.state.form;
       form.sender = this.getDefaultSender(hasSenderEditor);
 
       this.setState({
@@ -182,13 +182,13 @@ class EmailForm extends Component {
       this.interval = setInterval(async () => {
         await this.healthCheckTab();
 
-        let messageIds = this.state.messageIds || [];
-        let statuses = this.state.statuses || [];
+        const messageIds = this.state.messageIds || [];
+        const statuses = this.state.statuses || [];
         try {
           await this.asyncForEach(messageIds, async (id) => {
             let statusResponse = await this.fetchStatus(id);
             statusResponse.data.statuses.forEach(s => {
-              let status = s;
+              const status = s;
               // don't add it to list of results if it's already there (same message, same recipient, same type of status)
               if (!statuses.find(x => { return x.messageId === s.messageId && x.recipient === s.recipient && x.type === s.type; })) {
                 status.key = Math.random().toString(36);
@@ -237,7 +237,7 @@ class EmailForm extends Component {
 
   async healthCheckTab() {
     try {
-      let health = await this.healthCheck();
+      const health = await this.healthCheck();
       let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = health.data.cmsg;
       this.setState({
         healthCheck: {
@@ -282,28 +282,28 @@ class EmailForm extends Component {
       this.setState({form: form, info: ''});
       return;
     }
-    let messageIds = this.state.messageIds;
-    let statuses = this.state.statuses;
+    const messageIds = this.state.messageIds;
+    const statuses = this.state.statuses;
     let messageId = undefined;
     try {
       if (this.state.healthCheck.hasCreateMessage) {
         this.setState({busy: true});
-        let filenames = await this.uploadFiles();
-        let postEmailData = await this.postEmail(filenames);
+        const filenames = await this.uploadFiles();
+        const postEmailData = await this.postEmail(filenames);
 
         messageId = postEmailData.data.messageId;
         messageIds.push(messageId);
 
         // a single status response returns an email status for each recipient
         // break it down to a row item per msg & recipient
-        let statusResponse = await this.fetchStatus(messageId);
+        const statusResponse = await this.fetchStatus(messageId);
         statusResponse.data.statuses.forEach(s => {
           let status = s;
           status.key = Math.random().toString(36); //need a display key for rendering
           statuses.unshift(status);
         });
 
-        let form = this.state.form;
+        const form = this.state.form;
         form.wasValidated = false;
         form.sender = this.getDefaultSender(this.state.hasSenderEditor);
         form.recipients = '';
@@ -322,7 +322,7 @@ class EmailForm extends Component {
       }
       // this will show the info message, and prep the tinymce editor for next submit...
       // kind of lame, but event triggering and states are a bit out of wack in production (minified mode)
-      let form = this.state.form;
+      const form = this.state.form;
       form.reset = false;
       this.setState({
         busy: false,
@@ -352,7 +352,7 @@ class EmailForm extends Component {
       return [];
     }
 
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
 
     const data = new FormData();
     for (const file of this.state.form.files) {
@@ -403,7 +403,7 @@ class EmailForm extends Component {
   }
 
   async fetchStatus(messageId) {
-    let user = await this.authService.getUser();
+    const user = await this.authService.getUser();
 
     const response = await axios.get(`${MSG_SERVICE_PATH}/email/${messageId}/status`,{
       headers: {
@@ -423,12 +423,12 @@ class EmailForm extends Component {
   }
 
   async refreshStatuses() {
-    let messageIds = this.state.messageIds || [];
-    let statuses = this.state.statuses || [];
+    const messageIds = this.state.messageIds || [];
+    const statuses = this.state.statuses || [];
     await this.asyncForEach(messageIds, async (id) => {
-      let statusResponse = await this.fetchStatus(id);
+      const statusResponse = await this.fetchStatus(id);
       statusResponse.data.statuses.forEach(s => {
-        let status = s;
+        const status = s;
         status.key = Math.random().toString(36);
         statuses.unshift(status);
       });
@@ -439,8 +439,8 @@ class EmailForm extends Component {
 
   onFileDrop(acceptedFiles) {
     let dropWarning = `Attachments are limited to ${this.state.config.attachmentsMaxFiles} total files of type ${this.state.config.attachmentsAcceptedType} and under ${bytes.format(this.state.config.attachmentsMaxSize)} in size.`;
-    let form = this.state.form;
-    let files = form.files;
+    const form = this.state.form;
+    const files = form.files;
     acceptedFiles.forEach((value) => {
       if (-1 === form.files.findIndex((f) => { return f.name === value.name && f.lastModified === value.lastModified && f.size === value.size; })) {
         files.push(value);
@@ -456,8 +456,8 @@ class EmailForm extends Component {
   }
 
   removeFile(filename) {
-    let form = this.state.form;
-    let files = form.files.filter((f) => { return f.name !== filename; });
+    const form = this.state.form;
+    const files = form.files.filter((f) => { return f.name !== filename; });
     form.files = files;
     this.setState({form: form});
   }
@@ -493,11 +493,11 @@ class EmailForm extends Component {
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
 
     return (
-      <div className="container" id="maincontainer" >
+      <div className="container-fluid" id="maincontainer" >
 
         <div id="mainrow" className="row">
 
-          <div className="col-md-8 offset-md-2 order-md-1">
+          <div className="col-md-10 offset-md-1 order-md-1">
 
             <div className="text-center mt-4 mb-4" style={displayBusy}>
               <div className="spinner-grow text-primary" role="status">

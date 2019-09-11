@@ -28,7 +28,7 @@ const emailMerge = async (req, res, next) => {
   try {
     data = req.body;
 
-    let response = await svc.merge(data);
+    const response = await svc.merge(data);
     // for now just assume that we are getting 200
     res.status(200).json(response);
   } catch (error) {
@@ -36,4 +36,19 @@ const emailMerge = async (req, res, next) => {
   }
 };
 
-module.exports = {sendEmail, emailMerge};
+
+const emailPreview = async (req, res, next) => {
+  const svc = getService();
+  let data = {};
+  try {
+    data = req.body;
+
+    const response = await svc.preview(data);
+    // for now just assume that we are getting 200
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {sendEmail, emailMerge, emailPreview};
