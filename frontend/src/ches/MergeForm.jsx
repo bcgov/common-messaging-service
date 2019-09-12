@@ -18,6 +18,7 @@ const BODY_ENCODING = ['utf-8', 'base64', 'binary', 'hex'];
 const ATTACHMENT_ENCODING = ['base64', 'binary', 'hex'];
 
 const CONTEXTS_TYPES = ['xlsx', 'json'];
+const EXCEL_PARSING_DATENF = 'YYYY-MM-DD';
 
 // setting the front end to less than the backend payload, just to ensure delivery.
 const SERVER_BODYLIMIT = '20mb';
@@ -39,9 +40,9 @@ class MergeForm extends Component {
       excel: {
         cols: [],
         data: [],
-        headers: [],
-        variables: []
+        headers: []
       },
+      contextVariables: [],
       form: {
         wasValidated: false,
         contexts: '',
@@ -152,9 +153,13 @@ class MergeForm extends Component {
   onChangeContexts(event) {
     const form = this.state.form;
     form.contexts =  event.target.value;
+
+    const contextVariables = this.contextsToVariables(form.contexts);
+
     let excel = this.state.excel;
     excel = {cols: [], data: [], headers: []};
-    this.setState({form: form, info: '', excel: excel});
+    this.setState({form: form, info: '', excel: excel, contextVariables: contextVariables});
+
     const preview = this.state.preview;
     preview.allowed = this.canPreview();
     this.setState({preview: preview});
@@ -177,6 +182,8 @@ class MergeForm extends Component {
     try {
       preview.email = preview.data[preview.index+1];
       preview.index += 1;
+      if (!preview.email.cc) preview.email.cc = [];
+      if (!preview.email.bcc) preview.email.bcc = [];
     } catch(e) {
       preview.index = index;
       preview.email = email;
@@ -191,6 +198,8 @@ class MergeForm extends Component {
     try {
       preview.email = preview.data[preview.index-1];
       preview.index -= 1;
+      if (!preview.email.cc) preview.email.cc = [];
+      if (!preview.email.bcc) preview.email.bcc = [];
     } catch(e) {
       preview.index = index;
       preview.email = email;
@@ -259,6 +268,24 @@ class MergeForm extends Component {
     return !this.isEmpty(str);
   }
 
+  contextsToVariables(contexts) {
+    let result = [];
+    if (contexts) {
+      try {
+        let objs = [];
+        if (typeof contexts === 'string' || contexts instanceof String) {
+          objs = JSON.parse(contexts.trim());
+        } else {
+          objs = contexts;
+        }
+        result = Object.keys(objs[0].context).map(k => `{{${k}}}`); //nunjucks syntax
+      } catch(e) {
+        result = [];
+      }
+    }
+    return result;
+  }
+
   canPreview() {
     let form = this.state.form;
     return this.hasMessageBody() && this.validateContexts() && this.notEmpty(form.sender) && this.notEmpty(form.subject);
@@ -318,11 +345,11 @@ class MergeForm extends Component {
       this.setState({
         busy:false,
         form: form,
+        contextVariables: [],
         excel: {
           cols: [],
           data: [],
-          headers: [],
-          variables: []
+          headers: []
         },
         preview: {
           allowed: false,
@@ -427,6 +454,8 @@ class MergeForm extends Component {
         preview.length = preview.data.length;
         preview.index = 0;
         preview.email = preview.data[0];
+        if (!preview.email.cc) preview.email.cc = [];
+        if (!preview.email.bcc) preview.email.bcc = [];
       }
     }
     this.setState({preview: preview});
@@ -498,6 +527,9 @@ class MergeForm extends Component {
   }
 
   makeHeaderUnique(existing, original, val = original, count = 0) {
+    if ('' == original) {
+      original = val = 'var';
+    }
     if (existing.includes(val)) {
       count++;
       return this.makeHeaderUnique(existing, original, `${original}${count}`, count);
@@ -531,22 +563,23 @@ class MergeForm extends Component {
         reader.onload = (e) => {
           /* Parse data */
           const bstr = e.target.result;
-          const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array'});
+          const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array', cellDates: true, dateNF: EXCEL_PARSING_DATENF});
           /* Get first worksheet */
           const wsname = wb.SheetNames[0];
           const ws = wb.Sheets[wsname];
           /* Convert array of arrays */
-          const data = XLSX.utils.sheet_to_json(ws, {header:1});
+          const data = XLSX.utils.sheet_to_json(ws, {header:1, raw:false});
 
           /* Update state */
           let excel = this.state.excel;
           excel.cols = make_cols(ws['!ref']);
 
           const headers = this.sanitizeHeaders(data[0]);
-          excel.variables = headers.map(x => `{{${x}}}`); //just show as nunjucks syntax for now...
           excel.headers = [headers];
           // actual data is rows 2 onward
           excel.data = data.slice(1);
+          // eslint-disable-next-line no-console
+          console.log(excel.data);
 
           let form = this.state.form;
           let contexts = [];
@@ -575,7 +608,10 @@ class MergeForm extends Component {
             if (this.validateContext(r)) contexts.push(r);
           });
           form.contexts = JSON.stringify(contexts, null, 2);
-          this.setState({excel: excel, form: form });
+
+          const contextVariables = this.contextsToVariables(form.contexts);
+
+          this.setState({excel: excel, form: form, contextVariables: contextVariables});
         };
         if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
       } catch (e) {
@@ -752,7 +788,7 @@ class MergeForm extends Component {
                               <table className="table">
                                 <thead><th>Variables</th></thead>
                                 <tbody>
-                                  {this.state.excel.variables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
+                                  {this.state.contextVariables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
                                 </tbody>
                               </table>
                             </div>
@@ -771,7 +807,7 @@ class MergeForm extends Component {
                               <table className="table">
                                 <thead><th>Variables</th></thead>
                                 <tbody>
-                                  {this.state.excel.variables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
+                                  {this.state.contextVariables.map((r,i) => <tr key={i}><td key={i}>{ r }</td></tr>)}
                                 </tbody>
                               </table>
                             </div>
@@ -849,6 +885,16 @@ class MergeForm extends Component {
                                   <div className="mb-3">
                                     <label htmlFor="recipients">Recipients</label>
                                     <input type="text" className="form-control" value={this.state.preview.email.to.join(',')} readOnly={true}/>
+                                  </div>
+
+                                  <div className="mb-3">
+                                    <label htmlFor="recipients">CC</label>
+                                    <input type="text" className="form-control" value={this.state.preview.email.cc.join(',')} readOnly={true}/>
+                                  </div>
+
+                                  <div className="mb-3">
+                                    <label htmlFor="recipients">BCC</label>
+                                    <input type="text" className="form-control" value={this.state.preview.email.bcc.join(',')} readOnly={true}/>
                                   </div>
 
                                   <div className="mb-3">
