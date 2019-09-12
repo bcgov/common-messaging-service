@@ -1,10 +1,11 @@
 # Natural Resources Messaging Service Showcase
 
-This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG) and the Common Hosted Email Service (CHES).  We use [React.js](https://reactjs.org) for the frontend UI.
+This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice) and the Common Hosted Email Service ([CHES](https://github.com/bcgov/common-hosted-email-service.git)).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG).  The [ches-backend](ches-backend/README.md) provides an example implementation for use of the CHES API.  We use [React.js](https://reactjs.org) for the frontend UI.
 
 ## Directory Structure
 
     .github/                   - PR and Issue templates
+    ches-backend/              - Node JS backend for calling CHES API
     frontend/                  - ReactJS Client Application codebase
     openshift/                 - OpenShift-deployment specific files
     reverse-proxy/             - Reverse Proxy code
@@ -17,6 +18,7 @@ This repository contains code to provide a simple UI for the [NR Email Microserv
 
 ## Documentation
 
+* [Common Hosted Email Service (CHES)](https://github.com/bcgov/common-hosted-email-service/blob/master/README.md)
 * [Email Microservice](https://github.com/bcgov/nr-email-microservice/blob/master/README.md)
 * [CMSG Overview](https://github.com/bcgov/nr-email-microservice/blob/master/docs/overview.md)
 * [CMSG Developer Guide](https://github.com/bcgov/nr-email-microservice/blob/master/docs/developer-guide.md)
