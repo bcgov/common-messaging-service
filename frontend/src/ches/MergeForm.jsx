@@ -154,8 +154,7 @@ class MergeForm extends Component {
     const form = this.state.form;
     form.contexts =  event.target.value;
 
-    let contextVariables = this.state.contextVariables;
-    contextVariables = this.contextsToVariables(form.contexts);
+    const contextVariables = this.contextsToVariables(form.contexts);
 
     let excel = this.state.excel;
     excel = {cols: [], data: [], headers: []};
@@ -610,8 +609,7 @@ class MergeForm extends Component {
           });
           form.contexts = JSON.stringify(contexts, null, 2);
 
-          let contextVariables = this.state.contextVariables;
-          contextVariables = this.contextsToVariables(form.contexts);
+          const contextVariables = this.contextsToVariables(form.contexts);
 
           this.setState({excel: excel, form: form, contextVariables: contextVariables});
         };
