@@ -17,7 +17,7 @@ class Header extends Component {
           <a href="https://gov.bc.ca" alt="British Columbia">
             <img src="./images/logo-banner.svg" alt="Go to the Government of British Columbia website" className="logo-banner" />
           </a>
-          <h1>Common Messaging Service Showcase App</h1>
+          <h1>Messaging Services Showcase</h1>
         </div>
         <div className="other">
           <AuthConsumer>
