@@ -588,7 +588,7 @@ class MergeForm extends Component {
             let fields = excel.cols;
             fields.forEach(f => {
               let fieldName = excel.headers[0][f.key];
-              switch(fieldName) {
+              switch(fieldName.toLowerCase()) {
               case 'to':
                 r.to = this.getAddresses(d[f.key]);
                 r.context.to = r.to;
@@ -655,6 +655,8 @@ class MergeForm extends Component {
     const contextsJsonDisplay = this.state.form.contextsType === CONTEXTS_TYPES[1] ? {} : {display: 'none'};
     const contextsJsonButton = this.state.form.contextsType === CONTEXTS_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
 
+    const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
+
     return (
       <div className="container-fluid" id="maincontainer" >
 
@@ -700,7 +702,7 @@ class MergeForm extends Component {
                         className={wasValidated ? 'was-validated' : ''}>
                         <div className="mb-3">
                           <label htmlFor="sender">Sender</label>
-                          <input type="text" className="form-control" name="sender" placeholder={this.state.config.sender}
+                          <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
                             readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender} onChange={this.onChangeSender}/>
                           <div className="invalid-feedback">
                             Email sender is required.
@@ -869,32 +871,48 @@ class MergeForm extends Component {
                           <div className="modal-dialog" role="document">
                             <div className="modal-content">
                               <div className="modal-header">
-                                <h5 className="modal-title" id="previewModalLabel">Email Merge Preview</h5>
-                                <button type="button" className="close" data-dismiss="modal" aria-label="Close">
-                                  <span aria-hidden="true">&times;</span>
-                                </button>
+                                <div className="container">
+                                  <div className="row">
+                                    <div className="col-sm-6">
+                                      <h5 className="modal-title" id="previewModalLabel">Email Merge Preview</h5>
+                                    </div>
+                                    <div className="offset-sm-1 col-sm-2">
+                                      <button type="button" className="btn btn-info btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index <=  0)} onClick={this.onPreviewPrevious}>&lt;</button>
+                                    </div>
+                                    <div className="col-sm-2">
+                                      <button type="button" className="btn btn-info btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length-1)} onClick={this.onPreviewNext}>&gt;</button>
+                                    </div>
+                                    <div className="col-sm-1">
+                                      <button type="button" className="close btn btn-lg btn-block" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                               <div className="modal-body">
                                 <div>
+                                  <div className="row">
+                                    <div className="mb-3 col-sm-6">
+                                      <label>Sender</label>
+                                      <input type="text" className="form-control" value={this.state.preview.email.from} readOnly={true}/>
+                                    </div>
 
-                                  <div className="mb-3">
-                                    <label htmlFor="sender">Sender</label>
-                                    <input type="text" className="form-control" value={this.state.preview.email.from} readOnly={true}/>
+                                    <div className="mb-3 col-sm-6">
+                                      <label>Recipients</label>
+                                      <input type="text" className="form-control" value={this.state.preview.email.to.join(',')} readOnly={true}/>
+                                    </div>
                                   </div>
+                                  <div className="row">
+                                    <div className="mb-3 col-sm-6">
+                                      <label>CC</label>
+                                      <input type="text" className="form-control" value={this.state.preview.email.cc.join(',')} readOnly={true}/>
+                                    </div>
 
-                                  <div className="mb-3">
-                                    <label htmlFor="recipients">Recipients</label>
-                                    <input type="text" className="form-control" value={this.state.preview.email.to.join(',')} readOnly={true}/>
-                                  </div>
-
-                                  <div className="mb-3">
-                                    <label htmlFor="recipients">CC</label>
-                                    <input type="text" className="form-control" value={this.state.preview.email.cc.join(',')} readOnly={true}/>
-                                  </div>
-
-                                  <div className="mb-3">
-                                    <label htmlFor="recipients">BCC</label>
-                                    <input type="text" className="form-control" value={this.state.preview.email.bcc.join(',')} readOnly={true}/>
+                                    <div className="mb-3 col-sm-6">
+                                      <label>BCC</label>
+                                      <input type="text" className="form-control" value={this.state.preview.email.bcc.join(',')} readOnly={true}/>
+                                    </div>
                                   </div>
 
                                   <div className="mb-3">
@@ -911,7 +929,10 @@ class MergeForm extends Component {
                                     <label className="mt-1">Body</label>
                                     <div id="previewBodyHtml" dangerouslySetInnerHTML={{ __html: `${this.state.preview.email.body}` }}></div>
                                   </div>
-                                  <hr className="mb-4"/>
+                                </div>
+                              </div>
+                              <div className="modal-footer">
+                                <div className="container">
                                   <div className="row">
                                     <div className="col-sm-3">
                                       <button type="button" className="btn btn-info btn-lg btn-block" disabled={this.state.preview.index === -1 || (this.state.preview.index <=  0)} onClick={this.onPreviewPrevious}>Previous</button>
@@ -924,8 +945,6 @@ class MergeForm extends Component {
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                              <div className="modal-footer">
                               </div>
                             </div>
                           </div>
@@ -944,7 +963,6 @@ class MergeForm extends Component {
                 <br/>
                 <p>MSSC demonstrates how an application can leverage the Common Hosted Email Service&#39;s (CHES) ability to deliver emails by calling <a href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
                 <p>The common-hosted-email-service requires a Service Client that has previously been created in the environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get OK</a> for more on how to get access to CHES.</p>
-
               </div>
 
             </div>

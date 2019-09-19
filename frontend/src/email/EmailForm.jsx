@@ -492,6 +492,8 @@ class EmailForm extends Component {
     const scTabDisplay = this.state.tab === 'sc' ? {} : {display: 'none'};
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
 
+    const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
+
     return (
       <div className="container-fluid" id="maincontainer" >
 
@@ -543,7 +545,7 @@ class EmailForm extends Component {
                         className={wasValidated ? 'was-validated' : ''}>
                         <div className="mb-3">
                           <label htmlFor="sender">Sender</label>
-                          <input type="text" className="form-control" name="sender" placeholder={this.state.config.sender}
+                          <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
                             readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender} onChange={this.onChangeSender}/>
                           <div className="invalid-feedback">
                 Email sender is required.

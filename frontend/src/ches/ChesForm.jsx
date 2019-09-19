@@ -338,6 +338,8 @@ class ChesForm extends Component {
     const emailTabDisplay = this.state.tab === 'email' ? {} : {display: 'none'};
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
 
+    const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
+
     return (
       <div className="container-fluid" id="maincontainer" >
 
@@ -381,12 +383,24 @@ class ChesForm extends Component {
                     if (isAuthenticated()) {
                       return (<form id="emailForm" noValidate onSubmit={this.formSubmit}
                         className={wasValidated ? 'was-validated' : ''}>
-                        <div className="mb-3">
-                          <label htmlFor="sender">Sender</label>
-                          <input type="text" className="form-control" name="sender" placeholder={this.state.config.sender}
-                            readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender} onChange={this.onChangeSender}/>
-                          <div className="invalid-feedback">
+                        <div className='row'>
+                          <div className="mb-3 col-sm-6">
+                            <label htmlFor="sender">Sender</label>
+                            <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
+                              readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender} onChange={this.onChangeSender}/>
+                            <div className="invalid-feedback">
                             Email sender is required.
+                            </div>
+                          </div>
+                          <div className="mb-3 col-sm-6">
+                            <label htmlFor="priority">Priority</label>
+                            <select className="form-control col-sm-3" value={this.state.form.priority} onChange={this.onChangePriority}>
+                              {PRIORITIES.map(p => {
+                                return (
+                                  <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                                );
+                              })}
+                            </select>
                           </div>
                         </div>
 
@@ -400,18 +414,19 @@ class ChesForm extends Component {
                           </div>
                         </div>
 
-                        <div className="mb-3">
-                          <label htmlFor="cc">CC</label>
-                          <input type="text" className="form-control" name="cc"
-                            placeholder="you@example.com (separate multiple by comma)"
-                            value={this.state.form.cc} onChange={this.onChangeCC}/>
-                        </div>
-
-                        <div className="mb-3">
-                          <label htmlFor="bcc">BCC</label>
-                          <input type="text" className="form-control" name="bcc"
-                            placeholder="you@example.com (separate multiple by comma)"
-                            value={this.state.form.bcc} onChange={this.onChangeBCC}/>
+                        <div className='row'>
+                          <div className="mb-3 col-sm-6">
+                            <label htmlFor="cc">CC</label>
+                            <input type="text" className="form-control" name="cc"
+                              placeholder="you@example.com (separate multiple by comma)"
+                              value={this.state.form.cc} onChange={this.onChangeCC}/>
+                          </div>
+                          <div className="mb-3 col-sm-6">
+                            <label htmlFor="bcc">BCC</label>
+                            <input type="text" className="form-control" name="bcc"
+                              placeholder="you@example.com (separate multiple by comma)"
+                              value={this.state.form.bcc} onChange={this.onChangeBCC}/>
+                          </div>
                         </div>
 
                         <div className="mb-3">
@@ -421,17 +436,6 @@ class ChesForm extends Component {
                           <div className="invalid-feedback">
                             Subject is required.
                           </div>
-                        </div>
-
-                        <div className="mb-3">
-                          <label htmlFor="priority">Priority</label>
-                          <select className="form-control col-sm-3" value={this.state.form.priority} onChange={this.onChangePriority}>
-                            {PRIORITIES.map(p => {
-                              return (
-                                <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
-                              );
-                            })}
-                          </select>
                         </div>
 
                         <div className="mb-3 row">
