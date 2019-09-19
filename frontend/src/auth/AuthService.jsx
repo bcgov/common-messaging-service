@@ -57,7 +57,13 @@ export default class AuthService {
   getUser = async () => {
     const user = await this.UserManager.getUser();
     if (!user) {
-      return await this.UserManager.signinRedirectCallback();
+      try {
+        return await this.UserManager.signinRedirectCallback();
+      } catch (e) {
+        // can get a no state in response error, user not found, token is bad, login is bad.
+        // basically, they are logged out/expired, but we don't know it, so send through signin.
+        this.signinRedirect();
+      }
     }
     return user;
   };
