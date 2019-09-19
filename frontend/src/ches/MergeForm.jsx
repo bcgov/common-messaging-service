@@ -156,9 +156,7 @@ class MergeForm extends Component {
 
     const contextVariables = this.contextsToVariables(form.contexts);
 
-    let excel = this.state.excel;
-    excel = {cols: [], data: [], headers: []};
-    this.setState({form: form, info: '', excel: excel, contextVariables: contextVariables});
+    this.setState({form: form, info: '', excel: {cols: [], data: [], headers: []}, contextVariables: contextVariables});
 
     const preview = this.state.preview;
     preview.allowed = this.canPreview();
