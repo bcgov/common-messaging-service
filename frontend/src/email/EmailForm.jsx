@@ -5,7 +5,9 @@ import Dropzone from 'react-dropzone';
 import AuthService from '../auth/AuthService';
 import axios from 'axios';
 import bytes from 'bytes';
-import { AuthConsumer } from '../auth/AuthProvider';
+import {AuthConsumer} from '../auth/AuthProvider';
+import AlertDisplay from '../utils/AlertDisplay';
+import GetUserError from '../auth/GetUserError';
 
 const API_ROOT = process.env.REACT_APP_API_ROOT || '';
 const MSG_SERVICE_PATH = `${API_ROOT}/api/v1`;
@@ -35,6 +37,7 @@ class EmailForm extends Component {
       statuses: [],
       info: '',
       error: '',
+      userError: '',
       dropWarning: '',
       hasSenderEditor: false,
       form: {
@@ -135,6 +138,17 @@ class EmailForm extends Component {
     return hasSenderEditor ? '' : this.state.config.sender;
   }
 
+  errorHandler(e) {
+    let error = '';
+    let userError = '';
+    if (e && e instanceof GetUserError) {
+      userError = 'There appears to be an issue with login credentials.  Please logout and back in to renew your session.';
+    } else if (e) {
+      error = e.message;
+    }
+    return {error, userError};
+  }
+
   async componentDidMount() {
     let {credentialsGood, credentialsAuthenticated, hasTopLevel, hasCreateMessage, cmsgApiHealthy} = false;
     try {
@@ -148,7 +162,7 @@ class EmailForm extends Component {
       let {fileSize, fileCount, fileType} = config.data.attachments;
       let {defaultSender} = config.data;
 
-      const tab = (credentialsGood && credentialsAuthenticated  && hasTopLevel  && hasCreateMessage  && cmsgApiHealthy) ? 'about' : 'sc';
+      const tab = (credentialsGood && credentialsAuthenticated && hasTopLevel && hasCreateMessage && cmsgApiHealthy) ? 'about' : 'sc';
 
       const user = await this.authService.getUser();
       const hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
@@ -190,7 +204,9 @@ class EmailForm extends Component {
             statusResponse.data.statuses.forEach(s => {
               const status = s;
               // don't add it to list of results if it's already there (same message, same recipient, same type of status)
-              if (!statuses.find(x => { return x.messageId === s.messageId && x.recipient === s.recipient && x.type === s.type; })) {
+              if (!statuses.find(x => {
+                return x.messageId === s.messageId && x.recipient === s.recipient && x.type === s.type;
+              })) {
                 status.key = Math.random().toString(36);
                 statuses.unshift(status);
               }
@@ -206,6 +222,7 @@ class EmailForm extends Component {
       }, 60000);
 
     } catch (e) {
+      let {error, userError} = this.errorHandler(e);
       this.setState({
         busy: false,
         tab: 'sc',
@@ -216,7 +233,8 @@ class EmailForm extends Component {
           hasCreateMessage: hasCreateMessage,
           cmsgApiHealthy: cmsgApiHealthy
         },
-        error: e.message
+        error: error,
+        userError: userError
       });
     }
   }
@@ -314,7 +332,7 @@ class EmailForm extends Component {
         form.mediaType = MEDIA_TYPES[0];
         form.reset = true;
         this.setState({
-          busy:false,
+          busy: false,
           form: form,
           messageIds,
           statuses: statuses
@@ -336,10 +354,12 @@ class EmailForm extends Component {
     } catch (e) {
       let form = this.state.form;
       form.wasValidated = false;
+      let {error, userError} = this.errorHandler(e);
       this.setState({
         busy: false,
         form: form,
-        error: e.message
+        error: error,
+        userError: userError
       });
     }
 
@@ -364,8 +384,8 @@ class EmailForm extends Component {
       data,
       {
         headers: {
-          'Authorization':`Bearer ${user.access_token}`,
-          'Content-Type':'application/json'
+          'Authorization': `Bearer ${user.access_token}`,
+          'Content-Type': 'application/json'
         }
       }
     ).catch(e => {
@@ -378,7 +398,7 @@ class EmailForm extends Component {
   async postEmail(filenames) {
     let user = await this.authService.getUser();
 
-    const email  = {
+    const email = {
       mediaType: this.state.form.mediaType,
       sender: this.state.form.sender,
       subject: this.state.form.subject,
@@ -392,8 +412,8 @@ class EmailForm extends Component {
       JSON.stringify(email),
       {
         headers: {
-          'Authorization':`Bearer ${user.access_token}`,
-          'Content-Type':'application/json'
+          'Authorization': `Bearer ${user.access_token}`,
+          'Content-Type': 'application/json'
         }
       }
     ).catch(e => {
@@ -405,10 +425,10 @@ class EmailForm extends Component {
   async fetchStatus(messageId) {
     const user = await this.authService.getUser();
 
-    const response = await axios.get(`${MSG_SERVICE_PATH}/email/${messageId}/status`,{
+    const response = await axios.get(`${MSG_SERVICE_PATH}/email/${messageId}/status`, {
       headers: {
-        'Authorization':`Bearer ${user.access_token}`,
-        'Content-Type':'application/json'
+        'Authorization': `Bearer ${user.access_token}`,
+        'Content-Type': 'application/json'
       }
     }).catch(e => {
       throw Error('Could not connect to Showcase Messaging API for email status check: ' + e.message);
@@ -442,7 +462,9 @@ class EmailForm extends Component {
     const form = this.state.form;
     const files = form.files;
     acceptedFiles.forEach((value) => {
-      if (-1 === form.files.findIndex((f) => { return f.name === value.name && f.lastModified === value.lastModified && f.size === value.size; })) {
+      if (-1 === form.files.findIndex((f) => {
+        return f.name === value.name && f.lastModified === value.lastModified && f.size === value.size;
+      })) {
         files.push(value);
       }
     });
@@ -457,7 +479,9 @@ class EmailForm extends Component {
 
   removeFile(filename) {
     const form = this.state.form;
-    const files = form.files.filter((f) => { return f.name !== filename; });
+    const files = form.files.filter((f) => {
+      return f.name !== filename;
+    });
     form.files = files;
     this.setState({form: form});
   }
@@ -473,8 +497,6 @@ class EmailForm extends Component {
     const createMsgIndClass = this.state.healthCheck.hasCreateMessage ? 'icon good' : 'icon bad';
     const healthCheckIndClass = this.state.healthCheck.cmsgApiHealthy ? 'icon good' : 'icon bad';
     const emailFormDisplay = this.state.healthCheck.hasCreateMessage ? {} : {display: 'none'};
-    const successDisplay = (this.state.info && this.state.info.length > 0) ? {} : {display: 'none'};
-    const errorDisplay = (this.state.error && this.state.error.length > 0) ? {} : {display: 'none'};
     const plainTextDisplay = this.state.form.mediaType === MEDIA_TYPES[0] ? {} : {display: 'none'};
     const plainTextButton = this.state.form.mediaType === MEDIA_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const htmlTextDisplay = this.state.form.mediaType === MEDIA_TYPES[1] ? {} : {display: 'none'};
@@ -495,7 +517,7 @@ class EmailForm extends Component {
     const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
 
     return (
-      <div className="container-fluid" id="maincontainer" >
+      <div className="container-fluid" id="maincontainer">
 
         <div id="mainrow" className="row">
 
@@ -514,12 +536,9 @@ class EmailForm extends Component {
             </div>
 
             <div style={displayNotBusy}>
-              <div className="alert alert-success" style={successDisplay}>
-                {this.state.info}
-              </div>
-              <div className="alert alert-danger" style={errorDisplay}>
-                {this.state.error}
-              </div>
+              <AlertDisplay alertType='success' title='CMSG Service Success' message={this.state.info}/>
+              <AlertDisplay alertType='danger' title='CMSG Service Error' message={this.state.error}/>
+              <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
 
               <ul className="nav nav-tabs">
                 <li className="nav-item">
@@ -539,35 +558,37 @@ class EmailForm extends Component {
               <div id="emailTab" style={emailTabDisplay}>
                 <div className="mb-4"></div>
                 <AuthConsumer>
-                  {({ isAuthenticated }) => {
+                  {({isAuthenticated}) => {
                     if (isAuthenticated()) {
                       return (<form id="emailForm" noValidate style={emailFormDisplay} onSubmit={this.formSubmit}
-                        className={wasValidated ? 'was-validated' : ''}>
+                                    className={wasValidated ? 'was-validated' : ''}>
                         <div className="mb-3">
                           <label htmlFor="sender">Sender</label>
                           <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
-                            readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender} onChange={this.onChangeSender}/>
+                                 readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
+                                 onChange={this.onChangeSender}/>
                           <div className="invalid-feedback">
-                Email sender is required.
+                            Email sender is required.
                           </div>
                         </div>
 
                         <div className="mb-3">
                           <label htmlFor="recipients">Recipients</label>
                           <input type="text" className="form-control" name="recipients"
-                            placeholder="you@example.com (separate multiple by comma)" required
-                            value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
+                                 placeholder="you@example.com (separate multiple by comma)" required
+                                 value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
                           <div className="invalid-feedback">
-                One or more email recipients required.
+                            One or more email recipients required.
                           </div>
                         </div>
 
                         <div className="mb-3">
                           <label htmlFor="subject">Subject</label>
-                          <input type="text" className="form-control" name="subject" required value={this.state.form.subject}
-                            onChange={this.onChangeSubject}/>
+                          <input type="text" className="form-control" name="subject" required
+                                 value={this.state.form.subject}
+                                 onChange={this.onChangeSubject}/>
                           <div className="invalid-feedback">
-                Subject is required.
+                            Subject is required.
                           </div>
                         </div>
 
@@ -577,28 +598,32 @@ class EmailForm extends Component {
                           </div>
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]} value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType} /> Plain Text
+                              <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]}
+                                     value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType}/> Plain
+                              Text
                             </label>
                             <label className={htmlTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]} value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType} /> HTML
+                              <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]}
+                                     value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType}/> HTML
                             </label>
                           </div>
                         </div>
-                        <div style={plainTextDisplay} >
-                          <textarea id="messageText" name="plainText" className="form-control" required={this.state.form.mediaType === MEDIA_TYPES[0]}
-                            value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+                        <div style={plainTextDisplay}>
+                          <textarea id="messageText" name="plainText" className="form-control"
+                                    required={this.state.form.mediaType === MEDIA_TYPES[0]}
+                                    value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
-                Body is required.
+                            Body is required.
                           </div>
                         </div>
-                        <div style={htmlTextDisplay} >
+                        <div style={htmlTextDisplay}>
                           <TinyMceEditor
                             id="htmlText"
                             reset={this.state.form.reset}
                             onEditorChange={this.onEditorChange}
                           />
                           <div className="invalid-tinymce" style={bodyErrorDisplay}>
-                Body is required.
+                            Body is required.
                           </div>
                         </div>
 
@@ -625,7 +650,11 @@ class EmailForm extends Component {
                                 <div key={file.name} className="row">
                                   <div className="col-sm-7 dropzone-file m-auto">{file.name}</div>
                                   <div className="col-sm-1 dropzone-file m-auto">{bytes.format(file.size)}</div>
-                                  <div className="col-sm-1 m-auto"><button type="button" className="btn btn-sm" onClick={() => { this.removeFile(file.name); }}><i className="far fa-trash-alt"></i></button></div>
+                                  <div className="col-sm-1 m-auto">
+                                    <button type="button" className="btn btn-sm" onClick={() => {
+                                      this.removeFile(file.name);
+                                    }}><i className="far fa-trash-alt"></i></button>
+                                  </div>
                                 </div>
                               );
                             })}
@@ -647,29 +676,29 @@ class EmailForm extends Component {
               <div id="statusTab" style={statusTabDisplay}>
                 <div className="mb-4"></div>
                 <AuthConsumer>
-                  {({ isAuthenticated }) => {
+                  {({isAuthenticated}) => {
                     if (isAuthenticated()) {
                       return (
                         <div id="messageStatuses">
                           <div className="table-responsive-sm">
                             <table className="table table-striped table-sm">
                               <thead>
-                                <tr>
-                                  <th>Message ID</th>
-                                  <th>Recipient</th>
-                                  <th>Status</th>
-                                </tr>
+                              <tr>
+                                <th>Message ID</th>
+                                <th>Recipient</th>
+                                <th>Status</th>
+                              </tr>
                               </thead>
                               <tbody>
-                                {this.state.statuses.map((status, idx) => {
-                                  return (
-                                    <tr key={idx}>
-                                      <td>{status.messageId}</td>
-                                      <td>{status.recipient}</td>
-                                      <td>{status.type}</td>
-                                    </tr>
-                                  );
-                                })}
+                              {this.state.statuses.map((status, idx) => {
+                                return (
+                                  <tr key={idx}>
+                                    <td>{status.messageId}</td>
+                                    <td>{status.recipient}</td>
+                                    <td>{status.type}</td>
+                                  </tr>
+                                );
+                              })}
                               </tbody>
                             </table>
                           </div>
@@ -707,9 +736,14 @@ class EmailForm extends Component {
                 <div className="mb-4"></div>
                 <h3>Welcome to MSSC - the Common Messaging Service Showcase Application</h3>
                 <br/>
-                <p>MSSC demonstrates how an application can leverage the Common Messaging Service&#39;s (CMSG) ability to deliver emails by calling <a href="https://github.com/bcgov/nr-email-microservice">nr-email-microservice</a>.
-                The <em>nr-email-microservice</em> illustrates how to call the CMSG API, and shows how a team can easily stand up their own CMSG service in OpenShift.</p>
-                <p>The nr-email-microservice requires a Service Client that has previously been created in the environment with appropriate CMSG scopes; see <a href="https://github.com/bcgov/nr-get-token">Get OK</a> for more on how to get access to CMSG.</p>
+                <p>MSSC demonstrates how an application can leverage the Common Messaging Service&#39;s (CMSG) ability
+                  to deliver emails by calling <a
+                    href="https://github.com/bcgov/nr-email-microservice">nr-email-microservice</a>.
+                  The <em>nr-email-microservice</em> illustrates how to call the CMSG API, and shows how a team can
+                  easily stand up their own CMSG service in OpenShift.</p>
+                <p>The nr-email-microservice requires a Service Client that has previously been created in the
+                  environment with appropriate CMSG scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
+                    OK</a> for more on how to get access to CMSG.</p>
               </div>
 
             </div>

@@ -24,7 +24,7 @@ app.options('*', cors());
 app.use(morgan(config.get('server.morganFormat')));
 
 log.level = config.get('server.logLevel');
-log.addLevel('debug', 1500, { fg: 'green' });
+log.addLevel('debug', 1500, {fg: 'green'});
 
 // Print out configuration settings in verbose startup
 log.verbose(utils.prettyStringify(config));
@@ -44,14 +44,14 @@ app.use(function (err, req, res, next) {
   if (err instanceof Problem) {
     err.send(res, null);
   } else {
-    let p = new Problem(500, 'MSSC-CHES Server Error', { detail: err.message } );
+    let p = new Problem(500, 'MSSC-CHES Server Error', {detail: err.message});
     p.send(res, null);
   }
 });
 
 // Handle 404
 app.use(function (req, res) {
-  let p = new Problem(404, 'Page Not Found', { detail: req.originalUrl } );
+  let p = new Problem(404, 'Page Not Found', {detail: req.originalUrl});
   p.send(res, null);
 });
 

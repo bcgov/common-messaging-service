@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import './TinyMceEditor.css';
 
@@ -12,7 +12,7 @@ import 'tinymce/plugins/table';
 class TinyMceEditor extends Component {
   constructor() {
     super();
-    this.state = { editor: null, reset: false };
+    this.state = {editor: null, reset: false};
   }
 
   componentDidMount() {
@@ -21,9 +21,9 @@ class TinyMceEditor extends Component {
       skin: false,
       content_css: false,
       plugins: 'wordcount table',
-      height : '480px',
+      height: '480px',
       setup: editor => {
-        this.setState({ editor });
+        this.setState({editor});
         editor.on('keyup change', () => {
           const content = editor.getContent();
           this.props.onEditorChange(content);
