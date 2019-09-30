@@ -18,7 +18,7 @@ class Header extends Component {
         <div className="banner">
           <a href="https://gov.bc.ca" alt="British Columbia">
             <img src="./images/logo-banner.svg" alt="Go to the Government of British Columbia website"
-                 className="logo-banner"/>
+              className="logo-banner"/>
           </a>
           <h1>Messaging Services Showcase</h1>
         </div>

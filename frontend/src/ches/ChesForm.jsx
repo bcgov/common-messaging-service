@@ -10,6 +10,8 @@ import ChesValidationError from './ChesValidationError';
 import ChesAlertList from './ChesAlertList';
 import AlertDisplay from '../utils/AlertDisplay';
 import GetUserError from '../auth/GetUserError';
+import moment from 'moment';
+import {DatetimePickerTrigger} from 'rc-datetime-picker';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -51,7 +53,8 @@ class ChesForm extends Component {
         htmlText: '',
         files: [],
         reset: false,
-        bodyType: BODY_TYPES[0]
+        bodyType: BODY_TYPES[0],
+        moment: moment()
       },
       config: {
         attachmentsMaxSize: bytes.parse(SERVER_BODYLIMIT),
@@ -68,6 +71,7 @@ class ChesForm extends Component {
     this.onChangePlainText = this.onChangePlainText.bind(this);
     this.onChangeBodyType = this.onChangeBodyType.bind(this);
     this.onChangePriority = this.onChangePriority.bind(this);
+    this.onChangeMoment = this.onChangeMoment.bind(this);
 
     this.onEditorChange = this.onEditorChange.bind(this);
 
@@ -81,6 +85,12 @@ class ChesForm extends Component {
     if (this.state.tab !== event.target.id) {
       this.setState({tab: event.target.id, info: '', error: ''});
     }
+  }
+
+  onChangeMoment(moment) {
+    const form = this.state.form;
+    form.moment = moment;
+    this.setState({form: form, info: ''});
   }
 
   onChangeSender(event) {
@@ -227,6 +237,7 @@ class ChesForm extends Component {
       form.files = [];
       form.bodyType = BODY_TYPES[0];
       form.priority = PRIORITIES[0];
+      form.moment = moment();
       form.reset = true;
       this.setState({
         busy: false,
@@ -295,7 +306,8 @@ class ChesForm extends Component {
       from: this.state.form.sender,
       priority: this.state.form.priority,
       to: this.getAddresses(this.state.form.recipients),
-      subject: this.state.form.subject
+      subject: this.state.form.subject,
+      delayTS: this.state.form.moment.utc().valueOf()
     };
 
     const response = await axios.post(
@@ -375,6 +387,12 @@ class ChesForm extends Component {
 
     const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
 
+    const shortcuts = {
+      'Yesterday': moment().subtract(1, 'days'),
+      'Today': moment(),
+      'Tomorrow': moment().add(1, 'days')
+    };
+
     return (
       <div className="container-fluid" id="maincontainer">
 
@@ -395,8 +413,8 @@ class ChesForm extends Component {
 
             <div style={displayNotBusy}>
               <ChesAlertList title="CHES Validation Errors"
-                             message="The following validation errors were returned from CHES." alertType="danger"
-                             errors={this.state.apiValidationErrors}/>
+                message="The following validation errors were returned from CHES." alertType="danger"
+                errors={this.state.apiValidationErrors}/>
               <AlertDisplay alertType='success' title='CHES Service Success' message={this.state.info}/>
               <AlertDisplay alertType='danger' title='CHES Service Error' message={this.state.error}/>
               <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
@@ -416,21 +434,21 @@ class ChesForm extends Component {
                   {({isAuthenticated}) => {
                     if (isAuthenticated()) {
                       return (<form id="emailForm" noValidate onSubmit={this.formSubmit}
-                                    className={wasValidated ? 'was-validated' : ''}>
+                        className={wasValidated ? 'was-validated' : ''}>
                         <div className='row'>
                           <div className="mb-3 col-sm-6">
                             <label htmlFor="sender">Sender</label>
                             <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
-                                   readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
-                                   onChange={this.onChangeSender}/>
+                              readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
+                              onChange={this.onChangeSender}/>
                             <div className="invalid-feedback">
                               Email sender is required.
                             </div>
                           </div>
-                          <div className="mb-3 col-sm-6">
+                          <div className="mb-3 col-sm-3">
                             <label htmlFor="priority">Priority</label>
-                            <select className="form-control col-sm-3" value={this.state.form.priority}
-                                    onChange={this.onChangePriority}>
+                            <select className="form-control" value={this.state.form.priority}
+                              onChange={this.onChangePriority}>
                               {PRIORITIES.map(p => {
                                 return (
                                   <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
@@ -438,13 +456,22 @@ class ChesForm extends Component {
                               })}
                             </select>
                           </div>
+                          <div className="mb-3 col-sm-3">
+                            <label htmlFor="moment">Delay Until</label>
+                            <DatetimePickerTrigger
+                              shortcuts={shortcuts}
+                              moment={this.state.form.moment}
+                              onChange={this.onChangeMoment}>
+                              <input type="text" className="form-control" value={this.state.form.moment.local().format('YYYY-MM-DD HH:mm')} readOnly />
+                            </DatetimePickerTrigger>
+                          </div>
                         </div>
 
                         <div className="mb-3">
                           <label htmlFor="recipients">Recipients</label>
                           <input type="text" className="form-control" name="recipients"
-                                 placeholder="you@example.com (separate multiple by comma)" required
-                                 value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
+                            placeholder="you@example.com (separate multiple by comma)" required
+                            value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
                           <div className="invalid-feedback">
                             One or more email recipients required.
                           </div>
@@ -454,22 +481,22 @@ class ChesForm extends Component {
                           <div className="mb-3 col-sm-6">
                             <label htmlFor="cc">CC</label>
                             <input type="text" className="form-control" name="cc"
-                                   placeholder="you@example.com (separate multiple by comma)"
-                                   value={this.state.form.cc} onChange={this.onChangeCC}/>
+                              placeholder="you@example.com (separate multiple by comma)"
+                              value={this.state.form.cc} onChange={this.onChangeCC}/>
                           </div>
                           <div className="mb-3 col-sm-6">
                             <label htmlFor="bcc">BCC</label>
                             <input type="text" className="form-control" name="bcc"
-                                   placeholder="you@example.com (separate multiple by comma)"
-                                   value={this.state.form.bcc} onChange={this.onChangeBCC}/>
+                              placeholder="you@example.com (separate multiple by comma)"
+                              value={this.state.form.bcc} onChange={this.onChangeBCC}/>
                           </div>
                         </div>
 
                         <div className="mb-3">
                           <label htmlFor="subject">Subject</label>
                           <input type="text" className="form-control" name="subject" required
-                                 value={this.state.form.subject}
-                                 onChange={this.onChangeSubject}/>
+                            value={this.state.form.subject}
+                            onChange={this.onChangeSubject}/>
                           <div className="invalid-feedback">
                             Subject is required.
                           </div>
@@ -482,18 +509,18 @@ class ChesForm extends Component {
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
                               <input type="radio" defaultChecked={this.state.form.bodyType === BODY_TYPES[0]}
-                                     value={BODY_TYPES[0]} name="bodyType" onClick={this.onChangeBodyType}/> Plain Text
+                                value={BODY_TYPES[0]} name="bodyType" onClick={this.onChangeBodyType}/> Plain Text
                             </label>
                             <label className={htmlTextButton}>
                               <input type="radio" defaultChecked={this.state.form.bodyType === BODY_TYPES[1]}
-                                     value={BODY_TYPES[1]} name="bodyType" onClick={this.onChangeBodyType}/> HTML
+                                value={BODY_TYPES[1]} name="bodyType" onClick={this.onChangeBodyType}/> HTML
                             </label>
                           </div>
                         </div>
                         <div style={plainTextDisplay}>
                           <textarea id="messageText" name="plainText" className="form-control"
-                                    required={this.state.form.bodyType === BODY_TYPES[0]}
-                                    value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+                            required={this.state.form.bodyType === BODY_TYPES[0]}
+                            value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
@@ -559,7 +586,7 @@ class ChesForm extends Component {
                 <br/>
                 <p>MSSC demonstrates how an application can leverage the Common Hosted Email Service&#39;s (CHES)
                   ability to deliver emails by calling <a
-                    href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
+                  href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
                 <p>The common-hosted-email-service requires a Service Client that has previously been created in the
                   environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
                     OK</a> for more on how to get access to CHES.</p>

@@ -732,8 +732,8 @@ class MergeForm extends Component {
 
             <div style={displayNotBusy}>
               <ChesAlertList title="CHES Validation Errors"
-                             message="The following validation errors were returned from CHES." alertType="danger"
-                             errors={this.state.apiValidationErrors}/>
+                message="The following validation errors were returned from CHES." alertType="danger"
+                errors={this.state.apiValidationErrors}/>
               <AlertDisplay alertType='success' title='CHES Service Success' message={this.state.info}/>
               <AlertDisplay alertType='danger' title='CHES Service Error' message={this.state.error}/>
               <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
@@ -753,12 +753,12 @@ class MergeForm extends Component {
                   {({isAuthenticated}) => {
                     if (isAuthenticated()) {
                       return (<form id="emailForm" noValidate onSubmit={this.formSubmit}
-                                    className={wasValidated ? 'was-validated' : ''}>
+                        className={wasValidated ? 'was-validated' : ''}>
                         <div className="mb-3">
                           <label htmlFor="sender">Sender</label>
                           <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
-                                 readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
-                                 onChange={this.onChangeSender}/>
+                            readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
+                            onChange={this.onChangeSender}/>
                           <div className="invalid-feedback">
                             Email sender is required.
                           </div>
@@ -767,8 +767,8 @@ class MergeForm extends Component {
                         <div className="mt-3 mb-3">
                           <label htmlFor="subject">Subject</label>
                           <input type="text" className="form-control" name="subject" required
-                                 value={this.state.form.subject}
-                                 onChange={this.onChangeSubject}/>
+                            value={this.state.form.subject}
+                            onChange={this.onChangeSubject}/>
                           <div className="invalid-feedback">
                             Subject is required.
                           </div>
@@ -777,7 +777,7 @@ class MergeForm extends Component {
                         <div className="mb-3">
                           <label htmlFor="priority">Priority</label>
                           <select className="form-control col-sm-3" value={this.state.form.priority}
-                                  onChange={this.onChangePriority}>
+                            onChange={this.onChangePriority}>
                             {PRIORITIES.map(p => {
                               return (
                                 <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
@@ -793,13 +793,13 @@ class MergeForm extends Component {
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={contextsExcelButton}>
                               <input type="radio" defaultChecked={this.state.form.contextsType === CONTEXTS_TYPES[0]}
-                                     value={CONTEXTS_TYPES[0]} name="contextsType"
-                                     onClick={this.onChangeContextsType}/> Excel
+                                value={CONTEXTS_TYPES[0]} name="contextsType"
+                                onClick={this.onChangeContextsType}/> Excel
                             </label>
                             <label className={contextsJsonButton}>
                               <input type="radio" defaultChecked={this.state.form.contextsType === CONTEXTS_TYPES[1]}
-                                     value={CONTEXTS_TYPES[1]} name="contextsType"
-                                     onClick={this.onChangeContextsType}/> JSON
+                                value={CONTEXTS_TYPES[1]} name="contextsType"
+                                onClick={this.onChangeContextsType}/> JSON
                             </label>
                           </div>
                         </div>
@@ -822,8 +822,8 @@ class MergeForm extends Component {
                                 {this.state.excel.headers.map((r, i) => <thead key={i}>{this.state.excel.cols.map(c =>
                                   <th key={c.key}>{r[c.key]}</th>)}</thead>)}
                                 <tbody>
-                                {this.state.excel.data.map((r, i) => <tr key={i}>{this.state.excel.cols.map(c => <td
-                                  key={c.key}>{r[c.key]}</td>)}</tr>)}
+                                  {this.state.excel.data.map((r, i) => <tr key={i}>{this.state.excel.cols.map(c => <td
+                                    key={c.key}>{r[c.key]}</td>)}</tr>)}
                                 </tbody>
                               </table>
                             </div>
@@ -831,7 +831,7 @@ class MergeForm extends Component {
                         </div>
                         <div style={contextsJsonDisplay}>
                           <textarea id="contextsText" name="contextsText" className="form-control"
-                                    value={this.state.form.contexts} onChange={this.onChangeContexts}></textarea>
+                            value={this.state.form.contexts} onChange={this.onChangeContexts}></textarea>
                         </div>
 
                         <div className="mt-3 mb-3 row">
@@ -841,11 +841,11 @@ class MergeForm extends Component {
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
                               <input type="radio" defaultChecked={this.state.form.bodyType === BODY_TYPES[0]}
-                                     value={BODY_TYPES[0]} name="bodyType" onClick={this.onChangeBodyType}/> Plain Text
+                                value={BODY_TYPES[0]} name="bodyType" onClick={this.onChangeBodyType}/> Plain Text
                             </label>
                             <label className={htmlTextButton}>
                               <input type="radio" defaultChecked={this.state.form.bodyType === BODY_TYPES[1]}
-                                     value={BODY_TYPES[1]} name="bodyType" onClick={this.onChangeBodyType}/> HTML
+                                value={BODY_TYPES[1]} name="bodyType" onClick={this.onChangeBodyType}/> HTML
                             </label>
                           </div>
                         </div>
@@ -854,20 +854,20 @@ class MergeForm extends Component {
                             <div className="table-responsive">
                               <table className="table">
                                 <thead>
-                                <th>Variables</th>
+                                  <th>Variables</th>
                                 </thead>
                                 <tbody>
-                                {this.state.contextVariables.map((r, i) => <tr key={i}>
-                                  <td key={i}>{r}</td>
-                                </tr>)}
+                                  {this.state.contextVariables.map((r, i) => <tr key={i}>
+                                    <td key={i}>{r}</td>
+                                  </tr>)}
                                 </tbody>
                               </table>
                             </div>
                           </div>
                           <div className="col-sm-10">
                             <textarea id="messageText" name="plainText" className="form-control"
-                                      required={this.state.form.bodyType === BODY_TYPES[0]}
-                                      value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+                              required={this.state.form.bodyType === BODY_TYPES[0]}
+                              value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
                           </div>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
@@ -878,12 +878,12 @@ class MergeForm extends Component {
                             <div className="table-responsive">
                               <table className="table">
                                 <thead>
-                                <th>Variables</th>
+                                  <th>Variables</th>
                                 </thead>
                                 <tbody>
-                                {this.state.contextVariables.map((r, i) => <tr key={i}>
-                                  <td key={i}>{r}</td>
-                                </tr>)}
+                                  {this.state.contextVariables.map((r, i) => <tr key={i}>
+                                    <td key={i}>{r}</td>
+                                  </tr>)}
                                 </tbody>
                               </table>
                             </div>
@@ -938,8 +938,8 @@ class MergeForm extends Component {
                         <div className="row">
                           <div className="col-sm-6">
                             <button type="button" className="btn btn-info btn-lg btn-block" data-toggle="modal"
-                                    data-target="#previewModal" disabled={!this.state.preview.allowed}
-                                    onClick={this.loadPreview}>
+                              data-target="#previewModal" disabled={!this.state.preview.allowed}
+                              onClick={this.loadPreview}>
                               Preview
                             </button>
                           </div>
@@ -948,7 +948,7 @@ class MergeForm extends Component {
                           </div>
                         </div>
                         <div className="modal fade" id="previewModal" tabIndex="-1" role="dialog"
-                             aria-labelledby="previewModalLabel" aria-hidden="true">
+                          aria-labelledby="previewModalLabel" aria-hidden="true">
                           <div className="modal-dialog" role="document">
                             <div className="modal-content">
                               <div className="modal-header">
@@ -959,17 +959,17 @@ class MergeForm extends Component {
                                     </div>
                                     <div className="offset-sm-1 col-sm-2">
                                       <button type="button" className="btn btn-info btn-lg btn-block"
-                                              disabled={this.state.preview.index === -1 || (this.state.preview.index <= 0)}
-                                              onClick={this.onPreviewPrevious}>&lt;</button>
+                                        disabled={this.state.preview.index === -1 || (this.state.preview.index <= 0)}
+                                        onClick={this.onPreviewPrevious}>&lt;</button>
                                     </div>
                                     <div className="col-sm-2">
                                       <button type="button" className="btn btn-info btn-lg btn-block"
-                                              disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length - 1)}
-                                              onClick={this.onPreviewNext}>&gt;</button>
+                                        disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length - 1)}
+                                        onClick={this.onPreviewNext}>&gt;</button>
                                     </div>
                                     <div className="col-sm-1">
                                       <button type="button" className="close btn btn-lg btn-block" data-dismiss="modal"
-                                              aria-label="Close">
+                                        aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                       </button>
                                     </div>
@@ -982,45 +982,45 @@ class MergeForm extends Component {
                                     <div className="mb-3 col-sm-6">
                                       <label>Sender</label>
                                       <input type="text" className="form-control" value={this.state.preview.email.from}
-                                             readOnly={true}/>
+                                        readOnly={true}/>
                                     </div>
 
                                     <div className="mb-3 col-sm-6">
                                       <label>Recipients</label>
                                       <input type="text" className="form-control"
-                                             value={this.state.preview.email.to.join(',')} readOnly={true}/>
+                                        value={this.state.preview.email.to.join(',')} readOnly={true}/>
                                     </div>
                                   </div>
                                   <div className="row">
                                     <div className="mb-3 col-sm-6">
                                       <label>CC</label>
                                       <input type="text" className="form-control"
-                                             value={this.state.preview.email.cc.join(',')} readOnly={true}/>
+                                        value={this.state.preview.email.cc.join(',')} readOnly={true}/>
                                     </div>
 
                                     <div className="mb-3 col-sm-6">
                                       <label>BCC</label>
                                       <input type="text" className="form-control"
-                                             value={this.state.preview.email.bcc.join(',')} readOnly={true}/>
+                                        value={this.state.preview.email.bcc.join(',')} readOnly={true}/>
                                     </div>
                                   </div>
 
                                   <div className="mb-3">
                                     <label htmlFor="subject">Subject</label>
                                     <input type="text" className="form-control" required
-                                           value={this.state.preview.email.subject} readOnly={true}/>
+                                      value={this.state.preview.email.subject} readOnly={true}/>
                                   </div>
 
                                   <div className="mb-3" style={plainTextDisplay}>
                                     <label className="mt-1">Body</label>
                                     <textarea id="previewBodyText" className="form-control"
-                                              value={this.state.preview.email.body} readOnly={true}></textarea>
+                                      value={this.state.preview.email.body} readOnly={true}></textarea>
                                   </div>
 
                                   <div className="mb-3" style={htmlTextDisplay}>
                                     <label className="mt-1">Body</label>
                                     <div id="previewBodyHtml"
-                                         dangerouslySetInnerHTML={{__html: `${this.state.preview.email.body}`}}></div>
+                                      dangerouslySetInnerHTML={{__html: `${this.state.preview.email.body}`}}></div>
                                   </div>
                                 </div>
                               </div>
@@ -1029,19 +1029,19 @@ class MergeForm extends Component {
                                   <div className="row">
                                     <div className="col-sm-3">
                                       <button type="button" className="btn btn-info btn-lg btn-block"
-                                              disabled={this.state.preview.index === -1 || (this.state.preview.index <= 0)}
-                                              onClick={this.onPreviewPrevious}>Previous
+                                        disabled={this.state.preview.index === -1 || (this.state.preview.index <= 0)}
+                                        onClick={this.onPreviewPrevious}>Previous
                                       </button>
                                     </div>
                                     <div className="col-sm-3">
                                       <button type="button" className="btn btn-info btn-lg btn-block"
-                                              disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length - 1)}
-                                              onClick={this.onPreviewNext}>Next
+                                        disabled={this.state.preview.index === -1 || (this.state.preview.index >= this.state.preview.length - 1)}
+                                        onClick={this.onPreviewNext}>Next
                                       </button>
                                     </div>
                                     <div className="offset-sm-3 col-sm-3">
                                       <button type="button" className="btn btn-primary btn-lg btn-block"
-                                              data-dismiss="modal">Close
+                                        data-dismiss="modal">Close
                                       </button>
                                     </div>
                                   </div>
@@ -1064,7 +1064,7 @@ class MergeForm extends Component {
                 <br/>
                 <p>MSSC demonstrates how an application can leverage the Common Hosted Email Service&#39;s (CHES)
                   ability to deliver emails by calling <a
-                    href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
+                  href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
                 <p>The common-hosted-email-service requires a Service Client that has previously been created in the
                   environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
                     OK</a> for more on how to get access to CHES.</p>

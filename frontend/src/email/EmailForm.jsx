@@ -561,12 +561,12 @@ class EmailForm extends Component {
                   {({isAuthenticated}) => {
                     if (isAuthenticated()) {
                       return (<form id="emailForm" noValidate style={emailFormDisplay} onSubmit={this.formSubmit}
-                                    className={wasValidated ? 'was-validated' : ''}>
+                        className={wasValidated ? 'was-validated' : ''}>
                         <div className="mb-3">
                           <label htmlFor="sender">Sender</label>
                           <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
-                                 readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
-                                 onChange={this.onChangeSender}/>
+                            readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
+                            onChange={this.onChangeSender}/>
                           <div className="invalid-feedback">
                             Email sender is required.
                           </div>
@@ -575,8 +575,8 @@ class EmailForm extends Component {
                         <div className="mb-3">
                           <label htmlFor="recipients">Recipients</label>
                           <input type="text" className="form-control" name="recipients"
-                                 placeholder="you@example.com (separate multiple by comma)" required
-                                 value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
+                            placeholder="you@example.com (separate multiple by comma)" required
+                            value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
                           <div className="invalid-feedback">
                             One or more email recipients required.
                           </div>
@@ -585,8 +585,8 @@ class EmailForm extends Component {
                         <div className="mb-3">
                           <label htmlFor="subject">Subject</label>
                           <input type="text" className="form-control" name="subject" required
-                                 value={this.state.form.subject}
-                                 onChange={this.onChangeSubject}/>
+                            value={this.state.form.subject}
+                            onChange={this.onChangeSubject}/>
                           <div className="invalid-feedback">
                             Subject is required.
                           </div>
@@ -599,19 +599,19 @@ class EmailForm extends Component {
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
                               <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]}
-                                     value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType}/> Plain
+                                value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType}/> Plain
                               Text
                             </label>
                             <label className={htmlTextButton}>
                               <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]}
-                                     value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType}/> HTML
+                                value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType}/> HTML
                             </label>
                           </div>
                         </div>
                         <div style={plainTextDisplay}>
                           <textarea id="messageText" name="plainText" className="form-control"
-                                    required={this.state.form.mediaType === MEDIA_TYPES[0]}
-                                    value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+                            required={this.state.form.mediaType === MEDIA_TYPES[0]}
+                            value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
@@ -683,22 +683,22 @@ class EmailForm extends Component {
                           <div className="table-responsive-sm">
                             <table className="table table-striped table-sm">
                               <thead>
-                              <tr>
-                                <th>Message ID</th>
-                                <th>Recipient</th>
-                                <th>Status</th>
-                              </tr>
+                                <tr>
+                                  <th>Message ID</th>
+                                  <th>Recipient</th>
+                                  <th>Status</th>
+                                </tr>
                               </thead>
                               <tbody>
-                              {this.state.statuses.map((status, idx) => {
-                                return (
-                                  <tr key={idx}>
-                                    <td>{status.messageId}</td>
-                                    <td>{status.recipient}</td>
-                                    <td>{status.type}</td>
-                                  </tr>
-                                );
-                              })}
+                                {this.state.statuses.map((status, idx) => {
+                                  return (
+                                    <tr key={idx}>
+                                      <td>{status.messageId}</td>
+                                      <td>{status.recipient}</td>
+                                      <td>{status.type}</td>
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>
@@ -738,7 +738,7 @@ class EmailForm extends Component {
                 <br/>
                 <p>MSSC demonstrates how an application can leverage the Common Messaging Service&#39;s (CMSG) ability
                   to deliver emails by calling <a
-                    href="https://github.com/bcgov/nr-email-microservice">nr-email-microservice</a>.
+                  href="https://github.com/bcgov/nr-email-microservice">nr-email-microservice</a>.
                   The <em>nr-email-microservice</em> illustrates how to call the CMSG API, and shows how a team can
                   easily stand up their own CMSG service in OpenShift.</p>
                 <p>The nr-email-microservice requires a Service Client that has previously been created in the
