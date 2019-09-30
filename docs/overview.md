@@ -1,6 +1,11 @@
-# About the Messaging Common Service
+---
+description: MSSC demonstrates the capabilities of the Common Hosted Email Service, which provides applications with email messaging functionality. To learn more see [API Usage](https://github.com/bcgov/common-hosted-email-service/blob/master/app/README.md#api-usage) documentation.
+---
 
-## Common Service Elements
+
+## About the Messaging Common Service  
+
+### Common Service Elements  
 
 1. **Showcase Application**: Provides a demonstration of the capabilities of a common service. In this case MSSC demonstrates how an application can have messaging functionality by calling an API.
 2. **Self-Service Documentation**: Provide access to documentation that enables a software developer or end user to determine it is fit for their needs, have a step by step set of instructions for implementing it, and be able to complete the implementation without direct interaction with the team that built the service the API.
