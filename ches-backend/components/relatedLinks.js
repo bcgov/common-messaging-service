@@ -25,10 +25,10 @@ const relatedLinks = {
 
     if (links && links.length > 0) {
       // if we passed in links, add self to front of the list
-      links.unshift({r:'self'});
+      links.unshift({r: 'self'});
     } else {
       // no links, always return self
-      links = [{r:'self'}];
+      links = [{r: 'self'}];
     }
 
     const linksArray = links.map(l => relatedLinks.createLink(req, l.r, l.m, l.p));
@@ -38,4 +38,4 @@ const relatedLinks = {
 
 };
 
-module.exports = { relatedLinks };
+module.exports = {relatedLinks};

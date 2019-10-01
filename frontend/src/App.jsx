@@ -10,12 +10,12 @@ import NavigationBar from './bcgov/NavigationBar';
 const App = () => (
   <app>
     <Header/>
-    <NavigationBar />
+    <NavigationBar/>
     <Footer/>
     <div className="app-content">
-      <AppContentRouter />
+      <AppContentRouter/>
     </div>
-    <AuthRouter />
+    <AuthRouter/>
   </app>
 );
 

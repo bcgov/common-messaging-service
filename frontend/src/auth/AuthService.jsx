@@ -1,6 +1,7 @@
 /*eslint-disable */
-import { IDENTITY_CONFIG, METADATA_OIDC } from './AuthConfig';
-import { UserManager, WebStorageStateStore, Log } from 'oidc-client';
+import {IDENTITY_CONFIG, METADATA_OIDC} from './AuthConfig';
+import {Log, UserManager, WebStorageStateStore} from 'oidc-client';
+import GetUserError from './GetUserError';
 
 export default class AuthService {
   UserManager;
@@ -9,7 +10,7 @@ export default class AuthService {
   constructor() {
     this.UserManager = new UserManager({
       ...IDENTITY_CONFIG,
-      userStore: new WebStorageStateStore({ store: window.localStorage }),
+      userStore: new WebStorageStateStore({store: window.localStorage}),
       ...METADATA_OIDC
     });
     // Logger
@@ -60,9 +61,7 @@ export default class AuthService {
       try {
         return await this.UserManager.signinRedirectCallback();
       } catch (e) {
-        // can get a no state in response error, user not found, token is bad, login is bad.
-        // basically, they are logged out/expired, but we don't know it, so send through signin.
-        this.signinRedirect();
+        throw new GetUserError(e);
       }
     }
     return user;
@@ -91,7 +90,7 @@ export default class AuthService {
   };
 
   navigateToScreen = () => {
-    const redirectUri = localStorage.getItem("redirectUri") ? localStorage.getItem('redirectUri') : `${window._env_.REACT_APP_PUBLIC_URL}`;
+    const redirectUri = localStorage.getItem('redirectUri') ? localStorage.getItem('redirectUri') : `${window._env_.REACT_APP_PUBLIC_URL}`;
 
     window.location.replace(redirectUri);
   };
@@ -145,7 +144,7 @@ export default class AuthService {
   hasRole = (user, role) => {
     if (user) {
       const content = this.parseJwt(user.access_token);
-      const defaultClientId = `${window._env_.REACT_APP_OIDC_CLIENT_ID}`
+      const defaultClientId = `${window._env_.REACT_APP_OIDC_CLIENT_ID}`;
 
       const parts = role.split(':');
 

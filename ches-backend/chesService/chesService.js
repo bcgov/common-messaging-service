@@ -3,6 +3,20 @@ const Problem = require('api-problem');
 
 const ClientConnection = require('./clientConnection');
 
+const errorToProblem = (e) => {
+  if (e.response) {
+    log.error(`Error from CHES: status = ${e.response.status}, data : ${JSON.stringify(e.response.data, null, 2)}`);
+    let errors = [];
+    if (e.response.status === 422) {
+      errors = e.response.data.errors;
+    }
+    throw new Problem(e.response.status, {detail: e.response.data.detail, errors: errors});
+  } else {
+    log.error(`Unknown error calling CHES: ${e.message}`);
+    throw new Problem(500, 'Unknown CHES Error', {detail: e.message});
+  }
+};
+
 class ChesService {
   constructor({tokenUrl, clientId, clientSecret, apiUrl}) {
     log.info('ChesService ', `${tokenUrl}, ${clientId}, secret, ${apiUrl}`);
@@ -18,22 +32,16 @@ class ChesService {
   async checks() {
     try {
       const response = await this.axios.get(
-        `${this.apiUrl}/checks/status`,
+        `${this.apiUrl}/checks`,
         {
           headers: {
-            'Content-Type':'application/json'
+            'Content-Type': 'application/json'
           }
         }
       );
       return response.data;
     } catch (e) {
-      if (e.response) {
-        log.error(`Error from CHES: status = ${e.response.status}, data : ${JSON.stringify(e.response.data, null, 2)}`);
-        throw new Problem(e.response.status, 'CHES Error', {detail: e.response.data.detail});
-      } else {
-        log.error(`Unknown error calling CHES: ${e.message}`);
-        throw new Problem(500, 'Unknown CHES Error', {detail: e.message});
-      }
+      errorToProblem(e);
     }
   }
 
@@ -44,7 +52,7 @@ class ChesService {
         email,
         {
           headers: {
-            'Content-Type':'application/json'
+            'Content-Type': 'application/json'
           },
           maxContentLength: Infinity,
           maxBodyLength: Infinity
@@ -52,13 +60,7 @@ class ChesService {
       );
       return response.data;
     } catch (e) {
-      if (e.response) {
-        log.error(`Error from CHES: status = ${e.response.status}, data : ${JSON.stringify(e.response.data, null, 2)}`);
-        throw new Problem(e.response.status, 'CHES Error', {detail: e.response.data.detail});
-      } else {
-        log.error(`Unknown error calling CHES: ${e.message}`);
-        throw new Problem(500, 'Unknown CHES Error', {detail: e.message});
-      }
+      errorToProblem(e);
     }
   }
 
@@ -66,11 +68,11 @@ class ChesService {
   async merge(data) {
     try {
       const response = await this.axios.post(
-        `${this.apiUrl}/email/merge`,
+        `${this.apiUrl}/emailMerge`,
         data,
         {
           headers: {
-            'Content-Type':'application/json'
+            'Content-Type': 'application/json'
           },
           maxContentLength: Infinity,
           maxBodyLength: Infinity
@@ -78,24 +80,18 @@ class ChesService {
       );
       return response.data;
     } catch (e) {
-      if (e.response) {
-        log.error(`Error from CHES: status = ${e.response.status}, data : ${JSON.stringify(e.response.data, null, 2)}`);
-        throw new Problem(e.response.status, 'CHES Error', {detail: e.response.data.detail});
-      } else {
-        log.error(`Unknown error calling CHES: ${e.message}`);
-        throw new Problem(500, 'Unknown CHES Error', {detail: e.message});
-      }
+      errorToProblem(e);
     }
   }
 
   async preview(data) {
     try {
       const response = await this.axios.post(
-        `${this.apiUrl}/email/merge/preview`,
+        `${this.apiUrl}/emailMerge/preview`,
         data,
         {
           headers: {
-            'Content-Type':'application/json'
+            'Content-Type': 'application/json'
           },
           maxContentLength: Infinity,
           maxBodyLength: Infinity
@@ -103,13 +99,7 @@ class ChesService {
       );
       return response.data;
     } catch (e) {
-      if (e.response) {
-        log.error(`Error from CHES: status = ${e.response.status}, data : ${JSON.stringify(e.response.data, null, 2)}`);
-        throw new Problem(e.response.status, 'CHES Error', {detail: e.response.data.detail});
-      } else {
-        log.error(`Unknown error calling CHES: ${e.message}`);
-        throw new Problem(500, 'Unknown CHES Error', {detail: e.message});
-      }
+      errorToProblem(e);
     }
   }
 

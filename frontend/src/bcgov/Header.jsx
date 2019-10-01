@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { AuthConsumer } from '../auth/AuthProvider';
+import {AuthConsumer} from '../auth/AuthProvider';
 import './Header.css';
 
 class Header extends Component {
@@ -7,25 +7,32 @@ class Header extends Component {
     super(props);
     this.logoutClick = this.logoutClick.bind(this);
   }
+
   logoutClick() {
-    window.location.href=`${process.env.PUBLIC_URL}/auth/logout`;
+    window.location.href = `${process.env.PUBLIC_URL}/auth/logout`;
   }
+
   render() {
     return (
       <header>
         <div className="banner">
           <a href="https://gov.bc.ca" alt="British Columbia">
-            <img src="./images/logo-banner.svg" alt="Go to the Government of British Columbia website" className="logo-banner" />
+            <img src="./images/logo-banner.svg" alt="Go to the Government of British Columbia website"
+              className="logo-banner"/>
           </a>
           <h1>Messaging Services Showcase</h1>
         </div>
         <div className="other">
           <AuthConsumer>
-            {({ isAuthenticated, signinRedirect }) => {
+            {({isAuthenticated, signinRedirect}) => {
               if (isAuthenticated()) {
-                return <button onClick={() => { this.logoutClick(); }}>Logout</button>;
+                return <button onClick={() => {
+                  this.logoutClick();
+                }}>Logout</button>;
               } else {
-                return <button onClick={() => { signinRedirect(); }}>Login</button>;
+                return <button onClick={() => {
+                  signinRedirect();
+                }}>Login</button>;
               }
             }}
           </AuthConsumer>

@@ -1,18 +1,23 @@
 import React from 'react';
 
 const Home = () => (
-  <div className="container" id="maincontainer" >
+  <div className="container" id="maincontainer">
     <div id="mainrow" className="row">
       <div className="col-md-8 offset-md-2 order-md-1">
         <h2>Welcome to Messaging Services Showcase (MSSC).</h2>
-          MSSC demonstrates how an application can have messaging functionality by calling an API.  In this case, it demonstrates how to call two different common messaging APIs: <a href="https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md">CMSG</a> and <a href="https://github.com/bcgov/common-hosted-email-service">CHES</a>.
+        MSSC demonstrates how an application can have messaging functionality by calling an API. In this case, it
+        demonstrates how to call two different common messaging APIs: <a
+        href="https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md">CMSG</a> and <a
+        href="https://github.com/bcgov/common-hosted-email-service">CHES</a>.
 
         <h4 className="mt-4">Capabilities</h4>
 
         <h5 className="mt-2">Common Messaging Service (CMSG)</h5>
         <ul>
           <li>Send email</li>
-          <li>Tracks delivery status information and makes the status information available so that applications can respond to a failed delivery.</li>
+          <li>Tracks delivery status information and makes the status information available so that applications can
+            respond to a failed delivery.
+          </li>
           <li>Automated retry where a message notification has failed.</li>
         </ul>
 

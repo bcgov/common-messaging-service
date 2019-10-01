@@ -16,7 +16,7 @@ function protectEmail(token, req) {
   let sender = '';
   try {
     sender = req.body.from;
-  } catch(e) {
+  } catch (e) {
     sender = '';
   }
 
@@ -26,7 +26,7 @@ function protectEmail(token, req) {
 routes.get('/', wrap(function (req, res) {
   res.status(200).json({
     links: relatedLinks.createLinks(req, [
-      {r:'email', m:'POST', p:'/email'}
+      {r: 'email', m: 'POST', p: '/email'}
     ])
   });
 }));
