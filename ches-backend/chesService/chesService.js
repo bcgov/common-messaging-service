@@ -32,7 +32,7 @@ class ChesService {
   async checks() {
     try {
       const response = await this.axios.get(
-        `${this.apiUrl}/checks/status`,
+        `${this.apiUrl}/checks`,
         {
           headers: {
             'Content-Type': 'application/json'
@@ -68,7 +68,7 @@ class ChesService {
   async merge(data) {
     try {
       const response = await this.axios.post(
-        `${this.apiUrl}/email/merge`,
+        `${this.apiUrl}/emailMerge`,
         data,
         {
           headers: {
@@ -87,7 +87,7 @@ class ChesService {
   async preview(data) {
     try {
       const response = await this.axios.post(
-        `${this.apiUrl}/email/merge/preview`,
+        `${this.apiUrl}/emailMerge/preview`,
         data,
         {
           headers: {
