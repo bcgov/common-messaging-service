@@ -223,7 +223,7 @@ class ChesForm extends Component {
       this.setState({busy: true});
 
       const postEmailData = await this.postEmail();
-      messageId = postEmailData.messageId;
+      messageId = postEmailData.msgId;
 
       let form = this.state.form;
       form.wasValidated = false;

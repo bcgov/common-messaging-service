@@ -353,7 +353,7 @@ class MergeForm extends Component {
       this.setState({busy: true});
 
       const postMergeData = await this.postEmailMerge();
-      messageIds = postMergeData.map(d => d.messageId);
+      messageIds = postMergeData.map(d => d.msgId);
 
       let form = this.state.form;
       form.wasValidated = false;
