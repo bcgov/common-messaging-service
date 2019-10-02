@@ -611,7 +611,7 @@ class ChesForm extends Component {
                 <br />
                 <p>MSSC demonstrates how an application can leverage the Common Hosted Email Service&#39;s (CHES)
                   ability to deliver emails by calling <a
-                    href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
+                  href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
                 <p>The common-hosted-email-service requires a Service Client that has previously been created in the
                   environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
                     OK</a> for more on how to get access to CHES.</p>
