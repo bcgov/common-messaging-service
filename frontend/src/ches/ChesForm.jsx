@@ -161,7 +161,7 @@ class ChesForm extends Component {
 
   getAddresses(csv) {
     if (csv && csv.trim().length > 0) {
-      return csv.split(',');
+      return csv.split(',').map(item => item.trim());
     } else {
       return [];
     }
@@ -417,8 +417,15 @@ class ChesForm extends Component {
                 errors={this.state.apiValidationErrors}/>
               <AlertDisplay alertType='success' title='CHES Service Success' message={this.state.info}/>
               <AlertDisplay alertType='danger' title='CHES Service Error' message={this.state.error}/>
-              <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
-
+              <AuthConsumer>
+                {({isAuthenticated}) => {
+                  if (isAuthenticated()) {
+                    return (
+                      <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
+                    );
+                  }
+                }}
+              </AuthConsumer>
               <ul className="nav nav-tabs">
                 <li className="nav-item">
                   <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Email</button>

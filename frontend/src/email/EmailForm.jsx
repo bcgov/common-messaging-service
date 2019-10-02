@@ -538,7 +538,15 @@ class EmailForm extends Component {
             <div style={displayNotBusy}>
               <AlertDisplay alertType='success' title='CMSG Service Success' message={this.state.info}/>
               <AlertDisplay alertType='danger' title='CMSG Service Error' message={this.state.error}/>
-              <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
+              <AuthConsumer>
+                {({isAuthenticated}) => {
+                  if (isAuthenticated()) {
+                    return (
+                      <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
+                    );
+                  }
+                }}
+              </AuthConsumer>
 
               <ul className="nav nav-tabs">
                 <li className="nav-item">

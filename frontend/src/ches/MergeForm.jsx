@@ -226,7 +226,7 @@ class MergeForm extends Component {
 
   getAddresses(csv) {
     if (csv && csv.trim().length > 0) {
-      return csv.split(',');
+      return csv.split(',').map(item => item.trim());
     } else {
       return [];
     }
@@ -237,10 +237,10 @@ class MergeForm extends Component {
       if (this.state.form.contexts && this.state.form.contexts.trim().length > 0) {
         return JSON.parse(this.state.form.contexts.trim());
       } else {
-        return {};
+        return [];
       }
     } catch (e) {
-      return {};
+      return [];
     }
   }
 
@@ -401,6 +401,7 @@ class MergeForm extends Component {
         form: form,
         info: `Message submitted to Showcase CHES API: ${messageIds}`,
         error: '',
+        userError: '',
         apiValidationErrors: []
       });
 
@@ -478,8 +479,23 @@ class MergeForm extends Component {
     event.preventDefault();
     event.stopPropagation();
 
-    const preview = this.state.preview;
-    if (preview.allowed) {
+    const preview = {
+      allowed: true,
+      data: [],
+      index: -1,
+      length: -1,
+      email: {
+        bodyType: '',
+        body: '',
+        from: '',
+        subject: '',
+        bcc: [],
+        cc: [],
+        to: []
+      }
+    };
+
+    if (this.state.preview.allowed) {
       try {
         let postMergePreviewData = await this.postEmailMergePreview();
         if (postMergePreviewData && postMergePreviewData.length > 0) {
@@ -490,7 +506,11 @@ class MergeForm extends Component {
           if (!preview.email.cc) preview.email.cc = [];
           if (!preview.email.bcc) preview.email.bcc = [];
         }
-        this.setState({preview: preview});
+        this.setState({
+          preview: preview,
+          error: '',
+          userError: '',
+          apiValidationErrors: []});
       } catch (e) {
         let form = this.state.form;
         form.wasValidated = false;
@@ -498,6 +518,7 @@ class MergeForm extends Component {
         this.setState({
           busy: false,
           form: form,
+          preview: preview,
           error: error,
           userError: userError,
           apiValidationErrors: apiValidationErrors
@@ -711,6 +732,8 @@ class MergeForm extends Component {
 
     const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
 
+    const previewBodyDisplay = (this.state.apiValidationErrors && this.state.apiValidationErrors.length > 0) || (this.state.error && this.state.error.length >0) ? {display: 'none'} : {};
+
     return (
       <div className="container-fluid" id="maincontainer">
 
@@ -736,7 +759,15 @@ class MergeForm extends Component {
                 errors={this.state.apiValidationErrors}/>
               <AlertDisplay alertType='success' title='CHES Service Success' message={this.state.info}/>
               <AlertDisplay alertType='danger' title='CHES Service Error' message={this.state.error}/>
-              <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
+              <AuthConsumer>
+                {({isAuthenticated}) => {
+                  if (isAuthenticated()) {
+                    return (
+                      <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
+                    );
+                  }
+                }}
+              </AuthConsumer>
 
               <ul className="nav nav-tabs">
                 <li className="nav-item">
@@ -978,49 +1009,54 @@ class MergeForm extends Component {
                               </div>
                               <div className="modal-body">
                                 <div>
-                                  <div className="row">
-                                    <div className="mb-3 col-sm-6">
-                                      <label>Sender</label>
-                                      <input type="text" className="form-control" value={this.state.preview.email.from}
-                                        readOnly={true}/>
+                                  <ChesAlertList title="CHES Validation Errors" message="The following validation errors were returned from CHES." alertType="danger" errors={this.state.apiValidationErrors}/>
+                                  <AlertDisplay alertType='success' title='CHES Service Success' message={this.state.info}/>
+                                  <AlertDisplay alertType='danger' title='CHES Service Error' message={this.state.error}/>
+                                  <div style={previewBodyDisplay}>
+                                    <div className="row">
+                                      <div className="mb-3 col-sm-6">
+                                        <label>Sender</label>
+                                        <input type="text" className="form-control" value={this.state.preview.email.from}
+                                          readOnly={true}/>
+                                      </div>
+
+                                      <div className="mb-3 col-sm-6">
+                                        <label>Recipients</label>
+                                        <input type="text" className="form-control"
+                                          value={this.state.preview.email.to.join(',')} readOnly={true}/>
+                                      </div>
+                                    </div>
+                                    <div className="row">
+                                      <div className="mb-3 col-sm-6">
+                                        <label>CC</label>
+                                        <input type="text" className="form-control"
+                                          value={this.state.preview.email.cc.join(',')} readOnly={true}/>
+                                      </div>
+
+                                      <div className="mb-3 col-sm-6">
+                                        <label>BCC</label>
+                                        <input type="text" className="form-control"
+                                          value={this.state.preview.email.bcc.join(',')} readOnly={true}/>
+                                      </div>
                                     </div>
 
-                                    <div className="mb-3 col-sm-6">
-                                      <label>Recipients</label>
-                                      <input type="text" className="form-control"
-                                        value={this.state.preview.email.to.join(',')} readOnly={true}/>
-                                    </div>
-                                  </div>
-                                  <div className="row">
-                                    <div className="mb-3 col-sm-6">
-                                      <label>CC</label>
-                                      <input type="text" className="form-control"
-                                        value={this.state.preview.email.cc.join(',')} readOnly={true}/>
+                                    <div className="mb-3">
+                                      <label htmlFor="subject">Subject</label>
+                                      <input type="text" className="form-control" required
+                                        value={this.state.preview.email.subject} readOnly={true}/>
                                     </div>
 
-                                    <div className="mb-3 col-sm-6">
-                                      <label>BCC</label>
-                                      <input type="text" className="form-control"
-                                        value={this.state.preview.email.bcc.join(',')} readOnly={true}/>
+                                    <div className="mb-3" style={plainTextDisplay}>
+                                      <label className="mt-1">Body</label>
+                                      <textarea id="previewBodyText" className="form-control"
+                                        value={this.state.preview.email.body} readOnly={true}></textarea>
                                     </div>
-                                  </div>
 
-                                  <div className="mb-3">
-                                    <label htmlFor="subject">Subject</label>
-                                    <input type="text" className="form-control" required
-                                      value={this.state.preview.email.subject} readOnly={true}/>
-                                  </div>
-
-                                  <div className="mb-3" style={plainTextDisplay}>
-                                    <label className="mt-1">Body</label>
-                                    <textarea id="previewBodyText" className="form-control"
-                                      value={this.state.preview.email.body} readOnly={true}></textarea>
-                                  </div>
-
-                                  <div className="mb-3" style={htmlTextDisplay}>
-                                    <label className="mt-1">Body</label>
-                                    <div id="previewBodyHtml"
-                                      dangerouslySetInnerHTML={{__html: `${this.state.preview.email.body}`}}></div>
+                                    <div className="mb-3" style={htmlTextDisplay}>
+                                      <label className="mt-1">Body</label>
+                                      <div id="previewBodyHtml"
+                                        dangerouslySetInnerHTML={{__html: `${this.state.preview.email.body}`}}></div>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
