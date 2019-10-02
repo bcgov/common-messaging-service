@@ -8,6 +8,16 @@ import 'tinymce/skins/ui/oxide/skin.min.css';
 import 'tinymce/skins/ui/oxide/content.min.css';
 import 'tinymce/plugins/wordcount';
 import 'tinymce/plugins/table';
+import 'tinymce/plugins/image';
+import 'tinymce/plugins/link';
+import 'tinymce/plugins/lists';
+import 'tinymce/plugins/print';
+import 'tinymce/plugins/preview';
+import 'tinymce/plugins/paste';
+import 'tinymce/plugins/help';
+import 'tinymce/plugins/fullscreen';
+import 'tinymce/plugins/code';
+import 'tinymce/plugins/charmap';
 
 class TinyMceEditor extends Component {
   constructor() {
@@ -20,8 +30,18 @@ class TinyMceEditor extends Component {
       selector: `#${this.props.id}`,
       skin: false,
       content_css: false,
-      plugins: 'wordcount table',
+      plugins: 'wordcount table print preview paste help fullscreen image link code charmap',
       height: '480px',
+      menubar: 'file view edit insert format table help',
+      menu: {
+        file: { title: 'File', items: 'newdocument restoredraft | print' },
+        edit: { title: 'Edit', items: 'undo redo | cut copy paste | selectall' },
+        view: { title: 'View', items: 'code | preview fullscreen' },
+        insert: { title: 'Insert', items: 'image link inserttable | charmap' },
+        format: { title: 'Format', items: 'bold italic underline strikethrough superscript subscript codeformat | formats blockformats fontformats fontsizes align | forecolor backcolor | removeformat' },
+        table: { title: 'Table', items: 'inserttable tableprops deletetable row column cell' },
+        help: { title: 'Help', items: 'help' }
+      },
       setup: editor => {
         this.setState({editor});
         editor.on('keyup change', () => {
@@ -31,6 +51,8 @@ class TinyMceEditor extends Component {
       }
     });
   }
+
+
 
   componentWillUnmount() {
     tinymce.remove(this.state.editor);
