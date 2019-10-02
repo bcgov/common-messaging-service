@@ -1,17 +1,17 @@
 import './ChesForm.css';
 import axios from 'axios';
 import bytes from 'bytes';
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import TinyMceEditor from '../htmlText/TinyMceEditor';
-import {AuthConsumer} from '../auth/AuthProvider';
+import { AuthConsumer } from '../auth/AuthProvider';
 import AuthService from '../auth/AuthService';
 import ChesValidationError from './ChesValidationError';
 import ChesAlertList from './ChesAlertList';
 import AlertDisplay from '../utils/AlertDisplay';
 import GetUserError from '../auth/GetUserError';
 import moment from 'moment';
-import {DatetimePickerTrigger} from 'rc-datetime-picker';
+import { DatetimePickerTrigger } from 'rc-datetime-picker';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -54,7 +54,8 @@ class ChesForm extends Component {
         files: [],
         reset: false,
         bodyType: BODY_TYPES[0],
-        moment: moment()
+        moment: moment(),
+        tag: ''
       },
       config: {
         attachmentsMaxSize: bytes.parse(SERVER_BODYLIMIT),
@@ -72,6 +73,7 @@ class ChesForm extends Component {
     this.onChangeBodyType = this.onChangeBodyType.bind(this);
     this.onChangePriority = this.onChangePriority.bind(this);
     this.onChangeMoment = this.onChangeMoment.bind(this);
+    this.onChangeTag = this.onChangeTag.bind(this);
 
     this.onEditorChange = this.onEditorChange.bind(this);
 
@@ -83,68 +85,74 @@ class ChesForm extends Component {
   onSelectTab(event) {
     event.preventDefault();
     if (this.state.tab !== event.target.id) {
-      this.setState({tab: event.target.id, info: '', error: ''});
+      this.setState({ tab: event.target.id, info: '', error: '' });
     }
+  }
+
+  onChangeTag(event) {
+    const form = this.state.form;
+    form.tag = event.target.value;
+    this.setState({ form: form, info: '' });
   }
 
   onChangeMoment(moment) {
     const form = this.state.form;
     form.moment = moment;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangeSender(event) {
     const form = this.state.form;
     form.sender = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangeSubject(event) {
     const form = this.state.form;
     form.subject = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangeRecipients(event) {
     const form = this.state.form;
     form.recipients = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangeCC(event) {
     const form = this.state.form;
     form.cc = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangeBCC(event) {
     const form = this.state.form;
     form.bcc = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangePlainText(event) {
     const form = this.state.form;
     form.plainText = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangeBodyType(event) {
     const form = this.state.form;
     form.bodyType = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onChangePriority(event) {
     const form = this.state.form;
     form.priority = event.target.value;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   onEditorChange(content) {
     const form = this.state.form;
     form.htmlText = content;
-    this.setState({form: form, info: ''});
+    this.setState({ form: form, info: '' });
   }
 
   getMessageBody() {
@@ -187,7 +195,7 @@ class ChesForm extends Component {
     } else if (e) {
       error = e.message;
     }
-    return {error, userError, apiValidationErrors};
+    return { error, userError, apiValidationErrors };
   }
 
   async componentDidMount() {
@@ -196,10 +204,10 @@ class ChesForm extends Component {
       const hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
       const form = this.state.form;
       form.sender = this.getDefaultSender(hasSenderEditor);
-      this.setState({hasSenderEditor: hasSenderEditor, form: form});
+      this.setState({ hasSenderEditor: hasSenderEditor, form: form });
     } catch (e) {
-      let {error, userError, apiValidationErrors} = this.errorHandler(e);
-      this.setState({error: error, userError, apiValidationErrors});
+      let { error, userError, apiValidationErrors } = this.errorHandler(e);
+      this.setState({ error: error, userError, apiValidationErrors });
     }
   }
 
@@ -213,14 +221,14 @@ class ChesForm extends Component {
     if (!(event.target.checkValidity() && this.hasMessageBody())) {
       let form = this.state.form;
       form.wasValidated = true;
-      this.setState({form: form, info: ''});
+      this.setState({ form: form, info: '' });
       return;
     }
 
     let messageId = undefined;
     try {
 
-      this.setState({busy: true});
+      this.setState({ busy: true });
 
       const postEmailData = await this.postEmail();
       messageId = postEmailData.msgId;
@@ -238,6 +246,7 @@ class ChesForm extends Component {
       form.bodyType = BODY_TYPES[0];
       form.priority = PRIORITIES[0];
       form.moment = moment();
+      form.tag = '';
       form.reset = true;
       this.setState({
         busy: false,
@@ -259,7 +268,7 @@ class ChesForm extends Component {
     } catch (e) {
       let form = this.state.form;
       form.wasValidated = false;
-      let {error, userError, apiValidationErrors} = this.errorHandler(e);
+      let { error, userError, apiValidationErrors } = this.errorHandler(e);
       this.setState({
         busy: false,
         form: form,
@@ -307,7 +316,8 @@ class ChesForm extends Component {
       priority: this.state.form.priority,
       to: this.getAddresses(this.state.form.recipients),
       subject: this.state.form.subject,
-      delayTS: this.state.form.moment.utc().valueOf()
+      delayTS: this.state.form.moment.utc().valueOf(),
+      tag: this.state.form.tag
     };
 
     const response = await axios.post(
@@ -354,7 +364,7 @@ class ChesForm extends Component {
     });
 
     form.files = files;
-    this.setState({form: form, dropWarning: dropWarning});
+    this.setState({ form: form, dropWarning: dropWarning });
   }
 
   removeFile(filename) {
@@ -363,27 +373,27 @@ class ChesForm extends Component {
       return f.name !== filename;
     });
     form.files = files;
-    this.setState({form: form, dropWarning: ''});
+    this.setState({ form: form, dropWarning: '' });
   }
 
   render() {
 
     // set styles and classes here...
-    const displayBusy = this.state.busy ? {} : {display: 'none'};
-    const displayNotBusy = this.state.busy ? {display: 'none'} : {};
+    const displayBusy = this.state.busy ? {} : { display: 'none' };
+    const displayNotBusy = this.state.busy ? { display: 'none' } : {};
 
-    const plainTextDisplay = this.state.form.bodyType === BODY_TYPES[0] ? {} : {display: 'none'};
+    const plainTextDisplay = this.state.form.bodyType === BODY_TYPES[0] ? {} : { display: 'none' };
     const plainTextButton = this.state.form.bodyType === BODY_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
-    const htmlTextDisplay = this.state.form.bodyType === BODY_TYPES[1] ? {} : {display: 'none'};
+    const htmlTextDisplay = this.state.form.bodyType === BODY_TYPES[1] ? {} : { display: 'none' };
     const htmlTextButton = this.state.form.bodyType === BODY_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
-    const {wasValidated} = this.state.form;
-    const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
-    const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
+    const { wasValidated } = this.state.form;
+    const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : { display: 'none' };
+    const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : { display: 'none' };
 
     const emailTabClass = this.state.tab === 'email' ? 'nav-link active' : 'nav-link';
     const aboutTabClass = this.state.tab === 'about' ? 'nav-link active' : 'nav-link';
-    const emailTabDisplay = this.state.tab === 'email' ? {} : {display: 'none'};
-    const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
+    const emailTabDisplay = this.state.tab === 'email' ? {} : { display: 'none' };
+    const aboutTabDisplay = this.state.tab === 'about' ? {} : { display: 'none' };
 
     const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
 
@@ -414,14 +424,14 @@ class ChesForm extends Component {
             <div style={displayNotBusy}>
               <ChesAlertList title="CHES Validation Errors"
                 message="The following validation errors were returned from CHES." alertType="danger"
-                errors={this.state.apiValidationErrors}/>
-              <AlertDisplay alertType='success' title='CHES Service Success' message={this.state.info}/>
-              <AlertDisplay alertType='danger' title='CHES Service Error' message={this.state.error}/>
+                errors={this.state.apiValidationErrors} />
+              <AlertDisplay alertType='success' title='CHES Service Success' message={this.state.info} />
+              <AlertDisplay alertType='danger' title='CHES Service Error' message={this.state.error} />
               <AuthConsumer>
-                {({isAuthenticated}) => {
+                {({ isAuthenticated }) => {
                   if (isAuthenticated()) {
                     return (
-                      <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError}/>
+                      <AlertDisplay alertType='danger' title='Authentication Service' message={this.state.userError} />
                     );
                   }
                 }}
@@ -438,7 +448,7 @@ class ChesForm extends Component {
               <div id="emailTab" style={emailTabDisplay}>
                 <div className="mb-4"></div>
                 <AuthConsumer>
-                  {({isAuthenticated}) => {
+                  {({ isAuthenticated }) => {
                     if (isAuthenticated()) {
                       return (<form id="emailForm" noValidate onSubmit={this.formSubmit}
                         className={wasValidated ? 'was-validated' : ''}>
@@ -447,12 +457,49 @@ class ChesForm extends Component {
                             <label htmlFor="sender">Sender</label>
                             <input type="text" className="form-control" name="sender" placeholder={senderPlaceholder}
                               readOnly={!this.state.hasSenderEditor} required value={this.state.form.sender}
-                              onChange={this.onChangeSender}/>
+                              onChange={this.onChangeSender} />
                             <div className="invalid-feedback">
                               Email sender is required.
                             </div>
                           </div>
-                          <div className="mb-3 col-sm-3">
+                          <div className="mb-3 col-sm-6">
+                            <label htmlFor="recipients">Recipients</label>
+                            <input type="text" className="form-control" name="recipients"
+                              placeholder="you@example.com (separate multiple by comma)" required
+                              value={this.state.form.recipients} onChange={this.onChangeRecipients} />
+                            <div className="invalid-feedback">
+                              One or more email recipients required.
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className='row'>
+                          <div className="mb-3 col-sm-6">
+                            <label htmlFor="cc">CC</label>
+                            <input type="text" className="form-control" name="cc"
+                              placeholder="you@example.com (separate multiple by comma)"
+                              value={this.state.form.cc} onChange={this.onChangeCC} />
+                          </div>
+                          <div className="mb-3 col-sm-6">
+                            <label htmlFor="bcc">BCC</label>
+                            <input type="text" className="form-control" name="bcc"
+                              placeholder="you@example.com (separate multiple by comma)"
+                              value={this.state.form.bcc} onChange={this.onChangeBCC} />
+                          </div>
+                        </div>
+
+                        <div className="mb-3">
+                          <label htmlFor="subject">Subject</label>
+                          <input type="text" className="form-control" name="subject" required
+                            value={this.state.form.subject}
+                            onChange={this.onChangeSubject} />
+                          <div className="invalid-feedback">
+                            Subject is required.
+                          </div>
+                        </div>
+
+                        <div className="row">
+                          <div className="mb-3 col-sm-4">
                             <label htmlFor="priority">Priority</label>
                             <select className="form-control" value={this.state.form.priority}
                               onChange={this.onChangePriority}>
@@ -463,7 +510,7 @@ class ChesForm extends Component {
                               })}
                             </select>
                           </div>
-                          <div className="mb-3 col-sm-3">
+                          <div className="mb-3 col-sm-4">
                             <label htmlFor="moment">Delay Until</label>
                             <DatetimePickerTrigger
                               shortcuts={shortcuts}
@@ -472,40 +519,11 @@ class ChesForm extends Component {
                               <input type="text" className="form-control" value={this.state.form.moment.local().format('YYYY-MM-DD HH:mm')} readOnly />
                             </DatetimePickerTrigger>
                           </div>
-                        </div>
-
-                        <div className="mb-3">
-                          <label htmlFor="recipients">Recipients</label>
-                          <input type="text" className="form-control" name="recipients"
-                            placeholder="you@example.com (separate multiple by comma)" required
-                            value={this.state.form.recipients} onChange={this.onChangeRecipients}/>
-                          <div className="invalid-feedback">
-                            One or more email recipients required.
-                          </div>
-                        </div>
-
-                        <div className='row'>
-                          <div className="mb-3 col-sm-6">
-                            <label htmlFor="cc">CC</label>
-                            <input type="text" className="form-control" name="cc"
-                              placeholder="you@example.com (separate multiple by comma)"
-                              value={this.state.form.cc} onChange={this.onChangeCC}/>
-                          </div>
-                          <div className="mb-3 col-sm-6">
-                            <label htmlFor="bcc">BCC</label>
-                            <input type="text" className="form-control" name="bcc"
-                              placeholder="you@example.com (separate multiple by comma)"
-                              value={this.state.form.bcc} onChange={this.onChangeBCC}/>
-                          </div>
-                        </div>
-
-                        <div className="mb-3">
-                          <label htmlFor="subject">Subject</label>
-                          <input type="text" className="form-control" name="subject" required
-                            value={this.state.form.subject}
-                            onChange={this.onChangeSubject}/>
-                          <div className="invalid-feedback">
-                            Subject is required.
+                          <div className="mb-3 col-sm-4">
+                            <label htmlFor="moment">Tag</label>
+                            <input type="text" className="form-control" name="tag"
+                              placeholder="(optional) tag to aid with message search"
+                              value={this.state.form.tag} onChange={this.onChangeTag} />
                           </div>
                         </div>
 
@@ -516,11 +534,11 @@ class ChesForm extends Component {
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
                               <input type="radio" defaultChecked={this.state.form.bodyType === BODY_TYPES[0]}
-                                value={BODY_TYPES[0]} name="bodyType" onClick={this.onChangeBodyType}/> Plain Text
+                                value={BODY_TYPES[0]} name="bodyType" onClick={this.onChangeBodyType} /> Plain Text
                             </label>
                             <label className={htmlTextButton}>
                               <input type="radio" defaultChecked={this.state.form.bodyType === BODY_TYPES[1]}
-                                value={BODY_TYPES[1]} name="bodyType" onClick={this.onChangeBodyType}/> HTML
+                                value={BODY_TYPES[1]} name="bodyType" onClick={this.onChangeBodyType} /> HTML
                             </label>
                           </div>
                         </div>
@@ -550,9 +568,9 @@ class ChesForm extends Component {
                           <div className="col-sm-3">
                             <Dropzone
                               onDrop={this.onFileDrop}>
-                              {({getRootProps, getInputProps}) => (
-                                <div {...getRootProps({className: 'dropzone'})}>
-                                  <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
+                              {({ getRootProps, getInputProps }) => (
+                                <div {...getRootProps({ className: 'dropzone' })}>
+                                  <input type="file" multiple {...getInputProps({ className: 'dropzone-fileinput' })} />
                                   <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload files"></i>
                                 </div>
                               )}
@@ -577,7 +595,7 @@ class ChesForm extends Component {
                         <div className="alert alert-warning mt-2" style={dropWarningDisplay}>
                           {this.state.dropWarning}
                         </div>
-                        <hr className="mb-4"/>
+                        <hr className="mb-4" />
                         <button className="btn btn-primary btn-lg btn-block" type="submit">Send Message</button>
                       </form>);
                     } else {
@@ -590,10 +608,10 @@ class ChesForm extends Component {
               <div id="aboutTab" style={aboutTabDisplay}>
                 <div className="mb-4"></div>
                 <h3>CHES Showcase - the Common Hosted Email Service Showcase Page</h3>
-                <br/>
+                <br />
                 <p>MSSC demonstrates how an application can leverage the Common Hosted Email Service&#39;s (CHES)
                   ability to deliver emails by calling <a
-                  href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
+                    href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
                 <p>The common-hosted-email-service requires a Service Client that has previously been created in the
                   environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
                     OK</a> for more on how to get access to CHES.</p>
