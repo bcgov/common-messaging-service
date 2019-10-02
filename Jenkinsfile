@@ -730,7 +730,7 @@ def frontendBuilderTemplateUpdated() {
 }
 
 def frontendUpdated() {
-  return inChangeSet('frontend/')
+  return true
 }
 
 def rebuildFrontendNpm() {
