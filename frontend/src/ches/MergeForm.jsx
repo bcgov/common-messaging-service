@@ -11,6 +11,7 @@ import ChesValidationError from './ChesValidationError';
 import ChesAlertList from './ChesAlertList';
 import AlertDisplay from '../utils/AlertDisplay';
 import GetUserError from '../auth/GetUserError';
+import moment from 'moment';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -22,7 +23,12 @@ const BODY_ENCODING = ['utf-8', 'base64', 'binary', 'hex'];
 const ATTACHMENT_ENCODING = ['base64', 'binary', 'hex'];
 
 const CONTEXTS_TYPES = ['xlsx', 'json'];
-const EXCEL_PARSING_DATENF = 'YYYY-MM-DD';
+// populate context/table formats
+const DT_FORMAT = 'YYYY-MM-DD';
+const TS_FORMAT = 'YYYY-MM-DD HH:mm';
+// parsing and comparison formats
+const EXCEL_PARSE_FORMAT = 'm/d/yy h:mm'; //ECMA-376 18.8.30 ID=22
+const MOMENT_PARSE_FORMAT = 'M/D/YY HH:mm'; //matches excel format, but works for moment.js
 
 // setting the front end to less than the backend payload, just to ensure delivery.
 const SERVER_BODYLIMIT = '20mb';
@@ -628,6 +634,41 @@ class MergeForm extends Component {
       return o;
     };
 
+    // this will suppress a console warning about moment deprecating a defualt fallback on non ISO/RFC2822 date formats
+    // we will just force it to use the new Date constructor.
+    moment.createFromInputFallback = function (config){
+      config._d = new Date(config._i);
+    };
+
+    const parseDelayTs = (value) => {
+      // eslint-disable-next-line no-console
+      console.log(`parseDelayTs value=${value}, isTimestamp? ${moment(value, MOMENT_PARSE_FORMAT, true).format()}`);
+      if (moment(value, MOMENT_PARSE_FORMAT, true).format() !== 'Invalid date') {
+        //return the utc integer value of the timestamp
+        return moment(value).utc().valueOf();
+      }
+      // no good, return undefined so API doesn't process it.
+      return undefined;
+    };
+
+    const handleDefault = (context, data, fieldName, key) =>  {
+      const value = data[key];
+      // use relaxed mode to determine if date (would fail with 0:00 on strict)
+      const isDate = (moment(value, MOMENT_PARSE_FORMAT).format() !== 'Invalid date');
+      // be strict when determining if timestamp - we want valid h:mm
+      const isTimestamp = (moment(value, MOMENT_PARSE_FORMAT, true).format() !== 'Invalid date');
+      const isTimestampField = isTimestamp && fieldName.toLowerCase().endsWith('ts');
+      if (isTimestampField) {
+        const ts = moment(value);
+        context[fieldName] = ts.format(TS_FORMAT);
+      } else if (isDate) {
+        const dt = moment(value);
+        context[fieldName] = dt.format(DT_FORMAT);
+      } else {
+        context[fieldName] = value;
+      }
+    };
+
     if (acceptedFiles.length === 1) {
       try {
         const file = acceptedFiles[0];
@@ -636,7 +677,7 @@ class MergeForm extends Component {
         reader.onload = (e) => {
           /* Parse data */
           const bstr = e.target.result;
-          const wb = XLSX.read(bstr, {type: rABS ? 'binary' : 'array', cellDates: true, dateNF: EXCEL_PARSING_DATENF});
+          const wb = XLSX.read(bstr, {type: rABS ? 'binary' : 'array', cellDates: true, dateNF: EXCEL_PARSE_FORMAT});
           /* Get first worksheet */
           const wsname = wb.SheetNames[0];
           const ws = wb.Sheets[wsname];
@@ -655,25 +696,35 @@ class MergeForm extends Component {
           let form = this.state.form;
           let contexts = [];
           excel.data.forEach(d => {
-            let r = {to: [], cc: [], bcc: [], context: {}};
+            let r = {to: [], cc: [], bcc: [], tag: '', delayTS: undefined, delayTSDisplay: undefined, context: {}};
             let fields = excel.cols;
             fields.forEach(f => {
               let fieldName = excel.headers[0][f.key];
               switch (fieldName.toLowerCase()) {
               case 'to':
                 r.to = this.getAddresses(d[f.key]);
-                r.context.to = r.to;
+                //r.context.to = r.to;
                 break;
               case 'cc':
                 r.cc = this.getAddresses(d[f.key]);
-                r.context.cc = r.cc;
+                //r.context.cc = r.cc;
                 break;
               case 'bcc':
                 r.bcc = this.getAddresses(d[f.key]);
-                r.context.bcc = r.bcc;
+                //r.context.bcc = r.bcc;
+                break;
+              case 'tag':
+                r.tag = d[f.key];
+                break;
+              case 'delayts':
+                r.delayTS = parseDelayTs(d[f.key]);
+                // for display in the table, format it nicely (not unix milliseconds...)
+                d[f.key] = r.delayTS ? moment(d[f.key]).format(TS_FORMAT): undefined;
                 break;
               default:
-                r.context[fieldName] = d[f.key];
+                handleDefault(r.context, d, fieldName, f.key);
+                // for display in the table, return the value from the context (altered for date or timestamp)
+                d[f.key] = r.context[fieldName];
               }
             });
             if (this.validateContext(r)) contexts.push(r);
@@ -1096,14 +1147,43 @@ class MergeForm extends Component {
 
               <div id="aboutTab" style={aboutTabDisplay}>
                 <div className="mb-4"></div>
-                <h3>CHES Showcase - the Common Hosted Email Service Showcase Page</h3>
+                <h3>CHES Showcase - Mail Merge</h3>
                 <br/>
-                <p>MSSC demonstrates how an application can leverage the Common Hosted Email Service&#39;s (CHES)
-                  ability to deliver emails by calling <a
-                  href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
-                <p>The common-hosted-email-service requires a Service Client that has previously been created in the
-                  environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
-                    OK</a> for more on how to get access to CHES.</p>
+                <p>The Mail Merge page demonstrates the email merge and templating capabilites of CHES.  CHES supports sending a list of recipients (to, cc, bcc) a templated Subject and body. This allows an application to send personalized emails in batch mode.  </p>
+                <br/>
+                <h4>MSSC</h4>
+                <p>It is important to know what MSSC is providing and is not inherent to the CHES API.</p>
+                <p>To showcase CHES, we have added some nice features to turn an Excel spreadsheet or CVS file into a CHES Mail Merge request.  See below for some sample data and a template you can use as a guide to creating your own data and templates.  It is advised that you fix the data in your spreadsheet and not in the JSON editor.</p>
+                <p>
+                  <a href='./docs/mssc-ches-merge-example.csv' download>example csv</a><br/>
+                  <a href='./docs/mssc-ches-merge-example.txt' download>example html template</a><br/>
+                </p>
+                <h6>Guide</h6>
+                <ol>
+                  <li>Download the two examples.</li>
+                  <li>One the merge screen, click the Excel button, and upload the CSV file.</li>
+                  <li>Review the contents of the table</li>
+                  <li>Click the JSON button and review the contents - this the context list sent to CHES</li>
+                  <li>For the body, click the HTML button to bring up the editor, then click View, click Source Code.</li>
+                  <li>Paste the contents of the example html template into the Source Code view and Save.</li>
+                  <li>For the Subject, enter &quot;ATTN&#58; &#123;&#123;scope&#125;&#125;&#33;&quot;</li>
+                  <li>Click Preview</li>
+                </ol>
+                <h6>Notes</h6>
+                <ul>
+                  <li>Review the csv file and look over the Excel table headings.  Note that MSSC has removed &quot;bad&quot; characters (CHES accepts only underscore and alphanumeric characters for context variable names).</li>
+                  <li>Also note the last 5 columns: to, cc, bcc, tag, and delayTs.  The naming of these columns is important (not their location in the file).  These are special fields that are part of building the message, but are not used in the context (what populates each body and subject template).</li>
+                  <li>To is required.  It can be a comma-separated list of email addresses.</li>
+                  <li>Cc and Bcc are not required.  They can be comma-separated lists of email addresses.</li>
+                  <li>Tag can be used the help group messages and make it easier to search for them in CHES (for example, to determine status)</li>
+                  <li>Delay TS is a timestamp of when to deliver the message.  Leave empty if you wish to deliver now.</li>
+                  <li>Any other field that contains a date, the Excel parser will translate to YYYY-MM-DD.  Look in the csv file to see various formats it can translate.</li>
+                  <li>If a field contains a date and time, and ends with ts (see endDateTs), MSSC will translate to YYYY-MM-DD hh:mm.  This is local time.</li>
+                  <li>Note that delayTs appears in the JSON as a number. This is the date and time as milliseconds in UTC.  This is what CHES expects.</li>
+                  <li>Also, note down the lefthand side of the body is a listing of the variables you can use in the template. These are the CSV headings (altered if needed by MSSC)</li>
+                  <li>In Preview, you can navigate through all the messages that will be delivered.</li>
+                  <li><strong>Important:</strong> If you alter the JSON, the Excel data table will go away. This is a one way operation (excel to JSON).</li>
+                </ul>
               </div>
 
             </div>

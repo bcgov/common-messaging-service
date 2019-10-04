@@ -7,8 +7,8 @@ const Home = () => (
         <h2>Welcome to Messaging Services Showcase (MSSC).</h2>
         MSSC demonstrates how an application can have messaging functionality by calling an API. In this case, it
         demonstrates how to call two different common messaging APIs: <a
-        href="https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md">CMSG</a> and <a
-        href="https://github.com/bcgov/common-hosted-email-service">CHES</a>.
+          href="https://github.com/bcgov/nr-messaging-service-showcase/docs/developer-guide.md">CMSG</a> and <a
+          href="https://github.com/bcgov/common-hosted-email-service">CHES</a>.
 
         <h4 className="mt-4">Capabilities</h4>
 
