@@ -634,7 +634,7 @@ class MergeForm extends Component {
       return o;
     };
 
-    // this will suppress a console warning about moment deprecating a defualt fallback on non ISO/RFC2822 date formats
+    // this will suppress a console warning about moment deprecating a default fallback on non ISO/RFC2822 date formats
     // we will just force it to use the new Date constructor.
     moment.createFromInputFallback = function (config){
       config._d = new Date(config._i);
@@ -696,7 +696,7 @@ class MergeForm extends Component {
           let form = this.state.form;
           let contexts = [];
           excel.data.forEach(d => {
-            let r = {to: [], cc: [], bcc: [], tag: '', delayTS: undefined, delayTSDisplay: undefined, context: {}};
+            let r = {to: [], cc: [], bcc: [], tag: undefined, delayTS: undefined, delayTSDisplay: undefined, context: {}};
             let fields = excel.cols;
             fields.forEach(f => {
               let fieldName = excel.headers[0][f.key];

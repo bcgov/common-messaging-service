@@ -52,8 +52,6 @@ class TinyMceEditor extends Component {
     });
   }
 
-
-
   componentWillUnmount() {
     tinymce.remove(this.state.editor);
   }
