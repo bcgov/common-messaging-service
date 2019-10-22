@@ -317,7 +317,7 @@ pipeline {
                 "APP_NAME=${APP_NAME}"
               )
 
-              timeout(10) {
+              timeout(20) {
                 parallel(
                   Backend: {
                     try {

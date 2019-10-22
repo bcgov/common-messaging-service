@@ -22,7 +22,7 @@ objects:
       app: "${APP_NAME}-${JOB_NAME}"
     name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
   spec:
-    completionDeadlineSeconds: 600
+    completionDeadlineSeconds: 1200
     failedBuildsHistoryLimit: 5
     nodeSelector: null
     output:
@@ -32,8 +32,8 @@ objects:
     postCommit: {}
     resources:
       requests:
-        cpu: 1000m
-        memory: 1Gi
+        cpu: 2000m
+        memory: 2Gi
       limits:
         cpu: 4000m
         memory: 2Gi

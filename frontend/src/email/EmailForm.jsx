@@ -9,11 +9,10 @@ import {AuthConsumer} from '../auth/AuthProvider';
 import AlertDisplay from '../utils/AlertDisplay';
 import GetUserError from '../auth/GetUserError';
 
+import * as Constants from '../utils/Constants';
+
 const API_ROOT = process.env.REACT_APP_API_ROOT || '';
 const MSG_SERVICE_PATH = `${API_ROOT}/api/v1`;
-// email message media types: we are allowed to send the body of the email as html or plain text
-const MEDIA_TYPES = ['text/plain', 'text/html'];
-const SENDER_EDITOR_ROLE = 'mssc:sender_editor';
 
 class EmailForm extends Component {
 
@@ -49,13 +48,13 @@ class EmailForm extends Component {
         htmlText: '',
         files: [],
         reset: false,
-        mediaType: MEDIA_TYPES[0]
+        mediaType: Constants.CMSG_MEDIA_TYPES[0]
       },
       config: {
         attachmentsMaxSize: bytes.parse('5mb'),
         attachmentsMaxFiles: 3,
         attachmentsAcceptedType: '.pdf',
-        sender: 'NR.CommonServiceShowcase@gov.bc.ca'
+        sender: Constants.DEFAULT_SENDER
       }
     };
 
@@ -119,7 +118,7 @@ class EmailForm extends Component {
 
   getMessageBody() {
     const form = this.state.form;
-    if (form.mediaType === MEDIA_TYPES[0]) {
+    if (form.mediaType === Constants.CMSG_MEDIA_TYPES[0]) {
       return form.plainText && form.plainText.trim();
     }
     return form.htmlText && form.htmlText.trim();
@@ -131,7 +130,7 @@ class EmailForm extends Component {
 
   async hasSenderEditor() {
     const user = await this.authService.getUser();
-    return this.authService.hasRole(user, SENDER_EDITOR_ROLE);
+    return this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
   }
 
   getDefaultSender(hasSenderEditor) {
@@ -165,7 +164,7 @@ class EmailForm extends Component {
       const tab = (credentialsGood && credentialsAuthenticated && hasTopLevel && hasCreateMessage && cmsgApiHealthy) ? 'about' : 'sc';
 
       const user = await this.authService.getUser();
-      const hasSenderEditor = this.authService.hasRole(user, SENDER_EDITOR_ROLE);
+      const hasSenderEditor = this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
 
       const form = this.state.form;
       form.sender = this.getDefaultSender(hasSenderEditor);
@@ -329,7 +328,7 @@ class EmailForm extends Component {
         form.plainText = '';
         form.htmlText = '';
         form.files = [];
-        form.mediaType = MEDIA_TYPES[0];
+        form.mediaType = Constants.CMSG_MEDIA_TYPES[0];
         form.reset = true;
         this.setState({
           busy: false,
@@ -497,10 +496,10 @@ class EmailForm extends Component {
     const createMsgIndClass = this.state.healthCheck.hasCreateMessage ? 'icon good' : 'icon bad';
     const healthCheckIndClass = this.state.healthCheck.cmsgApiHealthy ? 'icon good' : 'icon bad';
     const emailFormDisplay = this.state.healthCheck.hasCreateMessage ? {} : {display: 'none'};
-    const plainTextDisplay = this.state.form.mediaType === MEDIA_TYPES[0] ? {} : {display: 'none'};
-    const plainTextButton = this.state.form.mediaType === MEDIA_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
-    const htmlTextDisplay = this.state.form.mediaType === MEDIA_TYPES[1] ? {} : {display: 'none'};
-    const htmlTextButton = this.state.form.mediaType === MEDIA_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const plainTextDisplay = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0] ? {} : {display: 'none'};
+    const plainTextButton = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const htmlTextDisplay = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[1] ? {} : {display: 'none'};
+    const htmlTextButton = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const {wasValidated} = this.state.form;
     const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
     const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
@@ -564,7 +563,7 @@ class EmailForm extends Component {
               </ul>
 
               <div id="emailTab" style={emailTabDisplay}>
-                <div className="mb-4"></div>
+                <div className="mb-4"/>
                 <AuthConsumer>
                   {({isAuthenticated}) => {
                     if (isAuthenticated()) {
@@ -606,20 +605,24 @@ class EmailForm extends Component {
                           </div>
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[0]}
-                                value={MEDIA_TYPES[0]} name="mediaType" onClick={this.onChangeMediaType}/> Plain
+                              <input type="radio"
+                                defaultChecked={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0]}
+                                value={Constants.CMSG_MEDIA_TYPES[0]} name="mediaType"
+                                onClick={this.onChangeMediaType}/> Plain
                               Text
                             </label>
                             <label className={htmlTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.mediaType === MEDIA_TYPES[1]}
-                                value={MEDIA_TYPES[1]} name="mediaType" onClick={this.onChangeMediaType}/> HTML
+                              <input type="radio"
+                                defaultChecked={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[1]}
+                                value={Constants.CMSG_MEDIA_TYPES[1]} name="mediaType"
+                                onClick={this.onChangeMediaType}/> HTML
                             </label>
                           </div>
                         </div>
                         <div style={plainTextDisplay}>
                           <textarea id="messageText" name="plainText" className="form-control"
-                            required={this.state.form.mediaType === MEDIA_TYPES[0]}
-                            value={this.state.form.plainText} onChange={this.onChangePlainText}></textarea>
+                            required={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0]}
+                            value={this.state.form.plainText} onChange={this.onChangePlainText}/>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
@@ -647,7 +650,7 @@ class EmailForm extends Component {
                               {({getRootProps, getInputProps}) => (
                                 <div {...getRootProps({className: 'dropzone'})}>
                                   <input type="file" multiple {...getInputProps({className: 'dropzone-fileinput'})} />
-                                  <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload pdf"></i>
+                                  <i className="m-sm-auto fas fa-2x fa-file-pdf upload-icon" alt="upload pdf"/>
                                 </div>
                               )}
                             </Dropzone>
@@ -661,7 +664,7 @@ class EmailForm extends Component {
                                   <div className="col-sm-1 m-auto">
                                     <button type="button" className="btn btn-sm" onClick={() => {
                                       this.removeFile(file.name);
-                                    }}><i className="far fa-trash-alt"></i></button>
+                                    }}><i className="far fa-trash-alt"/></button>
                                   </div>
                                 </div>
                               );
@@ -682,7 +685,7 @@ class EmailForm extends Component {
               </div>
 
               <div id="statusTab" style={statusTabDisplay}>
-                <div className="mb-4"></div>
+                <div className="mb-4"/>
                 <AuthConsumer>
                   {({isAuthenticated}) => {
                     if (isAuthenticated()) {
@@ -719,29 +722,29 @@ class EmailForm extends Component {
               </div>
 
               <div id="scTab" style={scTabDisplay}>
-                <div className="mb-4"></div>
+                <div className="mb-4"/>
                 <div id="healthCheck">
                   <div className="row">
                     <div className="col-sm-10 hc-text">Service Client credentials</div>
-                    <div className="col-sm-2"><span id="credentialsInd" className={credentialsIndClass}></span></div>
+                    <div className="col-sm-2"><span id="credentialsInd" className={credentialsIndClass}/></div>
                   </div>
                   <div className="row">
                     <div className="col-sm-10 hc-text">Service Client has access to Common Messaging API</div>
-                    <div className="col-sm-2"><span id="apiAccessInd" className={apiAccessIndClass}></span></div>
+                    <div className="col-sm-2"><span id="apiAccessInd" className={apiAccessIndClass}/></div>
                   </div>
                   <div className="row">
                     <div className="col-sm-10 hc-text">Service Client can send message</div>
-                    <div className="col-sm-2"><span id="createMsgInd" className={createMsgIndClass}></span></div>
+                    <div className="col-sm-2"><span id="createMsgInd" className={createMsgIndClass}/></div>
                   </div>
                   <div className="row">
                     <div className="col-sm-10 hc-text">Common Messaging API available</div>
-                    <div className="col-sm-2"><span id="healthCheckInd" className={healthCheckIndClass}></span></div>
+                    <div className="col-sm-2"><span id="healthCheckInd" className={healthCheckIndClass}/></div>
                   </div>
                 </div>
               </div>
 
               <div id="aboutTab" style={aboutTabDisplay}>
-                <div className="mb-4"></div>
+                <div className="mb-4"/>
                 <h3>Welcome to MSSC - the Common Messaging Service Showcase Application</h3>
                 <br/>
                 <p>MSSC demonstrates how an application can leverage the Common Messaging Service&#39;s (CMSG) ability
