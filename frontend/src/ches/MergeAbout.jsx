@@ -77,7 +77,8 @@ class MergeAbout extends Component {
           <li><strong>Important:</strong> If you alter the JSON, the Excel data table will go away. This is a
             one way operation (excel to JSON).
           </li>
-        </ul>      </div>
+        </ul>      
+      </div>
     );
   }
 }
