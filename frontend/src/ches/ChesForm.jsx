@@ -9,14 +9,17 @@ import AuthService from '../auth/AuthService';
 import ChesValidationError from './ChesValidationError';
 import ChesAlertList from './ChesAlertList';
 import AlertDisplay from '../utils/AlertDisplay';
+import ChesSuccess from '../utils/ChesSuccess';
+import StatusForm from './StatusForm';
 
 import moment from 'moment';
 import {DatetimePickerTrigger} from 'rc-datetime-picker';
 
 import * as Constants from '../utils/Constants';
 import * as ExcelUtils from '../utils/ExcelUtils';
+import * as StorageUtils from '../utils/StorageUtils';
 import * as Utils from '../utils/Utils';
-import ChesSuccess from '../utils/ChesSuccess';
+
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -47,11 +50,11 @@ class ChesForm extends Component {
         bcc: '',
         subject: '',
         plainText: '',
-        priority: Constants.CHES_PRIORITIES[0],
+        priority: Constants.CHES_PRIORITIES_NORMAL,
         htmlText: '',
         files: [],
         reset: false,
-        bodyType: Constants.CHES_BODY_TYPES[0],
+        bodyType: Constants.CHES_BODY_TYPES_TEXT,
         moment: moment(),
         tag: ''
       },
@@ -155,7 +158,7 @@ class ChesForm extends Component {
 
   getMessageBody() {
     const form = this.state.form;
-    if (form.bodyType === Constants.CHES_BODY_TYPES[0]) {
+    if (form.bodyType === Constants.CHES_BODY_TYPES_TEXT) {
       return form.plainText && form.plainText.trim();
     }
     return form.htmlText && form.htmlText.trim();
@@ -201,14 +204,13 @@ class ChesForm extends Component {
       return;
     }
 
-    let messageId = undefined;
     try {
 
       this.setState({busy: true});
 
       const postEmailData = await this.postEmail();
-      messageId = postEmailData.messages[0].msgId;
       const transactionCsv = ExcelUtils.transactionToCsv(postEmailData);
+      StorageUtils.transactionToStorage(postEmailData);
 
       let form = this.state.form;
       form.wasValidated = false;
@@ -220,8 +222,8 @@ class ChesForm extends Component {
       form.plainText = '';
       form.htmlText = '';
       form.files = [];
-      form.bodyType = Constants.CHES_BODY_TYPES[0];
-      form.priority = Constants.CHES_PRIORITIES[0];
+      form.bodyType = Constants.CHES_BODY_TYPES_TEXT;
+      form.priority = Constants.CHES_PRIORITIES_NORMAL;
       form.moment = moment();
       form.tag = '';
       form.reset = true;
@@ -263,7 +265,7 @@ class ChesForm extends Component {
 
   async postEmail() {
     const user = await this.authService.getUser();
-    const attachments = await Promise.all(this.state.form.files.map(file => Utils.convertFileToAttachment(file, Constants.CHES_ATTACHMENT_ENCODING[0])));
+    const attachments = await Promise.all(this.state.form.files.map(file => Utils.convertFileToAttachment(file, Constants.CHES_ATTACHMENT_ENCODING_BASE64)));
 
     const email = {
       attachments: attachments,
@@ -271,7 +273,7 @@ class ChesForm extends Component {
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),
       cc: Utils.getAddresses(this.state.form.cc),
-      encoding: Constants.CHES_BODY_ENCODING[0],
+      encoding: Constants.CHES_BODY_ENCODING_BASE64,
       from: this.state.form.sender,
       priority: this.state.form.priority,
       to: Utils.getAddresses(this.state.form.recipients),
@@ -322,18 +324,20 @@ class ChesForm extends Component {
     const displayBusy = this.state.busy ? {} : {display: 'none'};
     const displayNotBusy = this.state.busy ? {display: 'none'} : {};
 
-    const plainTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES[0] ? {} : {display: 'none'};
-    const plainTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
-    const htmlTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES[1] ? {} : {display: 'none'};
-    const htmlTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const plainTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT ? {} : {display: 'none'};
+    const plainTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const htmlTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES_HTML ? {} : {display: 'none'};
+    const htmlTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES_HTML ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const {wasValidated} = this.state.form;
     const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
     const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
 
     const emailTabClass = this.state.tab === 'email' ? 'nav-link active' : 'nav-link';
     const aboutTabClass = this.state.tab === 'about' ? 'nav-link active' : 'nav-link';
+    const statusTabClass = this.state.tab === 'status' ? 'nav-link active' : 'nav-link';
     const emailTabDisplay = this.state.tab === 'email' ? {} : {display: 'none'};
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
+    const statusTabDisplay = this.state.tab === 'status' ? {} : {display: 'none'};
 
     const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
 
@@ -379,6 +383,9 @@ class ChesForm extends Component {
               <ul className="nav nav-tabs">
                 <li className="nav-item">
                   <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Email</button>
+                </li>
+                <li className="nav-item">
+                  <button className={statusTabClass} id='status' onClick={this.onSelectTab}>Status</button>
                 </li>
                 <li className="nav-item">
                   <button className={aboutTabClass} id='about' onClick={this.onSelectTab}>About</button>
@@ -461,7 +468,7 @@ class ChesForm extends Component {
                             </DatetimePickerTrigger>
                           </div>
                           <div className="mb-3 col-sm-4">
-                            <label htmlFor="moment">Tag</label>
+                            <label htmlFor="tag">Tag</label>
                             <input type="text" className="form-control" name="tag"
                               placeholder="(optional) tag to aid with message search"
                               value={this.state.form.tag} onChange={this.onChangeTag}/>
@@ -474,20 +481,20 @@ class ChesForm extends Component {
                           </div>
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES[0]}
-                                value={Constants.CHES_BODY_TYPES[0]} name="bodyType"
+                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT}
+                                value={Constants.CHES_BODY_TYPES_TEXT} name="bodyType"
                                 onClick={this.onChangeBodyType}/> Plain Text
                             </label>
                             <label className={htmlTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES[1]}
-                                value={Constants.CHES_BODY_TYPES[1]} name="bodyType"
+                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES_HTML}
+                                value={Constants.CHES_BODY_TYPES_HTML} name="bodyType"
                                 onClick={this.onChangeBodyType}/> HTML
                             </label>
                           </div>
                         </div>
                         <div style={plainTextDisplay}>
                           <textarea id="messageText" name="plainText" className="form-control"
-                            required={this.state.form.bodyType === Constants.CHES_BODY_TYPES[0]}
+                            required={this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT}
                             value={this.state.form.plainText} onChange={this.onChangePlainText}/>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
@@ -499,7 +506,7 @@ class ChesForm extends Component {
                             reset={this.state.form.reset}
                             onEditorChange={this.onEditorChange}
                           />
-                          <div className="invalid-tinymce" style={bodyErrorDisplay}>
+                          <div className="invalid-field" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
                         </div>
@@ -546,6 +553,11 @@ class ChesForm extends Component {
                     }
                   }}
                 </AuthConsumer>
+              </div>
+
+              <div id="statusTab" style={statusTabDisplay}>
+                <div className="mb-4"/>
+                <StatusForm />
               </div>
 
               <div id="aboutTab" style={aboutTabDisplay}>

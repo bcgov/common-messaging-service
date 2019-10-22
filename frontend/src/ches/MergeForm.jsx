@@ -15,6 +15,7 @@ import * as ExcelUtils from '../utils/ExcelUtils';
 import * as Utils from '../utils/Utils';
 import MergeAbout from './MergeAbout';
 import ChesSuccess from '../utils/ChesSuccess';
+import StatusForm from './StatusForm';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -46,15 +47,15 @@ class MergeForm extends Component {
       form: {
         wasValidated: false,
         contexts: '',
-        contextsType: Constants.CONTEXTS_TYPES[0],
+        contextsType: Constants.CONTEXTS_TYPES_XLSX,
         sender: '',
         subject: '',
         plainText: '',
-        priority: Constants.CHES_PRIORITIES[0],
+        priority: Constants.CHES_PRIORITIES_NORMAL,
         htmlText: '',
         files: [],
         reset: false,
-        bodyType: Constants.CHES_BODY_TYPES[0]
+        bodyType: Constants.CHES_BODY_TYPES_TEXT
       },
       preview: {
         allowed: false,
@@ -209,7 +210,7 @@ class MergeForm extends Component {
 
   getMessageBody() {
     const form = this.state.form;
-    if (form.bodyType === Constants.CHES_BODY_TYPES[0]) {
+    if (form.bodyType === Constants.CHES_BODY_TYPES_TEXT) {
       return form.plainText && form.plainText.trim();
     }
     return form.htmlText && form.htmlText.trim();
@@ -295,8 +296,8 @@ class MergeForm extends Component {
       form.htmlText = '';
       form.files = [];
       form.contexts = '';
-      form.bodyType = Constants.CHES_BODY_TYPES[0];
-      form.priority = Constants.CHES_PRIORITIES[0];
+      form.bodyType = Constants.CHES_BODY_TYPES_TEXT;
+      form.priority = Constants.CHES_PRIORITIES_NORMAL;
       form.reset = true;
       this.setState({
         busy: false,
@@ -358,14 +359,14 @@ class MergeForm extends Component {
 
   async postEmailMerge() {
     const user = await this.authService.getUser();
-    const attachments = await Promise.all(this.state.form.files.map(file => Utils.convertFileToAttachment(file, Constants.CHES_ATTACHMENT_ENCODING[0])));
+    const attachments = await Promise.all(this.state.form.files.map(file => Utils.convertFileToAttachment(file, Constants.CHES_ATTACHMENT_ENCODING_BASE64)));
 
     const email = {
       contexts: this.getContextsObject(),
       attachments: attachments,
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),
-      encoding: Constants.CHES_BODY_ENCODING[0],
+      encoding: Constants.CHES_BODY_ENCODING_BASE64,
       from: this.state.form.sender,
       priority: this.state.form.priority,
       subject: this.state.form.subject
@@ -450,7 +451,7 @@ class MergeForm extends Component {
       attachments: [],
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),
-      encoding: Constants.CHES_BODY_ENCODING[0],
+      encoding: Constants.CHES_BODY_ENCODING_BASE64,
       from: this.state.form.sender,
       priority: this.state.form.priority,
       subject: this.state.form.subject
@@ -524,23 +525,25 @@ class MergeForm extends Component {
     const displayBusy = this.state.busy ? {} : {display: 'none'};
     const displayNotBusy = this.state.busy ? {display: 'none'} : {};
 
-    const plainTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES[0] ? {} : {display: 'none'};
-    const plainTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
-    const htmlTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES[1] ? {} : {display: 'none'};
-    const htmlTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const plainTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT ? {} : {display: 'none'};
+    const plainTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const htmlTextDisplay = this.state.form.bodyType === Constants.CHES_BODY_TYPES_HTML ? {} : {display: 'none'};
+    const htmlTextButton = this.state.form.bodyType === Constants.CHES_BODY_TYPES_HTML ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const {wasValidated} = this.state.form;
     const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
     const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
 
     const emailTabClass = this.state.tab === 'email' ? 'nav-link active' : 'nav-link';
     const aboutTabClass = this.state.tab === 'about' ? 'nav-link active' : 'nav-link';
+    const statusTabClass = this.state.tab === 'status' ? 'nav-link active' : 'nav-link';
     const emailTabDisplay = this.state.tab === 'email' ? {} : {display: 'none'};
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
+    const statusTabDisplay = this.state.tab === 'status' ? {} : {display: 'none'};
 
-    const contextsExcelDisplay = this.state.form.contextsType === Constants.CONTEXTS_TYPES[0] ? {} : {display: 'none'};
-    const contextsExcelButton = this.state.form.contextsType === Constants.CONTEXTS_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
-    const contextsJsonDisplay = this.state.form.contextsType === Constants.CONTEXTS_TYPES[1] ? {} : {display: 'none'};
-    const contextsJsonButton = this.state.form.contextsType === Constants.CONTEXTS_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const contextsExcelDisplay = this.state.form.contextsType === Constants.CONTEXTS_TYPES_XLSX ? {} : {display: 'none'};
+    const contextsExcelButton = this.state.form.contextsType === Constants.CONTEXTS_TYPES_XLSX ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const contextsJsonDisplay = this.state.form.contextsType === Constants.CONTEXTS_TYPES_JSON ? {} : {display: 'none'};
+    const contextsJsonButton = this.state.form.contextsType === Constants.CONTEXTS_TYPES_JSON ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
 
     const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
 
@@ -584,6 +587,9 @@ class MergeForm extends Component {
               <ul className="nav nav-tabs">
                 <li className="nav-item">
                   <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Mail Merge</button>
+                </li>
+                <li className="nav-item">
+                  <button className={statusTabClass} id='status' onClick={this.onSelectTab}>Status</button>
                 </li>
                 <li className="nav-item">
                   <button className={aboutTabClass} id='about' onClick={this.onSelectTab}>About</button>
@@ -636,14 +642,14 @@ class MergeForm extends Component {
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={contextsExcelButton}>
                               <input type="radio"
-                                defaultChecked={this.state.form.contextsType === Constants.CONTEXTS_TYPES[0]}
-                                value={Constants.CONTEXTS_TYPES[0]} name="contextsType"
+                                defaultChecked={this.state.form.contextsType === Constants.CONTEXTS_TYPES_XLSX}
+                                value={Constants.CONTEXTS_TYPES_XLSX} name="contextsType"
                                 onClick={this.onChangeContextsType}/> Excel
                             </label>
                             <label className={contextsJsonButton}>
                               <input type="radio"
-                                defaultChecked={this.state.form.contextsType === Constants.CONTEXTS_TYPES[1]}
-                                value={Constants.CONTEXTS_TYPES[1]} name="contextsType"
+                                defaultChecked={this.state.form.contextsType === Constants.CONTEXTS_TYPES_JSON}
+                                value={Constants.CONTEXTS_TYPES_JSON} name="contextsType"
                                 onClick={this.onChangeContextsType}/> JSON
                             </label>
                           </div>
@@ -685,13 +691,13 @@ class MergeForm extends Component {
                           </div>
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES[0]}
-                                value={Constants.CHES_BODY_TYPES[0]} name="bodyType"
+                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT}
+                                value={Constants.CHES_BODY_TYPES_TEXT} name="bodyType"
                                 onClick={this.onChangeBodyType}/> Plain Text
                             </label>
                             <label className={htmlTextButton}>
-                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES[1]}
-                                value={Constants.CHES_BODY_TYPES[1]} name="bodyType"
+                              <input type="radio" defaultChecked={this.state.form.bodyType === Constants.CHES_BODY_TYPES_HTML}
+                                value={Constants.CHES_BODY_TYPES_HTML} name="bodyType"
                                 onClick={this.onChangeBodyType}/> HTML
                             </label>
                           </div>
@@ -713,7 +719,7 @@ class MergeForm extends Component {
                           </div>
                           <div className="col-sm-10">
                             <textarea id="messageText" name="plainText" className="form-control"
-                              required={this.state.form.bodyType === Constants.CHES_BODY_TYPES[0]}
+                              required={this.state.form.bodyType === Constants.CHES_BODY_TYPES_TEXT}
                               value={this.state.form.plainText} onChange={this.onChangePlainText}/>
                           </div>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
@@ -742,7 +748,7 @@ class MergeForm extends Component {
                               onEditorChange={this.onEditorChange}
                             />
                           </div>
-                          <div className="invalid-tinymce" style={bodyErrorDisplay}>
+                          <div className="invalid-field" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
                         </div>
@@ -913,6 +919,11 @@ class MergeForm extends Component {
                     }
                   }}
                 </AuthConsumer>
+              </div>
+
+              <div id="statusTab" style={statusTabDisplay}>
+                <div className="mb-4"/>
+                <StatusForm />
               </div>
 
               <div id="aboutTab" style={aboutTabDisplay}>

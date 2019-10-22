@@ -48,7 +48,7 @@ class EmailForm extends Component {
         htmlText: '',
         files: [],
         reset: false,
-        mediaType: Constants.CMSG_MEDIA_TYPES[0]
+        mediaType: Constants.CMSG_MEDIA_TYPES_TEXT
       },
       config: {
         attachmentsMaxSize: bytes.parse('5mb'),
@@ -118,7 +118,7 @@ class EmailForm extends Component {
 
   getMessageBody() {
     const form = this.state.form;
-    if (form.mediaType === Constants.CMSG_MEDIA_TYPES[0]) {
+    if (form.mediaType === Constants.CMSG_MEDIA_TYPES_TEXT) {
       return form.plainText && form.plainText.trim();
     }
     return form.htmlText && form.htmlText.trim();
@@ -328,7 +328,7 @@ class EmailForm extends Component {
         form.plainText = '';
         form.htmlText = '';
         form.files = [];
-        form.mediaType = Constants.CMSG_MEDIA_TYPES[0];
+        form.mediaType = Constants.CMSG_MEDIA_TYPES_TEXT;
         form.reset = true;
         this.setState({
           busy: false,
@@ -496,10 +496,10 @@ class EmailForm extends Component {
     const createMsgIndClass = this.state.healthCheck.hasCreateMessage ? 'icon good' : 'icon bad';
     const healthCheckIndClass = this.state.healthCheck.cmsgApiHealthy ? 'icon good' : 'icon bad';
     const emailFormDisplay = this.state.healthCheck.hasCreateMessage ? {} : {display: 'none'};
-    const plainTextDisplay = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0] ? {} : {display: 'none'};
-    const plainTextButton = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
-    const htmlTextDisplay = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[1] ? {} : {display: 'none'};
-    const htmlTextButton = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[1] ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const plainTextDisplay = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES_TEXT ? {} : {display: 'none'};
+    const plainTextButton = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES_TEXT ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
+    const htmlTextDisplay = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES_HTML ? {} : {display: 'none'};
+    const htmlTextButton = this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES_HTML ? 'btn btn-sm btn-outline-secondary active' : 'btn btn-sm btn-outline-secondary';
     const {wasValidated} = this.state.form;
     const bodyErrorDisplay = (this.state.form.wasValidated && !this.hasMessageBody()) ? {} : {display: 'none'};
     const dropWarningDisplay = (this.state.dropWarning && this.state.dropWarning.length > 0) ? {} : {display: 'none'};
@@ -606,22 +606,22 @@ class EmailForm extends Component {
                           <div className="col-sm-4 offset-sm-4 btn-group btn-group-toggle">
                             <label className={plainTextButton}>
                               <input type="radio"
-                                defaultChecked={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0]}
-                                value={Constants.CMSG_MEDIA_TYPES[0]} name="mediaType"
+                                defaultChecked={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES_TEXT}
+                                value={Constants.CMSG_MEDIA_TYPES_TEXT} name="mediaType"
                                 onClick={this.onChangeMediaType}/> Plain
                               Text
                             </label>
                             <label className={htmlTextButton}>
                               <input type="radio"
-                                defaultChecked={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[1]}
-                                value={Constants.CMSG_MEDIA_TYPES[1]} name="mediaType"
+                                defaultChecked={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES_HTML}
+                                value={Constants.CMSG_MEDIA_TYPES_HTML} name="mediaType"
                                 onClick={this.onChangeMediaType}/> HTML
                             </label>
                           </div>
                         </div>
                         <div style={plainTextDisplay}>
                           <textarea id="messageText" name="plainText" className="form-control"
-                            required={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES[0]}
+                            required={this.state.form.mediaType === Constants.CMSG_MEDIA_TYPES_TEXT}
                             value={this.state.form.plainText} onChange={this.onChangePlainText}/>
                           <div className="invalid-feedback" style={bodyErrorDisplay}>
                             Body is required.
@@ -633,7 +633,7 @@ class EmailForm extends Component {
                             reset={this.state.form.reset}
                             onEditorChange={this.onEditorChange}
                           />
-                          <div className="invalid-tinymce" style={bodyErrorDisplay}>
+                          <div className="invalid-field" style={bodyErrorDisplay}>
                             Body is required.
                           </div>
                         </div>
