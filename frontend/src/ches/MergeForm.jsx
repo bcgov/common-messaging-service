@@ -253,16 +253,21 @@ class MergeForm extends Component {
     return hasSenderEditor ? '' : this.state.config.sender;
   }
 
-  setBusy(busy, error = '') {
-    this.setState({
-      busy: busy,
-      info: '',
-      error: error,
-      userError: '',
-      apiValidationErrors: [],
-      transactionCsv: null,
-      dropWarning: ''
-    });
+  setBusy(busy, e) {
+    if (e) {
+      let {error, userError, apiValidationErrors} = Utils.errorHandler(e);
+      this.setState({
+        busy: busy,
+        error: error,
+        userError: userError,
+        apiValidationErrors: apiValidationErrors,
+        transactionCsv: null
+      });
+    } else {
+      this.setState({
+        busy: busy
+      });
+    }
   }
 
   async componentDidMount() {

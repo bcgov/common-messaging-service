@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 
 import CreatableSelect from 'react-select/creatable';
 import axios from 'axios';
+import ChesValidationError from './ChesValidationError';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -101,13 +102,13 @@ class StatusPanel extends Component {
 
   async getStatuses(form) {
     let params = {txId: encodeURIComponent(this.getSelectableValue(form.transactionId))};
-    if (this.getValue(form.messageId) !== '') {
+    if (this.getSelectableValue(form.messageId) !== '') {
       params.msgId = encodeURIComponent(this.getSelectableValue(form.messageId));
     }
     if (form.tag !== '') {
       params.tag = encodeURIComponent(form.tag);
     }
-    if (this.getValue(form.status)) {
+    if (this.getSelectableValue(form.status)) {
       params.status = encodeURIComponent(this.getSelectableValue(form.status));
     }
 
@@ -124,7 +125,11 @@ class StatusPanel extends Component {
           }
         }
       ).catch(e => {
-        throw Error('Could not query status from Showcase CHES API: ' + e.message);
+        if (e && e.response && e.response.status === 422) {
+          throw new ChesValidationError(e.response.data);
+        } else {
+          throw Error('Could not get statuses from Showcase CHES API: ' + e.message);
+        }
       });
       // use the response data to populate the table...
       this.setState({
@@ -133,9 +138,9 @@ class StatusPanel extends Component {
         noResults: response.data && response.data.length === 0
       });
       this.props.setBusy(false);
-    } catch (e) {
+    } catch (err) {
       this.setState({statuses: [], form: form, noResults: false});
-      this.props.setBusy(false, e.message);
+      this.props.setBusy(false, err);
     }
   }
 
@@ -157,13 +162,17 @@ class StatusPanel extends Component {
             }
           }
         ).catch(e => {
-          throw Error('Could not cancel message from Showcase CHES API: ' + e.message);
+          if (e && e.response && e.response.status === 422) {
+            throw new ChesValidationError(e.response.data);
+          } else {
+            throw Error('Could not cancel message from Showcase CHES API: ' + e.message);
+          }
         });
         //fetch status
         await this.getStatuses(form);
-      } catch (e) {
+      } catch (err) {
         this.setState({statuses: [], form: form, noResults: false});
-        this.props.setBusy(false, e.message);
+        this.props.setBusy(false, err);
       }
     }
   }

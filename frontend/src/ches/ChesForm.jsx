@@ -34,7 +34,7 @@ class ChesForm extends Component {
 
     this.state = {
       busy: false,
-      tab: 'about',
+      tab: 'email',
       info: '',
       error: '',
       userError: '',
@@ -158,16 +158,21 @@ class ChesForm extends Component {
     this.setState({form: form, info: ''});
   }
 
-  setBusy(busy, error = '') {
-    this.setState({
-      busy: busy,
-      info: '',
-      error: error,
-      userError: '',
-      apiValidationErrors: [],
-      transactionCsv: null,
-      dropWarning: ''
-    });
+  setBusy(busy, e) {
+    if (e) {
+      let {error, userError, apiValidationErrors} = Utils.errorHandler(e);
+      this.setState({
+        busy: busy,
+        error: error,
+        userError: userError,
+        apiValidationErrors: apiValidationErrors,
+        transactionCsv: null
+      });
+    } else {
+      this.setState({
+        busy: busy
+      });
+    }
   }
 
   getMessageBody() {
@@ -200,7 +205,7 @@ class ChesForm extends Component {
       this.setState({hasSenderEditor: hasSenderEditor, form: form});
     } catch (e) {
       let {error, userError, apiValidationErrors} = Utils.errorHandler(e);
-      this.setState({error: error, userError, apiValidationErrors});
+      this.setState({error: error, userError: userError, apiValidationErrors: apiValidationErrors});
     }
   }
 
