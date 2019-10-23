@@ -78,9 +78,9 @@ class StatusPanel extends Component {
     });
   }
 
-  getValue(x) {
-    if (x && x.value && x.value.value) {
-      return x.value.value;
+  getSelectableValue(x) {
+    if (x && x.value) {
+      return x.value;
     }
     return '';
   }
@@ -100,15 +100,15 @@ class StatusPanel extends Component {
   }
 
   async getStatuses(form) {
-    let params = {txId: encodeURIComponent(this.getValue(form.transactionId))};
+    let params = {txId: encodeURIComponent(this.getSelectableValue(form.transactionId))};
     if (this.getValue(form.messageId) !== '') {
-      params.msgId = encodeURIComponent(this.getValue(form.messageId));
+      params.msgId = encodeURIComponent(this.getSelectableValue(form.messageId));
     }
     if (form.tag !== '') {
       params.tag = encodeURIComponent(form.tag);
     }
     if (this.getValue(form.status)) {
-      params.status = encodeURIComponent(this.getValue(form.status));
+      params.status = encodeURIComponent(this.getSelectableValue(form.status));
     }
 
     try {
