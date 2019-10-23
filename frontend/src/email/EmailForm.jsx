@@ -10,6 +10,8 @@ import AlertDisplay from '../utils/AlertDisplay';
 import GetUserError from '../auth/GetUserError';
 
 import * as Constants from '../utils/Constants';
+import StatusPanel from './StatusPanel';
+import * as StorageUtils from '../utils/StorageUtils';
 
 const API_ROOT = process.env.REACT_APP_API_ROOT || '';
 const MSG_SERVICE_PATH = `${API_ROOT}/api/v1`;
@@ -31,9 +33,7 @@ class EmailForm extends Component {
         hasCreateMessage: false,
         cmsgApiHealthy: false,
       },
-      tab: 'sc',
-      messageIds: [],
-      statuses: [],
+      tab: 'email',
       info: '',
       error: '',
       userError: '',
@@ -71,6 +71,8 @@ class EmailForm extends Component {
     this.removeFile = this.removeFile.bind(this);
 
     this.onSelectTab = this.onSelectTab.bind(this);
+
+    this.setBusy = this.setBusy.bind(this);
   }
 
   onSelectTab(event) {
@@ -161,7 +163,7 @@ class EmailForm extends Component {
       let {fileSize, fileCount, fileType} = config.data.attachments;
       let {defaultSender} = config.data;
 
-      const tab = (credentialsGood && credentialsAuthenticated && hasTopLevel && hasCreateMessage && cmsgApiHealthy) ? 'about' : 'sc';
+      const tab = (credentialsGood && credentialsAuthenticated && hasTopLevel && hasCreateMessage && cmsgApiHealthy) ? 'email' : 'sc';
 
       const user = await this.authService.getUser();
       const hasSenderEditor = this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
@@ -194,30 +196,6 @@ class EmailForm extends Component {
 
       this.interval = setInterval(async () => {
         await this.healthCheckTab();
-
-        const messageIds = this.state.messageIds || [];
-        const statuses = this.state.statuses || [];
-        try {
-          await this.asyncForEach(messageIds, async (id) => {
-            let statusResponse = await this.fetchStatus(id);
-            statusResponse.data.statuses.forEach(s => {
-              const status = s;
-              // don't add it to list of results if it's already there (same message, same recipient, same type of status)
-              if (!statuses.find(x => {
-                return x.messageId === s.messageId && x.recipient === s.recipient && x.type === s.type;
-              })) {
-                status.key = Math.random().toString(36);
-                statuses.unshift(status);
-              }
-            });
-
-          });
-          // update the table data, take them to the status tab
-          this.setState({statuses: statuses, info: '', error: '', tab: 'status'});
-
-        } catch (err) {
-          this.setState({statuses: statuses, info: '', error: err.message, tab: 'status'});
-        }
       }, 60000);
 
     } catch (e) {
@@ -236,6 +214,14 @@ class EmailForm extends Component {
         userError: userError
       });
     }
+  }
+
+  setBusy(busy, error = '') {
+    this.setState({
+      busy: busy,
+      info: '',
+      error: error
+    });
   }
 
   componentWillUnmount() {
@@ -289,6 +275,18 @@ class EmailForm extends Component {
     });
   }
 
+  async fetchStatus(user, messageId) {
+    const response = await axios.get(`${MSG_SERVICE_PATH}/email/${messageId}/status`, {
+      headers: {
+        'Authorization': `Bearer ${user.access_token}`,
+        'Content-Type': 'application/json'
+      }
+    }).catch(e => {
+      throw Error('Could not connect to Showcase Messaging API for email status check: ' + e.message);
+    });
+    return response.data;
+  }
+
   async formSubmit(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -299,8 +297,6 @@ class EmailForm extends Component {
       this.setState({form: form, info: ''});
       return;
     }
-    const messageIds = this.state.messageIds;
-    const statuses = this.state.statuses;
     let messageId = undefined;
     try {
       if (this.state.healthCheck.hasCreateMessage) {
@@ -309,15 +305,13 @@ class EmailForm extends Component {
         const postEmailData = await this.postEmail(filenames);
 
         messageId = postEmailData.data.messageId;
-        messageIds.push(messageId);
 
         // a single status response returns an email status for each recipient
         // break it down to a row item per msg & recipient
-        const statusResponse = await this.fetchStatus(messageId);
+        const user = await this.authService.getUser();
+        const statusResponse = await this.fetchStatus(user, messageId);
         statusResponse.data.statuses.forEach(s => {
-          let status = s;
-          status.key = Math.random().toString(36); //need a display key for rendering
-          statuses.unshift(status);
+          StorageUtils.cmsgToStorage(s);
         });
 
         const form = this.state.form;
@@ -332,9 +326,7 @@ class EmailForm extends Component {
         form.reset = true;
         this.setState({
           busy: false,
-          form: form,
-          messageIds,
-          statuses: statuses
+          form: form
         });
       }
       // this will show the info message, and prep the tinymce editor for next submit...
@@ -345,9 +337,7 @@ class EmailForm extends Component {
         busy: false,
         form: form,
         info: `Message submitted to Showcase Messaging API: id = ${messageId}`,
-        error: '',
-        messageIds,
-        statuses: statuses
+        error: ''
       });
 
     } catch (e) {
@@ -419,41 +409,6 @@ class EmailForm extends Component {
       throw Error('Could not deliver email to Showcase Messaging API: ' + e.message);
     });
     return response.data;
-  }
-
-  async fetchStatus(messageId) {
-    const user = await this.authService.getUser();
-
-    const response = await axios.get(`${MSG_SERVICE_PATH}/email/${messageId}/status`, {
-      headers: {
-        'Authorization': `Bearer ${user.access_token}`,
-        'Content-Type': 'application/json'
-      }
-    }).catch(e => {
-      throw Error('Could not connect to Showcase Messaging API for email status check: ' + e.message);
-    });
-    return response.data;
-  }
-
-  async asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
-  }
-
-  async refreshStatuses() {
-    const messageIds = this.state.messageIds || [];
-    const statuses = this.state.statuses || [];
-    await this.asyncForEach(messageIds, async (id) => {
-      const statusResponse = await this.fetchStatus(id);
-      statusResponse.data.statuses.forEach(s => {
-        const status = s;
-        status.key = Math.random().toString(36);
-        statuses.unshift(status);
-      });
-
-    });
-    this.setState({messageIds: messageIds, statuses: statuses});
   }
 
   onFileDrop(acceptedFiles) {
@@ -686,39 +641,9 @@ class EmailForm extends Component {
 
               <div id="statusTab" style={statusTabDisplay}>
                 <div className="mb-4"/>
-                <AuthConsumer>
-                  {({isAuthenticated}) => {
-                    if (isAuthenticated()) {
-                      return (
-                        <div id="messageStatuses">
-                          <div className="table-responsive-sm">
-                            <table className="table table-striped table-sm">
-                              <thead>
-                                <tr>
-                                  <th>Message ID</th>
-                                  <th>Recipient</th>
-                                  <th>Status</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {this.state.statuses.map((status, idx) => {
-                                  return (
-                                    <tr key={idx}>
-                                      <td>{status.messageId}</td>
-                                      <td>{status.recipient}</td>
-                                      <td>{status.type}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>);
-                    } else {
-                      return <div><p>You must be logged in to send emails and review message statuses.</p></div>;
-                    }
-                  }}
-                </AuthConsumer>
+                <StatusPanel setBusy={this.setBusy}
+                  authService={this.authService}
+                  fetchStatus={this.fetchStatus} />
               </div>
 
               <div id="scTab" style={scTabDisplay}>

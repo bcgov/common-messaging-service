@@ -29,11 +29,45 @@ class ChesService {
     this.apiUrl = apiUrl;
   }
 
-  async checks() {
+  async health() {
     try {
       const response = await this.axios.get(
-        `${this.apiUrl}/checks`,
+        `${this.apiUrl}/health`,
         {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (e) {
+      errorToProblem(e);
+    }
+  }
+
+  async status(params) {
+    try {
+      const response = await this.axios.get(
+        `${this.apiUrl}/status`,
+        {
+          params: params,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (e) {
+      errorToProblem(e);
+    }
+  }
+
+  async cancel(params) {
+    try {
+      const response = await this.axios.delete(
+        `${this.apiUrl}/cancel`,
+        {
+          params: params,
           headers: {
             'Content-Type': 'application/json'
           }

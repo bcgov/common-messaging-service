@@ -10,7 +10,7 @@ import ChesValidationError from './ChesValidationError';
 import ChesAlertList from './ChesAlertList';
 import AlertDisplay from '../utils/AlertDisplay';
 import ChesSuccess from '../utils/ChesSuccess';
-import StatusForm from './StatusForm';
+import StatusPanel from './StatusPanel';
 
 import moment from 'moment';
 import {DatetimePickerTrigger} from 'rc-datetime-picker';
@@ -81,6 +81,8 @@ class ChesForm extends Component {
     this.onFileDrop = this.onFileDrop.bind(this);
     this.removeFile = this.removeFile.bind(this);
     this.onSelectTab = this.onSelectTab.bind(this);
+
+    this.setBusy = this.setBusy.bind(this);
   }
 
   onSelectTab(event) {
@@ -154,6 +156,18 @@ class ChesForm extends Component {
     const form = this.state.form;
     form.htmlText = content;
     this.setState({form: form, info: ''});
+  }
+
+  setBusy(busy, error = '') {
+    this.setState({
+      busy: busy,
+      info: '',
+      error: error,
+      userError: '',
+      apiValidationErrors: [],
+      transactionCsv: null,
+      dropWarning: ''
+    });
   }
 
   getMessageBody() {
@@ -557,7 +571,7 @@ class ChesForm extends Component {
 
               <div id="statusTab" style={statusTabDisplay}>
                 <div className="mb-4"/>
-                <StatusForm />
+                <StatusPanel authService={this.authService} setBusy={this.setBusy} />
               </div>
 
               <div id="aboutTab" style={aboutTabDisplay}>

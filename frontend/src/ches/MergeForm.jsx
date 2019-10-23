@@ -15,12 +15,12 @@ import * as ExcelUtils from '../utils/ExcelUtils';
 import * as Utils from '../utils/Utils';
 import MergeAbout from './MergeAbout';
 import ChesSuccess from '../utils/ChesSuccess';
-import StatusForm from './StatusForm';
+import StatusPanel from './StatusPanel';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
-const EMAIL_MERGE_URL = `${CHES_PATH}/email/merge`;
-const EMAIL_MERGE_PREVIEW_URL = `${CHES_PATH}/email/merge/preview`;
+const EMAIL_MERGE_URL = `${CHES_PATH}/emailMerge`;
+const EMAIL_MERGE_PREVIEW_URL = `${CHES_PATH}/emailMerge/preview`;
 
 class MergeForm extends Component {
 
@@ -98,6 +98,8 @@ class MergeForm extends Component {
     this.loadPreview = this.loadPreview.bind(this);
     this.onPreviewNext = this.onPreviewNext.bind(this);
     this.onPreviewPrevious = this.onPreviewPrevious.bind(this);
+
+    this.setBusy = this.setBusy.bind(this);
   }
 
   onSelectTab(event) {
@@ -249,6 +251,18 @@ class MergeForm extends Component {
 
   getDefaultSender(hasSenderEditor) {
     return hasSenderEditor ? '' : this.state.config.sender;
+  }
+
+  setBusy(busy, error = '') {
+    this.setState({
+      busy: busy,
+      info: '',
+      error: error,
+      userError: '',
+      apiValidationErrors: [],
+      transactionCsv: null,
+      dropWarning: ''
+    });
   }
 
   async componentDidMount() {
@@ -923,7 +937,7 @@ class MergeForm extends Component {
 
               <div id="statusTab" style={statusTabDisplay}>
                 <div className="mb-4"/>
-                <StatusForm />
+                <StatusPanel authService={this.authService} setBusy={this.setBusy} />
               </div>
 
               <div id="aboutTab" style={aboutTabDisplay}>
