@@ -22,7 +22,7 @@ class Header extends Component {
           </a>
           <h1>Messaging Services Showcase</h1>
         </div>
-        <div className="other">
+        <div className="login">
           <AuthConsumer>
             {({isAuthenticated, signinRedirect}) => {
               if (isAuthenticated()) {

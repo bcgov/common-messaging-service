@@ -73,23 +73,59 @@ header .other :focus {
   outline-offset: 0;
 }
 
-header .other button {
-  color: #fff;
-  background-color: #036;
-  border-width: 0;
-  border-style: none;
+header .login {
+  -webkit-box-flex: 1;
+  -webkit-flex-grow: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+  -webkit-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: end;
+  -webkit-justify-content: flex-end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
 }
 
-header .other button:hover {
+header .login button {
   color: #fff;
-  text-decoration: underline;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1em;
+  line-height: 1.5;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  display: inline-block;
+  background-color: #FCBA19;
+}
+
+header .login button:hover {
+
+}
+
+header .login button:focus {
+  outline: none;
+  outline-offset: 0;
 }
 
 @media screen and (max-width: 599px) {
   header h1 {
     font-size: .75rem;
   }
-  header .other button {
+  header .login button {
     font-size: .75rem;
   }
 }
