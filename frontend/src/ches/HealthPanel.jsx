@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import axios from 'axios';
 import ChesValidationError from './ChesValidationError';
+import {AuthConsumer} from '../auth/AuthProvider';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
 const CHES_PATH = `${CHES_ROOT}/ches/v1`;
@@ -68,15 +69,25 @@ class HealthPanel extends Component {
     const smtpIndClass = this.state.smtp ? 'icon good' : 'icon bad';
 
     return (
-      <div id="healthCheck">
-        <div className="row">
-          <div className="col-sm-10 hc-text">Common Hosted Email Service available</div>
-          <div className="col-sm-2"><span id="apiInd" className={apiIndClass}/></div>
-        </div>
-        <div className="row">
-          <div className="col-sm-10 hc-text">SMTP available</div>
-          <div className="col-sm-2"><span id="smtpInd" className={smtpIndClass}/></div>
-        </div>
+      <div>
+        <AuthConsumer>
+          {({isAuthenticated}) => {
+            if (isAuthenticated()) {
+              return (<div id="healthCheck">
+                <div className="row">
+                  <div className="col-sm-10 hc-text">Common Hosted Email Service available</div>
+                  <div className="col-sm-2"><span id="apiInd" className={apiIndClass}/></div>
+                </div>
+                <div className="row">
+                  <div className="col-sm-10 hc-text">SMTP available</div>
+                  <div className="col-sm-2"><span id="smtpInd" className={smtpIndClass}/></div>
+                </div>
+              </div>);
+            } else {
+              return <div><p>You must be logged in to view service client status.</p></div>;
+            }
+          }}
+        </AuthConsumer>
       </div>
     );
   }
