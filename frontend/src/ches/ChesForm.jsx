@@ -19,6 +19,7 @@ import * as Constants from '../utils/Constants';
 import * as ExcelUtils from '../utils/ExcelUtils';
 import * as StorageUtils from '../utils/StorageUtils';
 import * as Utils from '../utils/Utils';
+import HealthPanel from './HealthPanel';
 
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
@@ -82,7 +83,7 @@ class ChesForm extends Component {
     this.removeFile = this.removeFile.bind(this);
     this.onSelectTab = this.onSelectTab.bind(this);
 
-    this.setBusy = this.setBusy.bind(this);
+    this.onStatusBusy = this.onStatusBusy.bind(this);
   }
 
   onSelectTab(event) {
@@ -158,7 +159,7 @@ class ChesForm extends Component {
     this.setState({form: form, info: ''});
   }
 
-  setBusy(busy, e) {
+  onStatusBusy(busy, e) {
     if (e) {
       let {error, userError, apiValidationErrors} = Utils.errorHandler(e);
       this.setState({
@@ -170,7 +171,13 @@ class ChesForm extends Component {
       });
     } else {
       this.setState({
-        busy: busy
+        busy: busy,
+        info: '',
+        error: '',
+        userError: '',
+        apiValidationErrors: [],
+        transactionCsv: null,
+        dropWarning: ''
       });
     }
   }
@@ -354,9 +361,11 @@ class ChesForm extends Component {
     const emailTabClass = this.state.tab === 'email' ? 'nav-link active' : 'nav-link';
     const aboutTabClass = this.state.tab === 'about' ? 'nav-link active' : 'nav-link';
     const statusTabClass = this.state.tab === 'status' ? 'nav-link active' : 'nav-link';
+    const healthTabClass = this.state.tab === 'health' ? 'nav-link active' : 'nav-link';
     const emailTabDisplay = this.state.tab === 'email' ? {} : {display: 'none'};
     const aboutTabDisplay = this.state.tab === 'about' ? {} : {display: 'none'};
     const statusTabDisplay = this.state.tab === 'status' ? {} : {display: 'none'};
+    const healthTabDisplay = this.state.tab === 'health' ? {} : {display: 'none'};
 
     const senderPlaceholder = this.state.hasSenderEditor ? 'you@example.com' : this.state.config.sender;
 
@@ -404,7 +413,10 @@ class ChesForm extends Component {
                   <button className={emailTabClass} id='email' onClick={this.onSelectTab}>CHES Email</button>
                 </li>
                 <li className="nav-item">
-                  <button className={statusTabClass} id='status' onClick={this.onSelectTab}>Status</button>
+                  <button className={statusTabClass} id='status' onClick={this.onSelectTab}>Statuses</button>
+                </li>
+                <li className="nav-item">
+                  <button className={healthTabClass} id='health' onClick={this.onSelectTab}>Service Client</button>
                 </li>
                 <li className="nav-item">
                   <button className={aboutTabClass} id='about' onClick={this.onSelectTab}>About</button>
@@ -576,7 +588,12 @@ class ChesForm extends Component {
 
               <div id="statusTab" style={statusTabDisplay}>
                 <div className="mb-4"/>
-                <StatusPanel authService={this.authService} setBusy={this.setBusy} />
+                <StatusPanel authService={this.authService} onBusy={this.onStatusBusy} />
+              </div>
+
+              <div id="healthTab" style={healthTabDisplay}>
+                <div className="mb-4"/>
+                <HealthPanel authService={this.authService} onBusy={this.onStatusBusy} />
               </div>
 
               <div id="aboutTab" style={aboutTabDisplay}>

@@ -21,7 +21,6 @@ const getStatus = async (req, res, next) => {
   const svc = getService();
   try {
     let params = req.query;
-    params.fields = 'delayTS%2CcreatedTimestamp%2CupdatedTimestamp';
     const response = await svc.status(params);
     res.status(200).json(response);
   } catch (error) {

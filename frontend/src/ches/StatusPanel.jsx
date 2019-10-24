@@ -4,6 +4,7 @@ import * as StorageUtils from '../utils/StorageUtils';
 import PropTypes from 'prop-types';
 
 import CreatableSelect from 'react-select/creatable';
+import Select from 'react-select';
 import axios from 'axios';
 import ChesValidationError from './ChesValidationError';
 
@@ -12,12 +13,19 @@ const CHES_PATH = `${CHES_ROOT}/ches/v1`;
 const STATUS_URL = `${CHES_PATH}/status`;
 const CANCEL_URL = `${CHES_PATH}/cancel`;
 
+const statusOptions = ['accepted', 'completed', 'enqueued', 'failed'].map((t) => {
+  return {value: t, label: t};
+});
+
 class StatusPanel extends Component {
   constructor(props) {
     super(props);
     this.formSubmit = this.formSubmit.bind(this);
 
     this.state = {
+      transactionIdOptions: [],
+      messageIdOptions: [],
+      statusOptions: [],
       form: {
         wasValidated: false,
         transactionId: {value: '', label: ''},
@@ -31,12 +39,20 @@ class StatusPanel extends Component {
     };
 
     this.handleTransactionIdChange = this.handleTransactionIdChange.bind(this);
+    this.handleCreateTransactionId = this.handleCreateTransactionId.bind(this);
     this.handleMessageIdChange = this.handleMessageIdChange.bind(this);
+    this.handleCreateMessageId = this.handleCreateMessageId.bind(this);
     this.handleStatusChange = this.handleStatusChange.bind(this);
 
     this.tagChanged = this.tagChanged.bind(this);
 
     this.clear = this.clear.bind(this);
+  }
+
+  componentDidMount() {
+  }
+
+  componentWillUnmount() {
   }
 
   handleTransactionIdChange(value) {
@@ -46,10 +62,20 @@ class StatusPanel extends Component {
     this.setState({form: form});
   }
 
+  handleCreateTransactionId(value) {
+    const option = StorageUtils.addTransactionId(value);
+    this.handleTransactionIdChange(option);
+  }
+
   handleMessageIdChange(value) {
     let form = this.state.form;
     form.messageId = value;
     this.setState({form: form});
+  }
+
+  handleCreateMessageId(value) {
+    const option = StorageUtils.addMessageId(value);
+    this.handleMessageIdChange(option);
   }
 
   handleStatusChange(value) {
@@ -79,7 +105,7 @@ class StatusPanel extends Component {
     });
   }
 
-  getSelectableValue(x) {
+  getOptionValue(x) {
     if (x && x.value) {
       return x.value;
     }
@@ -93,7 +119,7 @@ class StatusPanel extends Component {
     let form = this.state.form;
     if (!this.state.form.transactionIdValid) {
       form.wasValidated = true;
-      this.setState({form: form, statuses:[]});
+      this.setState({form: form, statuses: []});
       return;
     }
 
@@ -101,19 +127,19 @@ class StatusPanel extends Component {
   }
 
   async getStatuses(form) {
-    let params = {txId: encodeURIComponent(this.getSelectableValue(form.transactionId))};
-    if (this.getSelectableValue(form.messageId) !== '') {
-      params.msgId = encodeURIComponent(this.getSelectableValue(form.messageId));
+    let params = {txId: encodeURIComponent(this.getOptionValue(form.transactionId))};
+    if (this.getOptionValue(form.messageId) !== '') {
+      params.msgId = encodeURIComponent(this.getOptionValue(form.messageId));
     }
     if (form.tag !== '') {
       params.tag = encodeURIComponent(form.tag);
     }
-    if (this.getSelectableValue(form.status)) {
-      params.status = encodeURIComponent(this.getSelectableValue(form.status));
+    if (this.getOptionValue(form.status)) {
+      params.status = encodeURIComponent(this.getOptionValue(form.status));
     }
 
     try {
-      this.props.setBusy(true);
+      this.props.onBusy(true);
       const user = await this.props.authService.getUser();
       const response = await axios.get(
         STATUS_URL,
@@ -137,10 +163,10 @@ class StatusPanel extends Component {
         form: form,
         noResults: response.data && response.data.length === 0
       });
-      this.props.setBusy(false);
+      this.props.onBusy(false);
     } catch (err) {
       this.setState({statuses: [], form: form, noResults: false});
-      this.props.setBusy(false, err);
+      this.props.onBusy(false, err);
     }
   }
 
@@ -150,7 +176,7 @@ class StatusPanel extends Component {
       let params = {msgId: status.msgId};
 
       try {
-        this.props.setBusy(true);
+        this.props.onBusy(true);
         const user = await this.props.authService.getUser();
         await axios.get(
           CANCEL_URL,
@@ -172,23 +198,9 @@ class StatusPanel extends Component {
         await this.getStatuses(form);
       } catch (err) {
         this.setState({statuses: [], form: form, noResults: false});
-        this.props.setBusy(false, err);
+        this.props.onBusy(false, err);
       }
     }
-  }
-
-  componentDidMount() {
-
-  }
-
-  componentWillUnmount() {
-
-  }
-
-  getStatusOptions() {
-    return ['accepted', 'completed', 'enqueued', 'failed'].map((t) => {
-      return {value: t, label: t};
-    });
   }
 
   themeOverride(theme) {
@@ -201,6 +213,17 @@ class StatusPanel extends Component {
     };
   }
 
+  getTransactionIdOptions() {
+    return StorageUtils.getTransactionIdOptions();
+  }
+
+  getMessageIdOptions() {
+    return StorageUtils.getMessageIdOptions();
+  }
+
+  getStatusOptions() {
+    return statusOptions;
+  }
   render() {
     const buttonStyle = {'margin-top': '2em'};
     const transactionErrorDisplay = (this.state.form.wasValidated && !this.state.form.transactionIdValid) ? {} : {display: 'none'};
@@ -221,8 +244,9 @@ class StatusPanel extends Component {
                       isSearchable={true}
                       theme={this.themeOverride}
                       onChange={(value) => this.handleTransactionIdChange(value)}
-                      options={StorageUtils.getTransactionIdOptions()}
+                      options={this.getTransactionIdOptions()}
                       value={this.state.form.transactionId}
+                      onCreateOption={this.handleCreateTransactionId}
                     />
                     <div className="invalid-field" style={transactionErrorDisplay}>
                       Transaction ID is required.
@@ -235,8 +259,9 @@ class StatusPanel extends Component {
                       isSearchable={true}
                       theme={this.themeOverride}
                       onChange={(value) => this.handleMessageIdChange(value)}
-                      options={StorageUtils.getMessageIdOptions()}
+                      options={this.getMessageIdOptions()}
                       value={this.state.form.messageId}
+                      onCreateOption={this.handleCreateMessageId}
                     />
                   </div>
                   <div className="mb-3 col-md-2">
@@ -252,7 +277,7 @@ class StatusPanel extends Component {
                   </div>
                   <div className="mb-3 col-md-5">
                     <label htmlFor="status">Status</label>
-                    <CreatableSelect
+                    <Select
                       isClearable={true}
                       isSearchable={true}
                       theme={this.themeOverride}
@@ -319,7 +344,7 @@ class StatusPanel extends Component {
 
 StatusPanel.propTypes = {
   authService: PropTypes.object,
-  setBusy: PropTypes.func
+  onBusy: PropTypes.func
 };
 
 export default StatusPanel;

@@ -14,6 +14,28 @@ export function transactionToStorage(obj) {
   localStorage.setItem('messageIds', JSON.stringify(messageIds));
 }
 
+export function addTransactionId(id) {
+  let transactionIds = getTransactionIds();
+
+  if (!transactionIds.includes(id)) {
+    transactionIds.unshift(id);
+  }
+
+  localStorage.setItem('transactionIds', JSON.stringify(transactionIds));
+  return {value: id, label: id};
+}
+
+export function addMessageId(id) {
+  let messageIds = getMessageIds();
+
+  if (!messageIds.includes(id)) {
+    messageIds.unshift(id);
+  }
+
+  localStorage.setItem('messageIds', JSON.stringify(messageIds));
+  return {value: id, label: id};
+}
+
 export function getTransactionIds() {
   if (localStorage.getItem('transactionIds')) {
     return JSON.parse(localStorage.getItem('transactionIds'));
