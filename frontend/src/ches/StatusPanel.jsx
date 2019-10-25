@@ -1,3 +1,5 @@
+import './StatusPanel.css';
+
 import React, {Component} from 'react';
 import {AuthConsumer} from '../auth/AuthProvider';
 import * as StorageUtils from '../utils/StorageUtils';
@@ -6,6 +8,7 @@ import PropTypes from 'prop-types';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
 import axios from 'axios';
+import moment from 'moment';
 import ChesValidationError from './ChesValidationError';
 
 const CHES_ROOT = process.env.REACT_APP_CHES_ROOT || '';
@@ -137,7 +140,7 @@ class StatusPanel extends Component {
     if (this.getOptionValue(form.status)) {
       params.status = encodeURIComponent(this.getOptionValue(form.status));
     }
-
+    params.fields = 'delayTS';
     try {
       this.props.onBusy(true);
       const user = await this.props.authService.getUser();
@@ -294,13 +297,14 @@ class StatusPanel extends Component {
                 </div>
                 <div id="messageStatuses">
                   <div className="table-responsive-md">
-                    <table className="table table-striped">
+                    <table className="table table-striped table-ellipsis">
                       <thead>
                         <tr>
                           <th>Transaction ID</th>
                           <th>Message ID</th>
                           <th>Tag</th>
                           <th>Status</th>
+                          <th>Delayed Until</th>
                           <th>Cancel</th>
                         </tr>
                       </thead>
@@ -312,6 +316,7 @@ class StatusPanel extends Component {
                               <td>{status.msgId}</td>
                               <td>{status.tag}</td>
                               <td>{status.status}</td>
+                              <td><span style={status.status === 'enqueued' ? {} : {display: 'none'}}>{moment(status.delayTS).format('YYYY-MM-DD HH:mm')}</span></td>
                               <td style={{'padding': '6px', 'text-align': 'center'}}>
                                 <button className="btn btn-sm btn-outline-danger"
                                   type="button"

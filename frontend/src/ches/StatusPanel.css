@@ -1,0 +1,13 @@
+
+#messageStatuses .table td, #messageStatuses .table th {
+  padding: .75rem .25rem;
+  vertical-align: top;
+  border-top: 1px solid #dee2e6;
+}
+
+#messageStatuses .table.table-ellipsis tbody td {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
