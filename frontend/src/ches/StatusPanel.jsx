@@ -226,6 +226,7 @@ class StatusPanel extends Component {
   getStatusOptions() {
     return statusOptions;
   }
+
   render() {
     const buttonStyle = {'margin-top': '2em'};
     const transactionErrorDisplay = (this.state.form.wasValidated && !this.state.form.transactionIdValid) ? {} : {display: 'none'};
@@ -267,8 +268,9 @@ class StatusPanel extends Component {
                     />
                   </div>
                   <div className="mb-3 col-md-2">
-                    <button className="btn btn-primary btn-block" type="submit" style={buttonStyle}>Search&nbsp;<i
-                      className="fas fa-search"/></button>
+                    <button className="btn btn-primary btn-block" type="submit" style={buttonStyle}><i
+                      className="fas fa-search"/>&nbsp;Search
+                    </button>
                   </div>
                 </div>
                 <div className='row'>
@@ -290,8 +292,8 @@ class StatusPanel extends Component {
                   </div>
                   <div className="mb-3 col-md-2">
                     <button className="btn btn-secondary btn-block" type="button" style={buttonStyle}
-                      onClick={this.clear}>Clear&nbsp;<i
-                        className="fas fa-eraser"/></button>
+                      onClick={this.clear}><i className="fas fa-eraser"/>&nbsp;Clear
+                    </button>
                   </div>
                 </div>
                 <div id="messageStatuses">
@@ -315,7 +317,9 @@ class StatusPanel extends Component {
                               <td>{status.msgId}</td>
                               <td>{status.tag}</td>
                               <td>{status.status}</td>
-                              <td><span style={status.status === 'enqueued' ? {} : {display: 'none'}}>{moment(status.delayTS).format('YYYY-MM-DD HH:mm')}</span></td>
+                              <td><span
+                                style={status.status === 'enqueued' ? {} : {display: 'none'}}>{moment(status.delayTS).format('YYYY-MM-DD HH:mm')}</span>
+                              </td>
                               <td style={{'padding': '6px', 'text-align': 'center'}}>
                                 <button className="btn btn-sm btn-outline-danger"
                                   type="button"
