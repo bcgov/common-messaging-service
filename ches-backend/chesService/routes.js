@@ -4,7 +4,7 @@ const {relatedLinks} = require('../components/relatedLinks');
 const routes = require('express').Router();
 const wrap = require('../middleware/wrap');
 
-const {sendEmail, emailMerge, emailPreview} = require('./controller');
+const {healthCheck, getStatus, cancelDelayed, sendEmail, emailMerge, emailPreview} = require('./controller');
 
 // this is our authorization middleware function
 // users always need the email_sender role to send
@@ -26,22 +26,38 @@ function protectEmail(token, req) {
 routes.get('/', wrap(function (req, res) {
   res.status(200).json({
     links: relatedLinks.createLinks(req, [
-      {r: 'email', m: 'POST', p: '/email'}
+      {r: 'health', m: 'GET', p: '/health'},
+      {r: 'email', m: 'POST', p: '/email'},
+      {r: 'merge', m: 'POST', p: '/emailMerge'},
+      {r: 'preview', m: 'POST', p: '/emailMerge/preview'},
+      {r: 'status', m: 'GET', p: '/status'},
+      {r: 'cancel', m: 'DELETE', p: '/cancel'}
     ])
   });
+}));
+
+routes.get('/health', wrap(async function (req, res, next) {
+  await healthCheck(req, res, next);
 }));
 
 routes.post('/email', keycloak.protect(protectEmail), wrap(async function (req, res, next) {
   await sendEmail(req, res, next);
 }));
 
-
-routes.post('/email/merge', keycloak.protect(protectEmail), wrap(async function (req, res, next) {
+routes.post('/emailMerge', keycloak.protect(protectEmail), wrap(async function (req, res, next) {
   await emailMerge(req, res, next);
 }));
 
-routes.post('/email/merge/preview', keycloak.protect(protectEmail), wrap(async function (req, res, next) {
+routes.post('/emailMerge/preview', keycloak.protect(protectEmail), wrap(async function (req, res, next) {
   await emailPreview(req, res, next);
+}));
+
+routes.get('/status', wrap(async function (req, res, next) {
+  await getStatus(req, res, next);
+}));
+
+routes.get('/cancel', wrap(async function (req, res, next) {
+  await cancelDelayed(req, res, next);
 }));
 
 module.exports = routes;
