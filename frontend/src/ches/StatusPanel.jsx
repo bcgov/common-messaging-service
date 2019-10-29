@@ -140,7 +140,6 @@ class StatusPanel extends Component {
     if (this.getOptionValue(form.status)) {
       params.status = encodeURIComponent(this.getOptionValue(form.status));
     }
-    params.fields = 'delayTS';
     try {
       this.props.onBusy(true);
       const user = await this.props.authService.getUser();
