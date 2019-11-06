@@ -21,17 +21,17 @@ const getStatus = async (req, res, next) => {
   const svc = getService();
   try {
     let params = req.query;
-    const response = await svc.status(params);
+    const response = await svc.statusQuery(params);
     res.status(200).json(response);
   } catch (error) {
     next(error);
   }
 };
 
-const cancelDelayed = async (req, res, next) => {
+const cancelMsg = async (req, res, next) => {
   const svc = getService();
   try {
-    const response = await svc.cancel(req.query);
+    const response = await svc.cancelMsg(req.params.msgId);
     res.status(202).json(response);
   } catch (error) {
     next(error);
@@ -82,4 +82,4 @@ const emailPreview = async (req, res, next) => {
   }
 };
 
-module.exports = {healthCheck, getStatus, cancelDelayed, sendEmail, emailMerge, emailPreview};
+module.exports = {healthCheck, getStatus, cancelMsg, sendEmail, emailMerge, emailPreview};

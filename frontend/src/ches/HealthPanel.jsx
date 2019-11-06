@@ -15,7 +15,8 @@ class HealthPanel extends Component {
 
     this.state = {
       api: false,
-      smtp: false
+      smtp: false,
+      error: ''
     };
   }
 
@@ -33,6 +34,7 @@ class HealthPanel extends Component {
 
   async healthCheck() {
     let { apiOk, smtpOk } = false;
+    let smtpError = '';
     try {
       this.props.onBusy(true);
       const user = await this.props.authService.getUser();
@@ -52,16 +54,17 @@ class HealthPanel extends Component {
         }
       });
       apiOk = (response.status >= 200 && response.status < 400);
-      response.data.endpoints.forEach((p) => {
-        if (p.name === 'SMTP Endpoint') {
-          smtpOk = p.healthCheck;
+      response.data.dependencies.forEach((p) => {
+        if (p.name === 'smtp') {
+          smtpOk = p.healthy;
+          smtpError = smtpOk ? '': p.info;
         }
       });
       this.props.onBusy(false);
     } catch (err) {
       this.props.onBusy(false, err);
     }
-    this.setState({ api: apiOk, smtp: smtpOk });
+    this.setState({ api: apiOk, smtp: smtpOk, error: smtpError });
   }
 
   render() {
@@ -75,12 +78,14 @@ class HealthPanel extends Component {
             if (isAuthenticated()) {
               return (<div id="healthCheck">
                 <div className="row">
-                  <div className="col-sm-10 hc-text">Common Hosted Email Service available</div>
+                  <div className="col-sm-6 hc-text">Common Hosted Email Service available</div>
                   <div className="col-sm-2"><span id="apiInd" className={apiIndClass}/></div>
+                  <div className="col-sm-4"></div>
                 </div>
                 <div className="row">
-                  <div className="col-sm-10 hc-text">SMTP available</div>
+                  <div className="col-sm-6 hc-text">SMTP available</div>
                   <div className="col-sm-2"><span id="smtpInd" className={smtpIndClass}/></div>
+                  <div className="col-sm-4">{this.state.error}</div>
                 </div>
               </div>);
             } else {
