@@ -45,7 +45,7 @@ class ChesService {
     }
   }
 
-  async status(params) {
+  async statusQuery(params) {
     try {
       const response = await this.axios.get(
         `${this.apiUrl}/status`,
@@ -62,7 +62,23 @@ class ChesService {
     }
   }
 
-  async cancel(params) {
+  async cancelMsg(msgId) {
+    try {
+      const response = await this.axios.delete(
+        `${this.apiUrl}/cancel/${msgId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    } catch (e) {
+      errorToProblem(e);
+    }
+  }
+
+  async cancelQuery(params) {
     try {
       const response = await this.axios.delete(
         `${this.apiUrl}/cancel`,

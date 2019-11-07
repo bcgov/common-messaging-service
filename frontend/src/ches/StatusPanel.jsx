@@ -16,8 +16,8 @@ const CHES_PATH = `${CHES_ROOT}/ches/v1`;
 const STATUS_URL = `${CHES_PATH}/status`;
 const CANCEL_URL = `${CHES_PATH}/cancel`;
 
-const statusOptions = ['accepted', 'completed', 'enqueued', 'failed'].map((t) => {
-  return {value: t, label: t};
+const statusOptions = ['Accepted', 'Cancelled', 'Completed', 'Failed', 'Pending'].map((t) => {
+  return {value: t.toLowerCase(), label: t};
 });
 
 class StatusPanel extends Component {
@@ -173,17 +173,14 @@ class StatusPanel extends Component {
   }
 
   async cancel(status) {
-    if (status && status.status !== 'completed') {
+    if (status && this.isCancellable(status.status)) {
       let form = this.state.form;
-      let params = {msgId: status.msgId};
-
       try {
         this.props.onBusy(true);
         const user = await this.props.authService.getUser();
-        await axios.get(
-          CANCEL_URL,
+        await axios.delete(
+          `${CANCEL_URL}/${status.msgId}`,
           {
-            params: params,
             headers: {
               'Authorization': `Bearer ${user.access_token}`,
               'Content-Type': 'application/json'
@@ -192,6 +189,10 @@ class StatusPanel extends Component {
         ).catch(e => {
           if (e && e.response && e.response.status === 422) {
             throw new ChesValidationError(e.response.data);
+          } else if (e && e.response && e.response.status === 404) {
+            throw Error(`Error cancelling message.  ${e.response.data.detail}`);
+          } else if (e && e.response && e.response.status === 409) {
+            throw Error(`Error cancelling message.  ${e.response.data.detail}`);
           } else {
             throw Error('Could not cancel message from Showcase CHES API: ' + e.message);
           }
@@ -225,6 +226,10 @@ class StatusPanel extends Component {
 
   getStatusOptions() {
     return statusOptions;
+  }
+
+  isCancellable(status) {
+    return !['cancelled','completed','failed'].includes(status.toLowerCase());
   }
 
   render() {
@@ -316,14 +321,14 @@ class StatusPanel extends Component {
                               <td>{status.txId}</td>
                               <td>{status.msgId}</td>
                               <td>{status.tag}</td>
-                              <td>{status.status}</td>
+                              <td style={{'text-transform': 'capitalize'}}>{status.status}</td>
                               <td><span
-                                style={status.status === 'enqueued' ? {} : {display: 'none'}}>{moment(status.delayTS).format('YYYY-MM-DD HH:mm')}</span>
+                                style={status.status === 'pending' ? {} : {display: 'none'}}>{moment(status.delayTS).format('YYYY-MM-DD HH:mm')}</span>
                               </td>
                               <td style={{'padding': '6px', 'text-align': 'center'}}>
                                 <button className="btn btn-sm btn-outline-danger"
                                   type="button"
-                                  style={status.status === 'completed' ? {display: 'none'} : {}}
+                                  style={this.isCancellable(status.status) ? {} : {display: 'none'}}
                                   onClick={() => this.cancel(status)}><i className="fas fa-minus-circle"
                                     alt="Cancel"/></button>
                               </td>
