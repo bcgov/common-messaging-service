@@ -13,14 +13,15 @@ function protectEmail(token, req) {
   const hasEmailSender = token.hasRole('mssc:email_sender');
   const hasSenderEditor = token.hasRole('mssc:sender_editor');
   const defaultSender = config.get('server.defaultSender');
+  // email address for non-sender_editor is the user's email or our default.
+  const allowedSender = (token.content && token.content.email) ? token.content.email : defaultSender;
   let sender = '';
   try {
     sender = req.body.from;
   } catch (e) {
     sender = '';
   }
-
-  return hasEmailSender && (sender === defaultSender || hasSenderEditor);
+  return hasEmailSender && (sender === allowedSender || hasSenderEditor);
 }
 
 routes.get('/', wrap(function (req, res) {
