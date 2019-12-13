@@ -135,8 +135,10 @@ class EmailForm extends Component {
     return this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
   }
 
-  getDefaultSender(hasSenderEditor) {
-    return hasSenderEditor ? '' : this.state.config.sender;
+
+  getDefaultSender(hasSenderEditor, user) {
+    const email = (user && user.profile && user.profile.email) ? user.profile.email : this.state.config.sender;
+    return hasSenderEditor ? '' : email;
   }
 
   errorHandler(e) {
@@ -169,7 +171,7 @@ class EmailForm extends Component {
       const hasSenderEditor = this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
 
       const form = this.state.form;
-      form.sender = this.getDefaultSender(hasSenderEditor);
+      form.sender = this.getDefaultSender(hasSenderEditor, user);
 
       this.setState({
         busy: false,
@@ -316,7 +318,7 @@ class EmailForm extends Component {
 
         const form = this.state.form;
         form.wasValidated = false;
-        form.sender = this.getDefaultSender(this.state.hasSenderEditor);
+        form.sender = this.getDefaultSender(this.state.hasSenderEditor, user);
         form.recipients = '';
         form.subject = '';
         form.plainText = '';
