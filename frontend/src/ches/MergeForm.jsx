@@ -250,8 +250,9 @@ class MergeForm extends Component {
     return this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
   }
 
-  getDefaultSender(hasSenderEditor) {
-    return hasSenderEditor ? '' : this.state.config.sender;
+  getDefaultSender(hasSenderEditor, user) {
+    const email = (user && user.profile && user.profile.email) ? user.profile.email : this.state.config.sender;
+    return hasSenderEditor ? '' : email;
   }
 
   onStatusBusy(busy, e) {
@@ -282,7 +283,7 @@ class MergeForm extends Component {
       const user = await this.authService.getUser();
       const hasSenderEditor = this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
       const form = this.state.form;
-      form.sender = this.getDefaultSender(hasSenderEditor);
+      form.sender = this.getDefaultSender(hasSenderEditor, user);
       this.setState({hasSenderEditor: hasSenderEditor, form: form});
     } catch (e) {
       let {error, userError, apiValidationErrors} = Utils.errorHandler(e);
@@ -307,7 +308,7 @@ class MergeForm extends Component {
 
     let messageIds = [];
     try {
-
+      const user = await this.authService.getUser();
       this.setState({busy: true});
 
       const postMergeData = await this.postEmailMerge();
@@ -316,7 +317,7 @@ class MergeForm extends Component {
 
       let form = this.state.form;
       form.wasValidated = false;
-      form.sender = this.getDefaultSender(this.state.hasSenderEditor);
+      form.sender = this.getDefaultSender(this.state.hasSenderEditor, user);
       form.subject = '';
       form.plainText = '';
       form.htmlText = '';
@@ -387,8 +388,18 @@ class MergeForm extends Component {
     const user = await this.authService.getUser();
     const attachments = await Promise.all(this.state.form.files.map(file => Utils.convertFileToAttachment(file, Constants.CHES_ATTACHMENT_ENCODING_BASE64)));
 
+    // we want to bcc our default address, just to be sure there is no abuse.
+    const contexts = this.getContextsObject();
+    contexts.forEach((c) => {
+      if (c.bcc) {
+        c.bcc.push(this.state.config.sender);
+      } else {
+        c.bcc = [this.state.config.sender];
+      }
+    });
+
     const email = {
-      contexts: this.getContextsObject(),
+      contexts: contexts,
       attachments: attachments,
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),

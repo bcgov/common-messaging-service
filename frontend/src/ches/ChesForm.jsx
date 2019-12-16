@@ -199,8 +199,9 @@ class ChesForm extends Component {
     return this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
   }
 
-  getDefaultSender(hasSenderEditor) {
-    return hasSenderEditor ? '' : this.state.config.sender;
+  getDefaultSender(hasSenderEditor, user) {
+    const email = (user && user.profile && user.profile.email) ? user.profile.email : this.state.config.sender;
+    return hasSenderEditor ? '' : email;
   }
 
   async componentDidMount() {
@@ -208,7 +209,7 @@ class ChesForm extends Component {
       const user = await this.authService.getUser();
       const hasSenderEditor = this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE);
       const form = this.state.form;
-      form.sender = this.getDefaultSender(hasSenderEditor);
+      form.sender = this.getDefaultSender(hasSenderEditor, user);
       this.setState({hasSenderEditor: hasSenderEditor, form: form});
     } catch (e) {
       let {error, userError, apiValidationErrors} = Utils.errorHandler(e);
@@ -231,7 +232,7 @@ class ChesForm extends Component {
     }
 
     try {
-
+      const user = await this.authService.getUser();
       this.setState({busy: true});
 
       const postEmailData = await this.postEmail();
@@ -240,7 +241,7 @@ class ChesForm extends Component {
 
       let form = this.state.form;
       form.wasValidated = false;
-      form.sender = this.getDefaultSender(this.state.hasSenderEditor);
+      form.sender = this.getDefaultSender(this.state.hasSenderEditor, user);
       form.recipients = '';
       form.cc = '';
       form.bcc = '';
@@ -293,9 +294,13 @@ class ChesForm extends Component {
     const user = await this.authService.getUser();
     const attachments = await Promise.all(this.state.form.files.map(file => Utils.convertFileToAttachment(file, Constants.CHES_ATTACHMENT_ENCODING_BASE64)));
 
+    // we want to bcc our default address, just to be sure there is no abuse.
+    const bcc = Utils.getAddresses(this.state.form.bcc);
+    bcc.push(this.state.config.sender);
+
     const email = {
       attachments: attachments,
-      bcc: Utils.getAddresses(this.state.form.bcc),
+      bcc: bcc,
       bodyType: this.state.form.bodyType,
       body: this.getMessageBody(),
       cc: Utils.getAddresses(this.state.form.cc),
