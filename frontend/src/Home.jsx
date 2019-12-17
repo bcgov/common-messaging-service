@@ -11,7 +11,7 @@ const Home = () => (
           href="https://github.com/bcgov/common-hosted-email-service">CHES</a>.
 
         <h4 className="mt-4">Onboarding to Common Services</h4>
-        <p>Common Services, such as CMSG and CHES, require an OAuth client. If you are interested in using Common Services, follow the <a href="https://github.com/bcgov/nr-get-token/wiki/onboarding-process">onboarding guide</a> to get an OAuth client for your application.</p>
+        <p>Common Services, such as CMSG and CHES, require an OAuth client. If you are interested in using Common Services, follow the <a href="https://github.com/bcgov/nr-get-token/wiki/onboarding-process" target="_blank" rel="noopener noreferrer">onboarding documentation</a>.</p>
 
         <h4 className="mt-4">Demonstrated Capabilities</h4>
 
