@@ -609,8 +609,7 @@ class ChesForm extends Component {
                   ability to deliver emails by calling <a
                   href="https://github.com/bcgov/common-hosted-email-service.git">common-hosted-email-service</a>.</p>
                 <p>The common-hosted-email-service requires a Service Client that has previously been created in the
-                  environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
-                    OK</a> for more on how to get access to CHES.</p>
+                  environment with appropriate CHES scopes; see <a href="https://github.com/bcgov/nr-get-token/wiki/Onboarding-Process" target="_blank" rel="noopener noreferrer">onboarding</a> for more on how to get access to CHES.</p>
               </div>
 
             </div>

@@ -680,8 +680,7 @@ class EmailForm extends Component {
                   The <em>nr-email-microservice</em> illustrates how to call the CMSG API, and shows how a team can
                   easily stand up their own CMSG service in OpenShift.</p>
                 <p>The nr-email-microservice requires a Service Client that has previously been created in the
-                  environment with appropriate CMSG scopes; see <a href="https://github.com/bcgov/nr-get-token">Get
-                    OK</a> for more on how to get access to CMSG.</p>
+                  environment with appropriate CMSG scopes; see <a href="https://github.com/bcgov/nr-get-token/wiki/Onboarding-Process" target="_blank" rel="noopener noreferrer">onboarding</a> for more on how to get access to CMSG.</p>
               </div>
 
             </div>
