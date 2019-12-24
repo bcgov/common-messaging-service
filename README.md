@@ -2,6 +2,8 @@
 
 This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice) and the Common Hosted Email Service ([CHES](https://github.com/bcgov/common-hosted-email-service.git)).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG).  The [ches-backend](ches-backend/README.md) provides an example implementation for use of the CHES API.  We use [React.js](https://reactjs.org) for the frontend UI.
 
+To learn more about **Common Services** available including [hosted email](https://github.com/bcgov/common-hosted-email-service), [messaging](https://github.com/bcgov/nr-messaging-service-showcase) and [document generation](https://github.com/bcgov/document-generation-showcase) and to see them in action, visit the [Common Services Showcase](https://bcgov.github.io/common-service-showcase/) page.
+
 ## Directory Structure
 
     .github/                   - PR and Issue templates
