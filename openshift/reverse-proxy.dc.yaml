@@ -6,6 +6,35 @@ labels:
 metadata:
   name: "${APP_NAME}-${JOB_NAME}-reverse-proxy-dc"
 objects:
+- apiVersion: secops.pathfinder.gov.bc.ca/v1alpha1
+  kind: NetworkSecurityPolicy
+  metadata:
+    name: "${APP_NAME}-${JOB_NAME}-pods-to-k8s-api-${NAMESPACE}"
+  spec:
+    description: |
+      Allow pods to talk to the internal K8S api
+    source:
+      - - $namespace=${NAMESPACE}
+    destination:
+      - - int:network=internal-cluster-api-endpoint
+- kind: NetworkSecurityPolicy
+  apiVersion: secops.pathfinder.gov.bc.ca/v1alpha1
+  metadata:
+    name: "${APP_NAME}-${JOB_NAME}-reverse-proxy-to-destinations-${NAMESPACE}"
+  spec:
+    description: |
+      Allow reverse-proxy to connect to frontend, backend and ches-backend
+    source:
+      - - "app=${APP_NAME}-${JOB_NAME}"
+        - "deploymentconfig=${APP_NAME}-${JOB_NAME}-reverse-proxy"
+        - role=reverse-proxy
+    destination:
+      - - "app=${APP_NAME}-${JOB_NAME}"
+        - role=frontend
+      - - "app=${APP_NAME}-${JOB_NAME}"
+        - role=backend
+      - - "app=${APP_NAME}-${JOB_NAME}"
+        - role=ches-backend
 - apiVersion: v1
   kind: Service
   metadata:
@@ -21,6 +50,7 @@ objects:
     selector:
       app: "${APP_NAME}-${JOB_NAME}"
       deploymentconfig: "${APP_NAME}-${JOB_NAME}-reverse-proxy"
+      role: reverse-proxy
     sessionAffinity: None
     type: ClusterIP
 - apiVersion: route.openshift.io/v1
@@ -54,6 +84,7 @@ objects:
     selector:
       app: "${APP_NAME}-${JOB_NAME}"
       deploymentconfig: "${APP_NAME}-${JOB_NAME}-reverse-proxy"
+      role: reverse-proxy
     strategy:
       activeDeadlineSeconds: 21600
       resources: {}
@@ -69,6 +100,7 @@ objects:
         labels:
           app: "${APP_NAME}-${JOB_NAME}"
           deploymentconfig: "${APP_NAME}-${JOB_NAME}-reverse-proxy"
+          role: reverse-proxy
       spec:
         containers:
         - env:

@@ -21,6 +21,7 @@ objects:
     selector:
       app: "${APP_NAME}-${JOB_NAME}"
       deploymentconfig: "${APP_NAME}-${JOB_NAME}-frontend"
+      role: frontend
     sessionAffinity: None
     type: ClusterIP
 - apiVersion: apps.openshift.io/v1
@@ -34,6 +35,7 @@ objects:
     selector:
       app: "${APP_NAME}-${JOB_NAME}"
       deploymentconfig: "${APP_NAME}-${JOB_NAME}-frontend"
+      role: frontend
     strategy:
       activeDeadlineSeconds: 21600
       resources: {}
@@ -49,6 +51,7 @@ objects:
         labels:
           app: "${APP_NAME}-${JOB_NAME}"
           deploymentconfig: "${APP_NAME}-${JOB_NAME}-frontend"
+          role: frontend
       spec:
         containers:
         - env:

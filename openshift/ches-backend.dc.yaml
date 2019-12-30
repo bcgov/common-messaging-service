@@ -7,6 +7,20 @@ metadata:
   name: "${APP_NAME}-${JOB_NAME}-ches-dc"
 objects:
 
+  - kind: NetworkSecurityPolicy
+    apiVersion: secops.pathfinder.gov.bc.ca/v1alpha1
+    metadata:
+      name: "${APP_NAME}-${JOB_NAME}-ches-backend-to-egress-${NAMESPACE}"
+    spec:
+      description: |
+        Allow ches-backend to open connections to the internet
+      source:
+        - - "app=${APP_NAME}-${JOB_NAME}"
+          - "deploymentconfig=${APP_NAME}-${JOB_NAME}-ches-backend"
+          - role=ches-backend
+      destination:
+      - - ext:network=any
+
   - apiVersion: v1
     kind: Service
     metadata:
@@ -22,6 +36,7 @@ objects:
       selector:
         app: "${APP_NAME}-${JOB_NAME}"
         deploymentconfig: "${APP_NAME}-${JOB_NAME}-ches-backend"
+        role: ches-backend
       sessionAffinity: None
       type: ClusterIP
 
@@ -37,6 +52,7 @@ objects:
       selector:
         app: "${APP_NAME}-${JOB_NAME}"
         deploymentconfig: "${APP_NAME}-${JOB_NAME}-ches-backend"
+        role: ches-backend
       strategy:
         activeDeadlineSeconds: 21600
         resources: {}
@@ -52,6 +68,7 @@ objects:
           labels:
             app: "${APP_NAME}-${JOB_NAME}"
             deploymentconfig: "${APP_NAME}-${JOB_NAME}-ches-backend"
+            role: ches-backend
         spec:
           containers:
             - image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-ches-backend:latest"
