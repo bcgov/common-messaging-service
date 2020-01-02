@@ -31,6 +31,7 @@ We need to tell the build what path we expect to be served at (ex. /pr-5 for pul
 | REACT_APP_PUBLIC_URL | full url to the root of the application.  This is to expose callback urls for authentication. |
 | REACT_APP_OIDC_ISSUER | For User Authentication, we need the KeyCloak Realm Issuer URL.  ex. https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz |
 | REACT_APP_OIDC_CLIENT_ID | For User Authentication, we need the Client ID.  This must match the backend service configuration. |
+| REACT_APP_CHES_PERFORMANCE_URL | URL to CHES Performance dashboard. |
 
 ### Notes
 Upon startup, we immediately call the mssc api healthcheck at /api/v1/health.  This will check to see if the service client is configured correctly and has the expected permissions.  It will also check to see if the Common Messaging Service is up and available.  As part of the health check, we consume configuration for attachments and sender.  If the health check fails, or if the underlying service client does not have permissions to send, then the email form is disabled.
@@ -85,6 +86,7 @@ export REACT_APP_UI_ROOT=/pr-5
 export REACT_APP_PUBLIC_URL=https://mssc-dev.pathfinder.gov.bc.ca/pr-5
 export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
 export REACT_APP_OIDC_CLIENT_ID=mssc
+export REACT_APP_CHES_PERFORMANCE_URL=http://metabase-9f0fbe-prod.pathfinder.gov.bc.ca/public/dashboard/a8fb64fe-ebdd-4489-9ccc-3aafecdaecc9
 
 npm run build
 ```
