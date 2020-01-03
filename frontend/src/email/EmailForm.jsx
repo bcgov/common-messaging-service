@@ -475,7 +475,7 @@ class EmailForm extends Component {
     return (
       <div className="container-fluid" id="maincontainer">
 
-        <div id="mainrow" className="row">
+        <div className="row mainrow">
 
           <div className="col-md-10 offset-md-1 order-md-1">
 

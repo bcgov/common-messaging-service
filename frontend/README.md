@@ -22,7 +22,7 @@ In our Caddyfile, we expect certain environment variables:
 | STATIC_FILES_PATH | physical path to the files ex. build |  
 
 ### Application Environment Variables
-Environment variables that we need can be set for developers in a root file .env.development.local - this should be ignored for our git commits.  Or they can be set at the command line.
+Environment variables that we need can be set for developers in a root file .env.development.local - this should be ignored for our git commits.  Or they can be set at the command line. (see below for commands)
 We need to tell the build what path we expect to be served at (ex. /pr-5 for pull requests, /mssc for production), and that will be used to hit our relative backend api path.  All environment variables used in the application code must start with REACT\_APP\_
 
 | Name | Description |
@@ -65,6 +65,15 @@ Note that by default, we are running on localhost:3000.
 By default, a local instance of the [email microservice](https://github.com/bcgov/nr-email-microservice) will run on localhost:8080.  
 The following environment variables depend on how you set up your OIDC provider and realm; it also depends on running the email-microservice (CMSG v1) and the ches-backend (Common Hosted Email Service).  
 
+Note that Windows users should build and run the application with:
+
+``` sh
+npm run build-win 
+npm run start-win
+```
+
+UNIX style commands:
+
 ``` sh
 export REACT_APP_API_ROOT=http://localhost:8080
 export REACT_APP_CHES_ROOT=http://localhost:8888
@@ -76,8 +85,24 @@ export REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
 npm run start
 ```
 
+Windows style commands:
+
+``` sh
+$env:REACT_APP_API_ROOT=http://localhost:8080
+$env:REACT_APP_CHES_ROOT=http://localhost:8888
+$env:REACT_APP_UI_ROOT=
+$env:REACT_APP_PUBLIC_URL=http://localhost:3000
+$env:REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+$env:REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
+
+npm run start-win
+```
+
+
 ### Build the application
 For production releases, we need to build the application.  Build will use react-scripts and produce a production ready distribution at frontend/build.
+
+UNIX style commands:
 
 ``` sh
 export REACT_APP_API_ROOT=/pr-5
@@ -91,9 +116,24 @@ export REACT_APP_CHES_PERFORMANCE_URL=http://metabase-9f0fbe-prod.pathfinder.gov
 npm run build
 ```
 
+Windows style commands:
+
+``` sh
+$env:REACT_APP_API_ROOT=/pr-5
+$env:REACT_APP_CHES_ROOT=/pr-5
+$env:REACT_APP_UI_ROOT=/pr-5
+$env:REACT_APP_PUBLIC_URL=https://mssc-dev.pathfinder.gov.bc.ca/pr-5
+$env:REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+$env:REACT_APP_OIDC_CLIENT_ID=mssc
+$env:REACT_APP_CHES_PERFORMANCE_URL=
+
+npm run build-win
+```
 ### Build and run in Caddy locally
 The following will show how one can build the production code and run it locally in Caddy.
 Generally, REACT\_APP\_API\_ROOT, REACT\_APP\_CHES\_ROOT  and REACT\_APP\_UI\_ROOT are the same as PATH\_ROOT, but for serving locally, the api maybe hosted elsewhere.  See [reverse-proxy](../reverse-proxy) for a better example.
+
+UNIX style commands:
 
 ``` sh
 cd frontend
@@ -113,5 +153,22 @@ export STATIC_FILES_PATH=./build
 caddy -quic
 ```
 
+Windows style commands:
 
+``` sh
+cd frontend
 
+$env:REACT_APP_API_ROOT=http://localhost:8080
+$env:REACT_APP_CHES_ROOT=http://localhost:8888
+$env:REACT_APP_UI_ROOT=
+$env:REACT_APP_PUBLIC_URL=http://localhost:2016
+$env:REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+$env:REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend;
+npm run build-win
+
+$env:PATH_ROOT=
+$env:UI_SERVICE_PORT=2016
+$env:STATIC_FILES_PATH=./build
+
+caddy -quic
+```

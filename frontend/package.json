@@ -11,8 +11,10 @@
     "url": "https://github.com/bcgov/nr-messaging-service-showcase/issues"
   },
   "scripts": {
-    "start": "chmod +x ./env.sh && env.sh && cp -rf env-config.js ./public/ && react-scripts start",
-    "build": "chmod +x ./env.sh && env.sh && cp -rf env-config.js ./public/ && react-scripts build",
+    "start": "chmod +x ./env.sh && ./env.sh && cp -rf env-config.js ./public/ && react-scripts start",
+    "build": "chmod +x ./env.sh && ./env.sh && cp -rf env-config.js ./public/ && react-scripts build",
+    "start-win": "chmod +x ./env.sh && env.sh && cp -rf env-config.js ./public/ && react-scripts start",
+    "build-win": "chmod +x ./env.sh && env.sh && cp -rf env-config.js ./public/ && react-scripts build",
     "test": "CI=true react-scripts test --env=jsdom --coverage --testResultsProcessor ./node_modules/jest-sonar-reporter/index.js",
     "eject": "react-scripts eject",
     "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",
@@ -24,6 +26,7 @@
     "@babel/runtime": "7.4.4",
     "axios": "^0.19.0",
     "bytes": "^3.1.0",
+    "iframe-resizer": "3.5.11",
     "loglevel": "^1.6.1",
     "moment": "^2.24.0",
     "oidc-client": "^1.8.2",
