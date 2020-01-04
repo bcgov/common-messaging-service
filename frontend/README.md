@@ -111,7 +111,7 @@ export REACT_APP_UI_ROOT=/pr-5
 export REACT_APP_PUBLIC_URL=https://mssc-dev.pathfinder.gov.bc.ca/pr-5
 export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
 export REACT_APP_OIDC_CLIENT_ID=mssc
-export REACT_APP_CHES_PERFORMANCE_URL=http://metabase-9f0fbe-prod.pathfinder.gov.bc.ca/public/dashboard/a8fb64fe-ebdd-4489-9ccc-3aafecdaecc9
+export REACT_APP_CHES_PERFORMANCE_URL=https://metabase-9f0fbe-prod.pathfinder.gov.bc.ca/public/dashboard/a8fb64fe-ebdd-4489-9ccc-3aafecdaecc9
 
 npm run build
 ```
