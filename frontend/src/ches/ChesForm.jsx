@@ -383,7 +383,7 @@ class ChesForm extends Component {
     return (
       <div className="container-fluid" id="maincontainer">
 
-        <div id="mainrow" className="row">
+        <div className="row mainrow">
 
           <div className="col-md-10 offset-md-1 order-md-1">
             <div className="text-center mt-4 mb-4" style={displayBusy}>

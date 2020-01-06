@@ -2,7 +2,7 @@ import React from 'react';
 
 const Home = () => (
   <div className="container" id="maincontainer">
-    <div id="mainrow" className="row">
+    <div className="row mainrow">
       <div className="col-md-8 offset-md-2 order-md-1">
         <h2>Welcome to Messaging Services Showcase (MSSC).</h2>
         MSSC demonstrates how an application can have messaging functionality by calling an API. In this case, it
