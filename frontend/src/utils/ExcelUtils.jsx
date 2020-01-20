@@ -58,8 +58,9 @@ const handleDefault = (context, data, fieldName, key) => {
     const ts = moment(value);
     context[fieldName] = ts.format(CONTEXTS_TS_FORMAT);
   } else if (isDate) {
+    // this can have false positives because we use relaxed mode, return original data if not valid moment.
     const dt = moment(value);
-    context[fieldName] = dt.format(CONTEXTS_DT_FORMAT);
+    context[fieldName] = dt.isValid() ? dt.format(CONTEXTS_DT_FORMAT) : value;
   } else {
     context[fieldName] = value;
   }
