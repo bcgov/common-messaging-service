@@ -1,11 +1,12 @@
 .DS_Store
 node_modules
-dist
 .nyc_output
 coverage
 
 
 frontend/build
+frontend/dist
+frontend/libs/xlsx/dist/xlsx*
 
 # local env files
 .env.local
