@@ -36,15 +36,15 @@
     "react-dom": "16.8.6",
     "react-dropzone": "^10.1.4",
     "react-router-dom": "5.0.1",
-    "react-scripts": "3.0.1",
+    "react-scripts": "^3.3.0",
     "react-select": "^3.0.8",
     "tinymce": "5.0.5",
-    "xlsx": "^0.15.1"
+    "xlsx": "file:../libs/xlsx"
   },
   "devDependencies": {
-    "eslint": "5.16.0",
-    "eslint-plugin-react": "7.11.1",
-    "jest": "24.7.1",
+    "eslint": "6.8.0",
+    "eslint-plugin-react": "7.18.0",
+    "jest": "24.9.0",
     "jest-sonar-reporter": "^2.0.0",
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.14.0",
