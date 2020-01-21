@@ -49,6 +49,9 @@ objects:
         WORKDIR /opt/app-root/src
         COPY package*.json ./
         RUN npm ci
+        # the package.json has a postinstall script to do this, but is not successful: npm WARN lifecycle
+        # so we will manually copy this file over here
+        COPY xlsx-override.js /opt/app-root/src/node_modules/xlsx/xlsx.js
     strategy:
       dockerStrategy: {}
       type: Docker
