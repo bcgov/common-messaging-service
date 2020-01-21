@@ -45,7 +45,7 @@ objects:
         uri: "${SOURCE_REPO_URL}"
       type: Git
       dockerfile: |-
-        FROM mhart/alpine-node:10
+        FROM mhart/alpine-node:12
         WORKDIR /opt/app-root/src
         COPY package*.json ./
         RUN npm ci
