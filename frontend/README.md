@@ -51,7 +51,7 @@ We use [react-dropzone](https://react-dropzone.netlify.com) for handling attachm
 Only valid files will be accepted, and the UI does provide a means to remove attachments.  A warning will appear if all the files dropped or selected fail to meet the configured criteria.
 
 #### Excel/CSV (sheet js)
-We use [sheetjs](https://github.com/SheetJS/sheetjs) for parsing Excel and CSV files.  However, there are outstanding bugs around date parsing (see [Fix Issue #1212](https://github.com/SheetJS/sheetjs/pull/1457) and [Fix for #1332](https://github.com/SheetJS/sheetjs/pull/1333)) and we need them resolved.  We have imported version 0.15.4 of the library and made changes to fix the bugs.  See [xlsx.js](./libs/xlsx/xlsx.js).
+We use [sheetjs](https://github.com/SheetJS/sheetjs) for parsing Excel and CSV files.  However, there are outstanding bugs around date parsing (see [Fix Issue #1212](https://github.com/SheetJS/sheetjs/pull/1457) and [Fix for #1332](https://github.com/SheetJS/sheetjs/pull/1333)) and we need them resolved.  We have imported version 0.15.4 of the library and made changes to fix the bugs.  See [xlsx.js](./src/xlsx/xlsx.js).
 
 ## Project scripts
 
