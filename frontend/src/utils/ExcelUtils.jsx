@@ -1,5 +1,5 @@
 import * as Utils from './Utils';
-import XLSX from 'xlsx';
+import XLSX from '../xlsx/xlsx';
 import moment from 'moment';
 
 // populate context/table formats

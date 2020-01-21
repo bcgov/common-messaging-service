@@ -26,6 +26,8 @@
     "@babel/runtime": "7.4.4",
     "axios": "^0.19.0",
     "bytes": "^3.1.0",
+    "codepage": "~1.14.0",
+    "commander": "~2.17.1",
     "iframe-resizer": "3.5.11",
     "loglevel": "^1.6.1",
     "moment": "^2.24.0",
@@ -38,8 +40,7 @@
     "react-router-dom": "5.0.1",
     "react-scripts": "^3.3.0",
     "react-select": "^3.0.8",
-    "tinymce": "5.0.5",
-    "xlsx": "file:./libs/xlsx"
+    "tinymce": "5.0.5"
   },
   "devDependencies": {
     "eslint": "6.8.0",
