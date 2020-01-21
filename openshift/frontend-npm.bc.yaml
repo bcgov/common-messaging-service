@@ -45,22 +45,22 @@ objects:
         uri: "${SOURCE_REPO_URL}"
       type: Git
       dockerfile: |-
-      FROM mhart/alpine-node:12
-      WORKDIR /opt/app-root/src
-      COPY package*.json ./
-      RUN npm ci
-      # serious monkey patching...
-      # the package.json has a postinstall script to do this, but is not successful: npm WARN lifecycle
-      # so we will manually copy this file over here
-      # remove stuff we do not need, add the file we want...
-      RUN rm -rf /opt/app-root/src/node_modules/xlsx/bin && \
-        rm /opt/app-root/src/node_modules/xlsx/dist/*.min.js && \
-        rm /opt/app-root/src/node_modules/xlsx/dist/*.min.map && \
-        rm /opt/app-root/src/node_modules/xlsx/dist/*.extendscript.js && \
-        rm /opt/app-root/src/node_modules/xlsx/dist/xlsx.js && \
-        rm /opt/app-root/src/node_modules/xlsx/xlsx.mini.js
-      COPY xlsx-override.js /opt/app-root/src/node_modules/xlsx/xlsx.js
-      COPY xlsx-override.js /opt/app-root/src/node_modules/xlsx/dist/xlsx.js
+        FROM mhart/alpine-node:12
+        WORKDIR /opt/app-root/src
+        COPY package*.json ./
+        RUN npm ci
+        # serious monkey patching...
+        # the package.json has a postinstall script to do this, but is not successful: npm WARN lifecycle
+        # so we will manually copy this file over here
+        # remove stuff we do not need, add the file we want...
+        RUN rm -rf /opt/app-root/src/node_modules/xlsx/bin && \
+          rm /opt/app-root/src/node_modules/xlsx/dist/*.min.js && \
+          rm /opt/app-root/src/node_modules/xlsx/dist/*.min.map && \
+          rm /opt/app-root/src/node_modules/xlsx/dist/*.extendscript.js && \
+          rm /opt/app-root/src/node_modules/xlsx/dist/xlsx.js && \
+          rm /opt/app-root/src/node_modules/xlsx/xlsx.mini.js
+        COPY xlsx-override.js /opt/app-root/src/node_modules/xlsx/xlsx.js
+        COPY xlsx-override.js /opt/app-root/src/node_modules/xlsx/dist/xlsx.js
     strategy:
       dockerStrategy: {}
       type: Docker
