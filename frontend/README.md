@@ -15,11 +15,11 @@ In production, the frontend is behind a [reverse proxy](../reverse-proxy/README.
 
 In our Caddyfile, we expect certain environment variables:
 
-| Name | Description |  
-| --- | --- |  
-| UI_SERVICE_PORT | exposed port to access caddy server ex. 2015 |  
-| PATH_ROOT | url path  ex. localhost:2015/mypath |  
-| STATIC_FILES_PATH | physical path to the files ex. build |  
+| Name | Description |
+| --- | --- |
+| UI_SERVICE_PORT | exposed port to access caddy server ex. 2015 |
+| PATH_ROOT | url path  ex. localhost:2015/mypath |
+| STATIC_FILES_PATH | physical path to the files ex. build |
 
 ### Application Environment Variables
 Environment variables that we need can be set for developers in a root file .env.development.local - this should be ignored for our git commits.  Or they can be set at the command line. (see below for commands)
@@ -50,6 +50,8 @@ We use [react-dropzone](https://react-dropzone.netlify.com) for handling attachm
 
 Only valid files will be accepted, and the UI does provide a means to remove attachments.  A warning will appear if all the files dropped or selected fail to meet the configured criteria.
 
+#### Excel/CSV (sheet js)
+We use [sheetjs](https://github.com/SheetJS/sheetjs) for parsing Excel and CSV files.  However, there are outstanding bugs around date parsing (see [Fix Issue #1212](https://github.com/SheetJS/sheetjs/pull/1457) and [Fix for #1332](https://github.com/SheetJS/sheetjs/pull/1333)) and we need them resolved.  We have imported version 0.15.4 of the library and made changes to fix the bugs.  See [xlsx.js](./libs/xlsx/xlsx.js).
 
 ## Project scripts
 
@@ -61,14 +63,14 @@ npm install
 ```
 
 ### Run the application locally
-Note that by default, we are running on localhost:3000.    
-By default, a local instance of the [email microservice](https://github.com/bcgov/nr-email-microservice) will run on localhost:8080.  
-The following environment variables depend on how you set up your OIDC provider and realm; it also depends on running the email-microservice (CMSG v1) and the ches-backend (Common Hosted Email Service).  
+Note that by default, we are running on localhost:3000.
+By default, a local instance of the [email microservice](https://github.com/bcgov/nr-email-microservice) will run on localhost:8080.
+The following environment variables depend on how you set up your OIDC provider and realm; it also depends on running the email-microservice (CMSG v1) and the ches-backend (Common Hosted Email Service).
 
 Note that Windows users should build and run the application with:
 
 ``` sh
-npm run build-win 
+npm run build-win
 npm run start-win
 ```
 
