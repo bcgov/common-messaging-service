@@ -34,9 +34,9 @@ class MergeAbout extends Component {
           your dates to &apos;YYYY-MM-DD&apos; and time stamps to &apos;YYYY-MM-DD HH:mm&apos;.
         </p>
         <p>
-          <a href={process.env.PUBLIC_URL + '/docs/mssc-ches-merge-example.csv'} download>example csv</a><br/>
-          <a href={process.env.PUBLIC_URL + '/docs/mssc-ches-merge-example.xlsx'} download>example xlsx</a><br/>
-          <a href={process.env.PUBLIC_URL + '/docs/mssc-ches-merge-example.txt'} download>example html
+          <a href={process.env.PUBLIC_URL + '/docs/mssc-ches-merge-example.csv'} download="mssc-ches-merge-example-csv.csv">example csv</a><br/>
+          <a href={process.env.PUBLIC_URL + '/docs/mssc-ches-merge-example.xlsx'} download="mssc-ches-merge-example-excel.xlsx">example xlsx</a><br/>
+          <a href={process.env.PUBLIC_URL + '/docs/mssc-ches-merge-example.txt'} download="mssc-ches-merge-example-template.txt">example html
             template</a><br/>
         </p>
         <h6>Guide</h6>
