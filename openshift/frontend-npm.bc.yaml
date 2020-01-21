@@ -46,9 +46,11 @@ objects:
       type: Git
       dockerfile: |-
         FROM mhart/alpine-node:10
+        USER root
         WORKDIR /opt/app-root/src
         COPY package*.json ./
         RUN npm ci
+        USER 1001
     strategy:
       dockerStrategy: {}
       type: Docker
