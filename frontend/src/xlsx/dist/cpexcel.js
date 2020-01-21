@@ -1,3 +1,4 @@
+/*eslint-disable */
 /* cpexcel.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W100 */
 var cptable = {version:"1.14.0"};
