@@ -46,6 +46,7 @@ objects:
       type: Git
       dockerfile: |-
         FROM mhart/alpine-node:10
+        RUN apk update && apk add python make g++
         WORKDIR /opt/app-root/src
         COPY package*.json ./
         RUN npm ci
