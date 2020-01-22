@@ -71,7 +71,8 @@ class MergeAbout extends Component {
           <li>Delay TS is a timestamp of when to deliver the message. Leave empty if you wish to deliver now.
           </li>
           <li>Any other field that contains a date, the Excel parser will translate to YYYY-MM-DD. Look in the
-            csv file to see various formats it can translate from CSV.
+            csv file to see various formats it can translate from CSV. <strong>Note:</strong> the last line in the CSV
+            has date formats that cannot be converted.
           </li>
           <li>If a field contains a date and time, and ends with ts (see endDateTs), MSSC will translate to
             YYYY-MM-DD hh:mm. This is local time.
