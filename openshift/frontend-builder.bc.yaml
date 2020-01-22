@@ -41,7 +41,7 @@ objects:
     source:
       contextDir: /frontend
       dockerfile: |-
-        FROM mhart/alpine-node:10
+        FROM mhart/alpine-node:12
         WORKDIR /opt/app-root/src
         COPY . .
         ENV PATH_ROOT "${PATH_ROOT}"

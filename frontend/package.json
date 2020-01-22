@@ -20,7 +20,8 @@
     "lint": "node_modules/.bin/eslint . --no-fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",
     "lint:fix": "node_modules/.bin/eslint . --fix --ignore-pattern 'node_modules'  src/**/*.js src/**/*.jsx",
     "clean": "rm -rf build && rm -rf coverage && rm -rf node_modules",
-    "clean:build": "npm run clean && npm install && npm run build"
+    "clean:build": "npm run clean && npm install && npm run build",
+    "postinstall": "cp xlsx-override.js ./node_modules/xlsx/xlsx.js"
   },
   "dependencies": {
     "@babel/runtime": "7.4.4",

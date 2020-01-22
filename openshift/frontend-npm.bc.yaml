@@ -45,10 +45,23 @@ objects:
         uri: "${SOURCE_REPO_URL}"
       type: Git
       dockerfile: |-
-        FROM mhart/alpine-node:10
-        WORKDIR /opt/app-root/src
+        FROM mhart/alpine-node:12
+        ARG APP_ROOT=/opt/app-root/src
+        ARG XLSX_ROOT=${APP_ROOT}/node_modules/xlsx
+        WORKDIR ${APP_ROOT}
         COPY package*.json ./
         RUN npm ci
+        # serious monkey patching...
+        # the package.json has a postinstall script to do this, but is not successful: npm WARN lifecycle
+        # so we will manually copy this file over here
+        # remove stuff we do not need, add the file we want...
+        RUN rm -rf ${XLSX_ROOT}/bin && \
+          rm ${XLSX_ROOT}/dist/*.min.js && \
+          rm ${XLSX_ROOT}/dist/*.min.map && \
+          rm ${XLSX_ROOT}/dist/*.extendscript.js && \
+          rm ${XLSX_ROOT}/dist/xlsx.js && \
+          rm ${XLSX_ROOT}/xlsx.mini.js
+        COPY xlsx-override.js ${XLSX_ROOT}/xlsx.js
     strategy:
       dockerStrategy: {}
       type: Docker

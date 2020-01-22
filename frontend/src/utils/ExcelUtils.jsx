@@ -56,10 +56,10 @@ const handleDefault = (context, data, fieldName, key) => {
   const isTimestampField = isTimestamp && fieldName.toLowerCase().endsWith('ts');
   if (isTimestampField) {
     const ts = moment(value);
-    context[fieldName] = ts.format(CONTEXTS_TS_FORMAT);
+    context[fieldName] = (ts.format(CONTEXTS_TS_FORMAT) !== 'Invalid date' ? ts.format(CONTEXTS_TS_FORMAT) : value);
   } else if (isDate) {
     const dt = moment(value);
-    context[fieldName] = dt.format(CONTEXTS_DT_FORMAT);
+    context[fieldName] = (dt.format(CONTEXTS_DT_FORMAT) !== 'Invalid date' ? dt.format(CONTEXTS_DT_FORMAT) : value);
   } else {
     context[fieldName] = value;
   }
