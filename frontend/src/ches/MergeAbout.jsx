@@ -30,8 +30,10 @@ class MergeAbout extends Component {
         </p>
         <p>
           The Excel spreadsheet/CVS file parser does best guesses on dates and times, it cannot parse and understand all
-          formats.  If you encounter difficulties with dates and times from Excel, convert your sheet to CSV and format
-          your dates to &apos;YYYY-MM-DD&apos; and time stamps to &apos;YYYY-MM-DD HH:mm&apos;.
+          formats.  If you encounter difficulties with dates and times from Excel, ensure your date and time stamp columns
+          are formatted properly (&quot;Short Date&quot;, &quot;Long Date&quot; or &quot;Custom yyyy-mm-dd h:mm&quot; not
+          &quot;General&quot;), or convert your sheet to CSV and format your dates to &quot;yyyy-mm-dd&quot; and time
+          stamps to &quot;yyyy-mm-dd h:mm&quot;.
         </p>
         <p>
           <a href={process.env.PUBLIC_URL + '/docs/mssc-ches-merge-example.csv'} download="mssc-ches-merge-example-csv.csv">example csv</a><br/>

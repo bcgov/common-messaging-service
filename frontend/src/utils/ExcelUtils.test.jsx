@@ -90,7 +90,7 @@ describe('ExcelUtils parseFile test', () => {
     //endDateTS[4] = Oct 6 2019 1:45:00 PM
     expect(contexts[4].context.endDateTs).toBe('2019-10-06 13:45');
   });
-  it('handles bad date datacorrectly', async () => {
+  it('handles bad date data correctly', async () => {
     const data = await fileParse(badData);
     const contexts = JSON.parse(data.contexts);
     // start date throws false positives in moment, but should then be handled gracefully and original value returned.
