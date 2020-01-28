@@ -1,5 +1,10 @@
 ---
 description: MSSC demonstrates the capabilities of the Common Hosted Email Service, which provides applications with email messaging functionality. To learn more see [API Usage](https://github.com/bcgov/common-hosted-email-service/blob/master/app/README.md#api-usage) documentation.
+title: About the Messaging Common Service
+tags:
+- nr
+- nrm
+- common components
 ---
 
 
