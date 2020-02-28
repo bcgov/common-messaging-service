@@ -547,6 +547,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             'OIDC_CONFIG_MAP_NAME=email-microsrv-oidc',
             'CMSG_SENDER=NR.CommonServiceShowcase@gov.bc.ca',
             "HOST_URL=https://${hostEnv}${pathEnv}",
+            'SERVER_MORGANFORMAT=combined',
             'CPU_REQUEST=100m',
             'MEMORY_REQUEST=256Mi',
             'CPU_LIMIT=500m',
@@ -577,6 +578,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             "NAMESPACE=${projectEnv}",
             "APP_NAME=${APP_NAME}",
             "SERVER_HOST_URL=https://${hostEnv}${pathEnv}",
+            'SERVER_MORGANFORMAT=combined'
           )
           echo "Applying Deployment ${APP_NAME}-${JOB_NAME}-ches-backend..."
           createDeploymentStatus(projectEnv, 'PENDING', hostEnv, pathEnv)
