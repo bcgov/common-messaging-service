@@ -5,7 +5,7 @@
     "clientId": "mssc"
   },
   "server": {
-    "logLevel": "info",
+    "logLevel": "combined",
     "morganFormat": "dev",
     "port": "8888",
     "hostUrl": "http://localhost:8888",

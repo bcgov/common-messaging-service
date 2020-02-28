@@ -2,7 +2,7 @@
     # requests without trailing slash don't load our app.
     redir / {uri}/
 
-    log stdout
+    log / stdout "{combined}"
 
     errors stdout
 }
@@ -12,7 +12,7 @@
     # we need to redirect this internal route to the actual auth route
     redir / {$PATH_ROOT}/auth/logout 307
 
-    log stdout
+    log / stdout "{combined}"
 
     errors stdout
 }
@@ -21,7 +21,7 @@
 
     root {$STATIC_FILES_PATH}
 
-    log stdout
+    log / stdout "{combined}"
 
     errors stdout
 
