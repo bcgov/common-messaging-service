@@ -318,8 +318,11 @@ pipeline {
                     try {
                       notifyStageStatus('Backend', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
+                      echo "Building ImageStream ${REPO_NAME}-backend..."
                       openshift.apply(bcBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-backend:latest..."
+                      openshift.tag("${REPO_NAME}-backend:latest", "${REPO_NAME}-backend:${JOB_NAME}")
 
                       echo 'Backend build successful'
                       notifyStageStatus('Backend', 'SUCCESS')
@@ -334,8 +337,11 @@ pipeline {
                     try {
                       notifyStageStatus('ChesBackend', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-ches-backend..."
+                      echo "Building ImageStream ${REPO_NAME}-ches-backend..."
                       openshift.apply(bcChesBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-ches-backend:latest..."
+                      openshift.tag("${REPO_NAME}-ches-backend:latest", "${REPO_NAME}-ches-backend:${JOB_NAME}")
 
                       echo 'Ches Backend build successful'
                       notifyStageStatus('ChesBackend', 'SUCCESS')
@@ -350,8 +356,11 @@ pipeline {
                     try {
                       notifyStageStatus('Frontend', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
+                      echo "Building ImageStream ${REPO_NAME}-frontend..."
                       openshift.apply(bcFrontendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-frontend:latest..."
+                      openshift.tag("${REPO_NAME}-frontend:latest", "${REPO_NAME}-frontend:${JOB_NAME}")
 
                       echo 'Frontend build successful'
                       notifyStageStatus('Frontend', 'SUCCESS')
@@ -366,8 +375,11 @@ pipeline {
                     try {
                       notifyStageStatus('ReverseProxy', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+                      echo "Building ImageStream ${REPO_NAME}-reverse-proxy..."
                       openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-reverse-proxy:latest..."
+                      openshift.tag("${REPO_NAME}-reverse-proxy:latest", "${REPO_NAME}-reverse-proxy:${JOB_NAME}")
 
                       echo 'ReverseProxy build successful'
                       notifyStageStatus('ReverseProxy', 'SUCCESS')
