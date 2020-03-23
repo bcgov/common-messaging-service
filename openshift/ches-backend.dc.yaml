@@ -69,7 +69,7 @@ objects:
             role: ches-backend
         spec:
           containers:
-            - image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-ches-backend:latest"
+            - image: "docker-registry.default.svc:5000/${NAMESPACE}/${REPO_NAME}-ches-backend:${JOB_NAME}"
               imagePullPolicy: Always
               livenessProbe:
                 failureThreshold: 3
@@ -144,6 +144,10 @@ objects:
       test: false
 
 parameters:
+  - name: REPO_NAME
+    description: Application repository name
+    displayName: Repository Name
+    required: true
   - name: APP_NAME
     description: Application name
     required: true

@@ -11,7 +11,7 @@ objects:
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-npm"
+    name: "${REPO_NAME}-frontend-npm"
   spec:
     lookupPolicy:
       local: false
@@ -28,7 +28,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
+        name: "${REPO_NAME}-frontend-npm:latest"
     postCommit: {}
     resources:
       requests:

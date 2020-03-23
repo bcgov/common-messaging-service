@@ -12,7 +12,7 @@ objects:
     metadata:
       labels:
         app: "${APP_NAME}-${JOB_NAME}"
-      name: "${APP_NAME}-${JOB_NAME}-ches-backend"
+      name: "${REPO_NAME}-ches-backend"
     spec:
       lookupPolicy:
         local: false
@@ -30,7 +30,7 @@ objects:
       output:
         to:
           kind: ImageStreamTag
-          name: "${APP_NAME}-${JOB_NAME}-ches-backend:latest"
+          name: "${REPO_NAME}-ches-backend:latest"
       postCommit: {}
       resources:
         requests:
@@ -56,6 +56,10 @@ objects:
       successfulBuildsHistoryLimit: 5
 
 parameters:
+  - name: REPO_NAME
+    description: Application repository name
+    displayName: Repository Name
+    required: true
   - name: SOURCE_REPO_URL
     description: Git Repository URL
     required: true

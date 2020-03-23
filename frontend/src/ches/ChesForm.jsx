@@ -294,9 +294,12 @@ class ChesForm extends Component {
     const user = await this.authService.getUser();
     const attachments = await Promise.all(this.state.form.files.map(file => Utils.convertFileToAttachment(file, Constants.CHES_ATTACHMENT_ENCODING_BASE64)));
 
-    // we want to bcc our default address, just to be sure there is no abuse.
     const bcc = Utils.getAddresses(this.state.form.bcc);
-    bcc.push(this.state.config.sender);
+    // if current user is NOT a sender/editor (has elevated privileges)
+    // then we want to bcc our service email to ensure there is no abuse.
+    if (!this.authService.hasRole(user, Constants.SENDER_EDITOR_ROLE)) {
+      bcc.push(this.state.config.sender);
+    }
 
     const email = {
       attachments: attachments,

@@ -78,7 +78,7 @@ objects:
               configMapKeyRef:
                 key: OIDC_ISSUER
                 name: "${OIDC_CONFIG_MAP_NAME}"
-          image: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend:latest"
+          image: "docker-registry.default.svc:5000/${NAMESPACE}/${REPO_NAME}-frontend:${JOB_NAME}"
           imagePullPolicy: Always
           # livenessProbe:
           #  failureThreshold: 3
