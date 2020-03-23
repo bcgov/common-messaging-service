@@ -557,6 +557,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-ches-backend..."
           def dcChesBackendTemplate = openshift.process('-f',
             'openshift/ches-backend.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
             "JOB_NAME=${JOB_NAME}",
             "NAMESPACE=${projectEnv}",
             "APP_NAME=${APP_NAME}",
