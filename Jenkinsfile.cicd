@@ -37,12 +37,13 @@ pipeline {
     PATH_ROOT = "/${JOB_NAME}"
 
     // for the email microservice backend
-    EMAIL_MICROSRV_REF = '1.1.2'
+    EMAIL_MICROSRV_REF = 'feature/image-tags'
     EMAIL_MICROSRV_BC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.bc.yaml"
     EMAIL_MICROSRV_DC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.dc.user-auth.yaml"
 
     EMAIL_MICROSRV_APP_LABEL = "${APP_NAME}-${JOB_NAME}"
-    EMAIL_MICROSRV_IMAGE_NAME = "${APP_NAME}-${JOB_NAME}-backend"
+    EMAIL_MICROSRV_IMAGE_NAME = "${REPO_NAME}-backend"
+    EMAIL_MICROSRV_IMAGE_TAG = "${JOB_NAME}"
 
     // SonarQube Endpoint URL
     SONARQUBE_URL_INT = 'http://sonarqube:9000'
@@ -509,6 +510,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             "${EMAIL_MICROSRV_DC}",
             "APP_LABEL=${EMAIL_MICROSRV_APP_LABEL}",
             "IMAGE_NAME=${EMAIL_MICROSRV_IMAGE_NAME}",
+            "IMAGE_TAG=${EMAIL_MICROSRV_IMAGE_TAG}",
             "NAMESPACE=${projectEnv}",
             'SECRET_NAME=cmsg-client',
             'CONFIG_MAP_NAME=cmsg-config',
