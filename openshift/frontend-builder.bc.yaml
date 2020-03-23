@@ -11,7 +11,7 @@ objects:
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-frontend-builder"
+    name: "${REPO_NAME}-frontend-builder"
   spec:
     lookupPolicy:
       local: false
@@ -28,7 +28,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-frontend-builder:latest"
+        name: "${REPO_NAME}-frontend-builder:latest"
     postCommit: {}
     resources:
       requests:
@@ -57,7 +57,7 @@ objects:
       dockerStrategy:
         from:
           kind: DockerImage
-          name: "docker-registry.default.svc:5000/${NAMESPACE}/${APP_NAME}-${JOB_NAME}-frontend-npm:latest"
+          name: "docker-registry.default.svc:5000/${NAMESPACE}/${REPO_NAME}-frontend-npm:latest"
       type: Docker
     successfulBuildsHistoryLimit: 5
 parameters:

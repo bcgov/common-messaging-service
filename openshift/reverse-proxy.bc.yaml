@@ -11,7 +11,7 @@ objects:
   metadata:
     labels:
       app: "${APP_NAME}-${JOB_NAME}"
-    name: "${APP_NAME}-${JOB_NAME}-reverse-proxy"
+    name: "${REPO_NAME}-reverse-proxy"
   spec:
     lookupPolicy:
       local: false
@@ -27,7 +27,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: "${APP_NAME}-${JOB_NAME}-reverse-proxy:latest"
+        name: "${REPO_NAME}-reverse-proxy:latest"
     postCommit: {}
     resources: {}
     runPolicy: Serial

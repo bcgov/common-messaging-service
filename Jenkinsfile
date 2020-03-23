@@ -290,6 +290,7 @@ pipeline {
               echo "Processing BuildConfig ${APP_NAME}-${JOB_NAME}-ches-backend..."
               def bcChesBackendTemplate = openshift.process('-f',
                 'openshift/ches-backend.bc.yaml',
+                "REPO_NAME=${REPO_NAME}",
                 "JOB_NAME=${JOB_NAME}",
                 "SOURCE_REPO_URL=${SOURCE_REPO_URL}",
                 "SOURCE_REPO_REF=${SOURCE_REPO_REF}",
@@ -521,17 +522,17 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
       }
 
       // "move" images from tools project to our target environment and deploy from there...
-      echo "Tagging Image ${APP_NAME}-${JOB_NAME}-backend:latest..."
-      openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-backend:latest", "${APP_NAME}-${JOB_NAME}-backend:latest")
+      echo "Tagging Image ${REPO_NAME}-backend:${JOB_NAME}..."
+      openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-backend:${JOB_NAME}", "${REPO_NAME}-backend:${JOB_NAME}")
 
-      echo "Tagging Image ${APP_NAME}-${JOB_NAME}-ches-backend:latest..."
-      openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-ches-backend:latest", "${APP_NAME}-${JOB_NAME}-ches-backend:latest")
+      echo "Tagging Image ${REPO_NAME}-ches-backend:${JOB_NAME}..."
+      openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-ches-backend:${JOB_NAME}", "${REPO_NAME}-ches-backend:${JOB_NAME}")
 
-      echo "Tagging Image ${APP_NAME}-${JOB_NAME}-frontend:latest..."
-      openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-frontend:latest", "${APP_NAME}-${JOB_NAME}-frontend:latest")
+      echo "Tagging Image ${REPO_NAME}-frontend:${JOB_NAME}..."
+      openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-frontend:${JOB_NAME}", "${REPO_NAME}-frontend:${JOB_NAME}")
 
-      echo "Tagging Image ${APP_NAME}-${JOB_NAME}-reverse-proxy:latest..."
-      openshift.tag("${TOOLS_PROJECT}/${APP_NAME}-${JOB_NAME}-reverse-proxy:latest", "${APP_NAME}-${JOB_NAME}-reverse-proxy:latest")
+      echo "Tagging Image ${REPO_NAME}-reverse-proxy:${JOB_NAME}..."
+      openshift.tag("${TOOLS_PROJECT}/${REPO_NAME}-reverse-proxy:${JOB_NAME}", "${REPO_NAME}-reverse-proxy:${JOB_NAME}")
 
       parallel(
         Backend: {
