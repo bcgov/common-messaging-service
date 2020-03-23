@@ -43,13 +43,14 @@ pipeline {
     PATH_ROOT = "/${APP_NAME}"
 
     // for the email microservice backend
-    EMAIL_MICROSRV_REF = '1.1.2'
+    EMAIL_MICROSRV_REF = '1.1.3'
     EMAIL_MICROSRV_BC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.bc.yaml"
     EMAIL_MICROSRV_DC = "https://raw.githubusercontent.com/bcgov/nr-email-microservice/${EMAIL_MICROSRV_REF}/openshift/api.dc.user-auth.yaml"
 
 
     EMAIL_MICROSRV_APP_LABEL = "${APP_NAME}-${JOB_NAME}"
-    EMAIL_MICROSRV_IMAGE_NAME = "${APP_NAME}-${JOB_NAME}-backend"
+    EMAIL_MICROSRV_IMAGE_NAME = "${REPO_NAME}-backend"
+    EMAIL_MICROSRV_IMAGE_TAG = "${JOB_NAME}"
 
     // SonarQube Endpoint URL
     SONARQUBE_URL_INT = 'http://sonarqube:9000'
@@ -324,8 +325,11 @@ pipeline {
                     try {
                       notifyStageStatus('Backend', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-backend..."
+                      echo "Building ImageStream ${REPO_NAME}-backend..."
                       openshift.apply(bcBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-backend:latest..."
+                      openshift.tag("${REPO_NAME}-backend:latest", "${REPO_NAME}-backend:${JOB_NAME}")
 
                       echo 'Backend build successful'
                       notifyStageStatus('Backend', 'SUCCESS')
@@ -340,8 +344,11 @@ pipeline {
                     try {
                       notifyStageStatus('ChesBackend', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-ches-backend..."
+                      echo "Building ImageStream ${REPO_NAME}-ches-backend..."
                       openshift.apply(bcChesBackendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-ches-backend:latest..."
+                      openshift.tag("${REPO_NAME}-ches-backend:latest", "${REPO_NAME}-ches-backend:${JOB_NAME}")
 
                       echo 'Ches Backend build successful'
                       notifyStageStatus('ChesBackend', 'SUCCESS')
@@ -356,8 +363,11 @@ pipeline {
                     try {
                       notifyStageStatus('Frontend', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-frontend..."
+                      echo "Building ImageStream ${REPO_NAME}-frontend..."
                       openshift.apply(bcFrontendTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-frontend:latest..."
+                      openshift.tag("${REPO_NAME}-frontend:latest", "${REPO_NAME}-frontend:${JOB_NAME}")
 
                       echo 'Frontend build successful'
                       notifyStageStatus('Frontend', 'SUCCESS')
@@ -372,8 +382,11 @@ pipeline {
                     try {
                       notifyStageStatus('ReverseProxy', 'PENDING')
 
-                      echo "Building ImageStream ${APP_NAME}-${JOB_NAME}-reverse-proxy..."
+                      echo "Building ImageStream ${REPO_NAME}-reverse-proxy..."
                       openshift.apply(bcReverseProxyTemplate).narrow('bc').startBuild('-w').logs('-f')
+
+                      echo "Tagging Image ${REPO_NAME}-reverse-proxy:latest..."
+                      openshift.tag("${REPO_NAME}-reverse-proxy:latest", "${REPO_NAME}-reverse-proxy:${JOB_NAME}")
 
                       echo 'ReverseProxy build successful'
                       notifyStageStatus('ReverseProxy', 'SUCCESS')
@@ -541,6 +554,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
             "${EMAIL_MICROSRV_DC}",
             "APP_LABEL=${EMAIL_MICROSRV_APP_LABEL}",
             "IMAGE_NAME=${EMAIL_MICROSRV_IMAGE_NAME}",
+            "IMAGE_TAG=${EMAIL_MICROSRV_IMAGE_TAG}",
             "NAMESPACE=${projectEnv}",
             'SECRET_NAME=cmsg-client',
             'CONFIG_MAP_NAME=cmsg-config',
@@ -575,6 +589,7 @@ def deployStage(String stageEnv, String projectEnv, String hostEnv, String pathE
           echo "Processing DeploymentConfig ${APP_NAME}-${JOB_NAME}-ches-backend..."
           def dcChesBackendTemplate = openshift.process('-f',
             'openshift/ches-backend.dc.yaml',
+            "REPO_NAME=${REPO_NAME}",
             "JOB_NAME=${JOB_NAME}",
             "NAMESPACE=${projectEnv}",
             "APP_NAME=${APP_NAME}",
