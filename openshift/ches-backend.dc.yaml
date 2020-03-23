@@ -144,6 +144,10 @@ objects:
       test: false
 
 parameters:
+  - name: REPO_NAME
+    description: Application repository name
+    displayName: Repository Name
+    required: true
   - name: APP_NAME
     description: Application name
     required: true
