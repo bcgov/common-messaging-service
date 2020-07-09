@@ -153,7 +153,7 @@ parameters:
 - name: CHES_PERFORMANCE_URL
   description: the location for the CHES performance dashboard
   required: true
-  value: https://metabase-9f0fbe-prod.pathfinder.gov.bc.ca/public/dashboard/a8fb64fe-ebdd-4489-9ccc-3aafecdaecc9
+  value: https://metabase-9f0fbe-prod.pathfinder.gov.bc.ca/dashboard/6f388f95-dba7-4632-be4c-8855ee645f31
 - name: STATIC_FILES_PATH
   description: where files are physically located on frontend caddy server
   required: true
