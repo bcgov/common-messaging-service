@@ -50,7 +50,7 @@
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.14.0",
     "jest-enzyme": "^7.0.2",
-    "lodash": "4.17.15"
+    "lodash": "4.17.19"
   },
   "eslintConfig": {
     "env": {
