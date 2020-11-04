@@ -1,7 +1,7 @@
 {
   "keycloak": {
     "realm": "98r0z7rz",
-    "serverUrl": "https://sso-dev.pathfinder.gov.bc.ca/auth",
+    "serverUrl": "https://dev.oidc.gov.bc.ca/auth",
     "clientId": "mssc"
   },
   "server": {
