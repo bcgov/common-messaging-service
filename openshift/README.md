@@ -1,5 +1,5 @@
 # The Messaging Service ShowCase (MSSC) Application
-The Messaging Service Showcase application is quite simple.  
+The Messaging Service Showcase application is quite simple.
 It is 2 [node.js](https://nodejs.org/) APIs (CMSG - see [NR Email Microservice](https://github.com/bcgov/nr-email-microservice) and CHES - see [ches-backend](../ches-backend/README.md)) and a [React.js](https://reactjs.org) UI (see [frontend](../frontend/README.md)).  In production, both backends and the frontend are placed behind a reverse proxy (see [reverse-proxy](../reverse-proxy/README.md)).
 
 
@@ -23,26 +23,26 @@ Please see [Email Microservice OpenShift Readme](https://github.com/bcgov/nr-ema
 #### Secrets/Environment variables
 The following oc command creates a new secret, cmsg-client, that will be used to set environment variables in the application.
 
-cmsg-client.username sets environment variable CMSG_CLIENT_ID  
-cmsg-client.password sets environment variable CMSG_CLIENT_SECRET  
+cmsg-client.username sets environment variable CMSG_CLIENT_ID
+cmsg-client.password sets environment variable CMSG_CLIENT_SECRET
 
 ```sh
 oc create secret -n <namespace> generic cmsg-client --from-literal=username=<client id> --from-literal=password=<client secret> --type=kubernetes.io/basic-auth
-```  
+```
 
-The following oc command creates a new secret, ches-client, that will be used to set environment variables in the application.  
+The following oc command creates a new secret, ches-client, that will be used to set environment variables in the application.
 
-ches-client.username sets environment variable CHES_CLIENT_ID  
-ches-client.password sets environment variable CHES_CLIENT_SECRET  
+ches-client.username sets environment variable CHES_CLIENT_ID
+ches-client.password sets environment variable CHES_CLIENT_SECRET
 
 ```sh
 oc create secret -n <namespace> generic ches-client --from-literal=username=<ches client id> --from-literal=password=<ches client secret> --type=kubernetes.io/basic-auth
 ```
 
-The following oc command creates a new secret, mssc-keycloak-client, that will be used to set environment variables in the application.  Note that the username/password (client id/secret) should be the same values and for the same client as we use when setting up the NR Email Microservice Config (see below).  
+The following oc command creates a new secret, mssc-keycloak-client, that will be used to set environment variables in the application.  Note that the username/password (client id/secret) should be the same values and for the same client as we use when setting up the NR Email Microservice Config (see below).
 
-mssc-keycloak-client.username sets environment variable KC_CLIENTID  
-mssc-keycloak-client.password sets environment variable KC_CLIENTSECRET  
+mssc-keycloak-client.username sets environment variable KC_CLIENTID
+mssc-keycloak-client.password sets environment variable KC_CLIENTSECRET
 
 ```sh
 oc create secret -n <namespace> generic mssc-keycloak-client --from-literal=username=<ches client id> --from-literal=password=<ches client secret> --type=kubernetes.io/basic-auth
@@ -53,7 +53,7 @@ The following oc command creates a new configmap, cmsg-config, that will be used
 
 ```sh
 oc create configmap -n <namespace> cmsg-config --from-literal=OAUTH_TOKEN_URL=<oauth token url> --from-literal=CMSG_TOP_LEVEL_URL=<common messaging api top level url>
-```  
+```
 
 The following oc command creates a new configmap, ches-config, that will be used to set environment variables in the application for the CHES backend.
 
@@ -64,11 +64,11 @@ oc create configmap -n <namespace> ches-config --from-literal=CHES_API_URL=<ches
 The following oc command creates a new configmap, mssc-keycloak-config, that will be used to set environment variables in the application for the CHES backend.
 
 ```sh
-oc create configmap -n <namespace> mssc-keycloak-config --from-literal=KC_REALM=<KeyCloak Realm ID> --from-literal=KC_SERVERURL=<KeyCloak Auth. URL ex. https://sso-dev.pathfinder.gov.bc.ca/auth>
+oc create configmap -n <namespace> mssc-keycloak-config --from-literal=KC_REALM=<KeyCloak Realm ID> --from-literal=KC_SERVERURL=<KeyCloak Auth. URL ex. https://dev.oidc.gov.bc.ca/auth>
 ```
 
 #### Backend - NR Email Microservice Config
-We also need to set up secrets and config map for our backend deployment.  See [User Authentication Secrets and ConfigMap](https://github.com/bcgov/nr-email-microservice/blob/master/README.md) in the microservice project for more.  Note that the username/password (client id/secret) should be the same values and for the same client as we use when setting up the MSSC - CHES Backend (mssc-keycloak-client secret) (see above).  
+We also need to set up secrets and config map for our backend deployment.  See [User Authentication Secrets and ConfigMap](https://github.com/bcgov/nr-email-microservice/blob/master/README.md) in the microservice project for more.  Note that the username/password (client id/secret) should be the same values and for the same client as we use when setting up the MSSC - CHES Backend (mssc-keycloak-client secret) (see above).
 
 ## Overview
 To deploy the 3 components (backend, frontend, reverse-proxy), into multiple enviroments (one per pull-request, one each for master in dev, test, and prod); we use a series of templates that allows us to configure these deployments.  We do our builds and deploys through Jenkins, and the coordination and configuration of the templates is done in Jenkinsfiles.  See [Jenkinsfile](../Jenkinsfile) and [Jenkinsfile.cicd](../Jenkinsfile.cicd) to see how the templates are used for building and deploying in our CI/CD pipeline.
@@ -134,7 +134,7 @@ The template expects 4 parameters:
 | JOB_NAME | this will be master or a pull request (ex. pr-3) |
 | SOURCE_REPO_URL | complete url to the repo (including .git) |
 | SOURCE_REPO_REF | master or pull request ref (ex. pull/3/head) |
-| APP_NAME | name of the application: mssc |  
+| APP_NAME | name of the application: mssc |
 
 ### Build Template - frontend.bc.yaml
 This template is used to create our Frontend Runtime image, it is 3rd in the Frontend chained build and uses frontend-builder.bc.yaml.  This image will only be created and updated if the [frontend/*](../frontend) code changes - basically if we update any Frontend code.  The minified React production bundle is copied into a new image that is a Caddy server, which serves that static file.

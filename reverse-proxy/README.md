@@ -56,7 +56,7 @@ export REACT_APP_UI_ROOT=$PATH_ROOT
 export REACT_APP_PUBLIC_URL=http://localhost:$PROXY_SERVICE_PORT$PATH_ROOT
 export STATIC_FILES_PATH=./build
 # this is for configuring the KeyCloak and OIDC, fill with appropriate values - see above for microservice
-export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+export REACT_APP_OIDC_ISSUER=https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz
 export REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
 
 npm run build

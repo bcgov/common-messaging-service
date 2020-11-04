@@ -3,9 +3,9 @@ description: MSSC demonstrates the capabilities of the Common Hosted Email Servi
 ---
 
 
-## About the Messaging Common Service  
+## About the Messaging Common Service
 
-### Common Service Elements  
+### Common Service Elements
 
 1. **Showcase Application**: Provides a demonstration of the capabilities of a common service. In this case MSSC demonstrates how an application can have messaging functionality by calling an API.
 2. **Self-Service Documentation**: Provide access to documentation that enables a software developer or end user to determine it is fit for their needs, have a step by step set of instructions for implementing it, and be able to complete the implementation without direct interaction with the team that built the service the API.
@@ -72,7 +72,7 @@ A software development team can request access to use an application called GETO
 
 ### API Specifications
 
-- [CHES API v1.0.0](https://ches-master-9f0fbe-prod.pathfinder.gov.bc.ca/api/v1/docs)
+- [CHES API v1.0.0](https://ches.pathfinder.gov.bc.ca/api/v1/docs)
 - [nr-email-microservice API Spec](https://github.com/bcgov/nr-email-microservice/blob/master/api/msgService/v1.api-spec.yaml): This API is a wrapper over Common Messaging Services API (CMSG) v1 published at <https://apistore.nrs.gov.bc.ca/store/apis/info?name=cmsg-messaging-api&version=v1>
 
 ## Development
