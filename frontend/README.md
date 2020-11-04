@@ -29,7 +29,7 @@ We need to tell the build what path we expect to be served at (ex. /pr-5 for pul
 | --- | --- |
 | REACT_APP_UI_ROOT | same as PATH_ROOT, /pr-5, mssc, etc |
 | REACT_APP_PUBLIC_URL | full url to the root of the application.  This is to expose callback urls for authentication. |
-| REACT_APP_OIDC_ISSUER | For User Authentication, we need the KeyCloak Realm Issuer URL.  ex. https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz |
+| REACT_APP_OIDC_ISSUER | For User Authentication, we need the KeyCloak Realm Issuer URL.  ex. https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz |
 | REACT_APP_OIDC_CLIENT_ID | For User Authentication, we need the Client ID.  This must match the backend service configuration. |
 | REACT_APP_CHES_PERFORMANCE_URL | URL to CHES Performance dashboard. |
 
@@ -82,7 +82,7 @@ export REACT_APP_API_ROOT=http://localhost:8080
 export REACT_APP_CHES_ROOT=http://localhost:8888
 export REACT_APP_UI_ROOT=
 export REACT_APP_PUBLIC_URL=http://localhost:3000
-export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+export REACT_APP_OIDC_ISSUER=https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz
 export REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
 
 npm run start
@@ -95,7 +95,7 @@ $env:REACT_APP_API_ROOT=http://localhost:8080
 $env:REACT_APP_CHES_ROOT=http://localhost:8888
 $env:REACT_APP_UI_ROOT=
 $env:REACT_APP_PUBLIC_URL=http://localhost:3000
-$env:REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+$env:REACT_APP_OIDC_ISSUER=https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz
 $env:REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
 
 npm run start-win
@@ -112,7 +112,7 @@ export REACT_APP_API_ROOT=/pr-5
 export REACT_APP_CHES_ROOT=/pr-5
 export REACT_APP_UI_ROOT=/pr-5
 export REACT_APP_PUBLIC_URL=https://mssc-dev.pathfinder.gov.bc.ca/pr-5
-export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+export REACT_APP_OIDC_ISSUER=https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz
 export REACT_APP_OIDC_CLIENT_ID=mssc
 export REACT_APP_CHES_PERFORMANCE_URL=https://metabase-9f0fbe-prod.pathfinder.gov.bc.ca/public/dashboard/a8fb64fe-ebdd-4489-9ccc-3aafecdaecc9
 
@@ -126,7 +126,7 @@ $env:REACT_APP_API_ROOT=/pr-5
 $env:REACT_APP_CHES_ROOT=/pr-5
 $env:REACT_APP_UI_ROOT=/pr-5
 $env:REACT_APP_PUBLIC_URL=https://mssc-dev.pathfinder.gov.bc.ca/pr-5
-$env:REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+$env:REACT_APP_OIDC_ISSUER=https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz
 $env:REACT_APP_OIDC_CLIENT_ID=mssc
 $env:REACT_APP_CHES_PERFORMANCE_URL=
 
@@ -145,7 +145,7 @@ export REACT_APP_API_ROOT=http://localhost:8080
 export REACT_APP_CHES_ROOT=http://localhost:8888
 export REACT_APP_UI_ROOT=
 export REACT_APP_PUBLIC_URL=http://localhost:2016
-export REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+export REACT_APP_OIDC_ISSUER=https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz
 export REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend
 npm run build
 
@@ -165,7 +165,7 @@ $env:REACT_APP_API_ROOT=http://localhost:8080
 $env:REACT_APP_CHES_ROOT=http://localhost:8888
 $env:REACT_APP_UI_ROOT=
 $env:REACT_APP_PUBLIC_URL=http://localhost:2016
-$env:REACT_APP_OIDC_ISSUER=https://sso-dev.pathfinder.gov.bc.ca/auth/realms/98r0z7rz
+$env:REACT_APP_OIDC_ISSUER=https://dev.oidc.gov.bc.ca/auth/realms/98r0z7rz
 $env:REACT_APP_OIDC_CLIENT_ID=mssc-localhost-frontend;
 npm run build-win
 
