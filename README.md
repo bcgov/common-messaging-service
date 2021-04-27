@@ -1,4 +1,10 @@
-# Natural Resources Messaging Service Showcase
+# Natural Resources Messaging Service Showcase [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![img](https://img.shields.io/badge/Lifecycle-Retired-d45500)](https://github.com/bcgov/repomountie/blob/master/doc/lifecycle-badges.md)
+
+## WARNING: This project has been deprecated
+
+This application will no longer be maintained and has been replaced by [CHES Showcase](https://github.com/bcgov/common-hosted-email-service-showcase).
+
+---
 
 This repository contains code to provide a simple UI for the [NR Email Microservice](https://github.com/bcgov/nr-email-microservice) and the Common Hosted Email Service ([CHES](https://github.com/bcgov/common-hosted-email-service.git)).  The Email Microservice provides an example implementation for use of the Common Messaging Service API (CMSG).  The [ches-backend](ches-backend/README.md) provides an example implementation for use of the CHES API.  We use [React.js](https://reactjs.org) for the frontend UI.
 
